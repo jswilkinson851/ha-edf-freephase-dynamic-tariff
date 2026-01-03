@@ -85,6 +85,7 @@ class EDFCoordinator(DataUpdateCoordinator):
                 from datetime import datetime, timezone
                 import dateutil.parser
                 
+                # --- Determine the correct current slot ---
                 now = datetime.now(timezone.utc)
                 
                 current_slot = None
@@ -92,14 +93,29 @@ class EDFCoordinator(DataUpdateCoordinator):
                     start = dateutil.parser.isoparse(item["valid_from"])
                     end = dateutil.parser.isoparse(item["valid_to"])
                     if start <= now < end:
-                        current_slot = item
+                        current_slot = {
+                            "start": item["valid_from"],
+                            "end": item["valid_to"],
+                            "value": item["value_inc_vat"],
+                            "phase": classify_slot(item["valid_from"], item["value_inc_vat"]),
+                        }
                         break
                 
+                # --- Determine the correct current price ---
                 if current_slot:
-                    current_price = current_slot["value_inc_vat"]
+                    current_price = current_slot["value"]
                 else:
                     # Fallback to EDF's own "current" price (first item)
                     current_price = results[0]["value_inc_vat"]
+                
+                # --- Fallback current_slot if forecast doesn't include the current time ---
+                if not current_slot:
+                    current_slot = {
+                        "start": None,
+                        "end": None,
+                        "value": current_price,
+                        "phase": classify_slot(results[0]["valid_from"], results[0]["value_inc_vat"]),
+                    }
 
                 # Next slot price (first future slot)
                 next_price = None
@@ -108,7 +124,6 @@ class EDFCoordinator(DataUpdateCoordinator):
                     if start > now:
                         next_price = item["value_inc_vat"]
                         break
-
     
                 # Build the next 24 hours forecast (48 half‑hour slots)
                 next_24_hours = []
@@ -130,6 +145,7 @@ class EDFCoordinator(DataUpdateCoordinator):
                     "current_price": current_price,
                     "next_price": next_price,
                     "next_24_hours": next_24_hours,
+                    "current_slot": current_slot,
                 }
 
 from homeassistant.components.sensor import SensorEntity
@@ -416,8 +432,8 @@ class EDFFreePhaseDynamicCurrentSlotColourSensor(CoordinatorEntity, SensorEntity
             return None
 
         # Re‑classify the current slot using your helper
-        current = data["next_24_hours"][0]
-        return current["phase"]
+        current = data.get("current_slot")
+        return current["phase"] if current else None
 
     @property
     def extra_state_attributes(self):
@@ -425,8 +441,8 @@ class EDFFreePhaseDynamicCurrentSlotColourSensor(CoordinatorEntity, SensorEntity
         if not data:
             return {}
 
-        current = data["next_24_hours"][0]
-        return current
+        current = data.get("current_slot")
+        return current or {}
 
     @property
     def device_info(self):
@@ -452,8 +468,8 @@ class EDFFreePhaseDynamicIsGreenSlotBinarySensor(CoordinatorEntity, SensorEntity
         if not data:
             return None
 
-        current = data["next_24_hours"][0]
-        return current["phase"] == "green"
+        current = data.get("current_slot")
+        return current["phase"] == "green" if current else None
 
     @property
     def extra_state_attributes(self):
@@ -461,8 +477,8 @@ class EDFFreePhaseDynamicIsGreenSlotBinarySensor(CoordinatorEntity, SensorEntity
         if not data:
             return {}
 
-        current = data["next_24_hours"][0]
-        return current
+        current = data.get("current_slot")
+        return current or {}
 
     @property
     def device_info(self):
