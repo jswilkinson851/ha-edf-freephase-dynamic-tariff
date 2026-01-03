@@ -7,5 +7,7 @@
   "iot_class": "cloud_polling",
   "config_flow": true,
   "logo": "logo.png",
-  "icon": "icon.png"
+  "icon": "icon.png",
+  "documentation": "https://github.com/<your-username>/ha-edf-freephase-dynamic-tariff",
+  "issue_tracker": "https://github.com/<your-username>/ha-edf-freephase-dynamic-tariff/issues"
 }
