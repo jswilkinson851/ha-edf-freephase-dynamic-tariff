@@ -11,7 +11,7 @@ This custom integration brings EDF’s FreePhase Dynamic 12‑month tariff into 
 
 It’s designed for UK users on the FreePhase tariff who want deeper insight into when electricity is cheapest, most expensive, or completely free.
 
-✨ Features
+## ✨ Features
 Live current price updated automatically
 
 Next slot price (the upcoming 30‑minute period)
@@ -30,10 +30,10 @@ Device grouping for a clean Home Assistant UI
 
 Automatic slot classification based on EDF’s schedule and negative wholesale prices
 
-📦 Installation
+## 📦 Installation
 
-## Installation via HACS (recommended)
-[![Install with HACS](https://img.shields.io/badge/HACS-Install-41BDF5.svg)](https://hacs.xyz/docs/usage/custom_repositories/)
+### Installation via HACS (recommended)
+[![Install with HACS](https://img.shields.io/badge/HACS-Install-41BDF5.svg)](https://github.com/hacs/integration)
 
 This integration is fully compatible with HACS and can be installed as a custom repository.
 
@@ -59,7 +59,7 @@ Go to **Settings → Devices & Services → Add Integration** and search for:
 
 Follow the setup flow to complete configuration.
 
-Manual installation
+### Manual installation
 Download or clone this repository.
 
 Copy the folder:
@@ -76,7 +76,7 @@ Search for EDF FreePhase Dynamic Tariff.
 
 Select your tariff code from the dropdown and choose your scan interval.
 
-⚙️ Configuration
+## ⚙️ Configuration
 When adding the integration, you’ll be asked for:
 
 Tariff Code  
@@ -87,7 +87,7 @@ How often to refresh pricing (default: 30 minutes)
 
 No API keys or authentication are required.
 
-🧠 How slot classification works
+## 🧠 How slot classification works
 Each half‑hour slot is assigned a colour:
 
 Green — free or overnight
@@ -98,7 +98,7 @@ Red — peak (16:00–19:00)
 
 Negative wholesale prices automatically count as green.
 
-🗂️ Entities created
+## 🗂️ Entities created
 You’ll get the following sensors:
 
 Current price
@@ -123,16 +123,16 @@ Binary sensor: Is now a green slot?
 
 Each sensor includes useful attributes such as start time, end time, value, and phase.
 
-🧪 Known limitations
+## 🧪 Known limitations
 This integration currently supports single‑register electricity tariffs only.
 
 Pricing is pulled directly from the EDF Kraken API; outages or changes in structure may affect availability.
 
 No standing charge data is included yet (planned).
 
-🤝 Contributing
+## 🤝 Contributing
 Pull requests, issues, and suggestions are always welcome.
 If you’re using this integration and want to help improve it, feel free to open an issue or PR.
 
-📄 License
+## 📄 License
 This project is licensed under the MIT License.
