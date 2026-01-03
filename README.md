@@ -4,7 +4,7 @@ EDF FreePhase Dynamic Tariff — Home Assistant Integration
 
 ![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)
 ![Version](https://img.shields.io/github/v/release/jswilkinson851/ha-edf-freephase-dynamic-tariff)
-![License](https://img.shields.io/github/license/jswilkinson851/ha-edf-freephase-dynamic-tariff)
+![License](https://img.shields.io/github/license/jswilkinson851/ha-edf-freephase-dynamic-tariff?refresh=1)
 
 This custom integration brings EDF’s FreePhase Dynamic 12‑month tariff into Home Assistant, giving you live pricing, colour‑coded slot classification, and a full 24‑hour forecast directly from the EDF Kraken API.
 
