@@ -3,7 +3,7 @@
   "name": "EDF FreePhase Dynamic Tariff",
   "version": "0.2.3",
   "requirements": ["aiohttp>=3.8.0"],
-  "codeowners": ["@yourgithub"],
+  "codeowners": ["@jswilkinson851"],
   "iot_class": "cloud_polling",
   "config_flow": true,
   "logo": "logo.png",
