@@ -5,6 +5,7 @@ EDF FreePhase Dynamic Tariff — Home Assistant Integration
 ![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)
 ![Version](https://img.shields.io/github/v/release/jswilkinson851/ha-edf-freephase-dynamic-tariff)
 ![License](https://img.shields.io/github/license/jswilkinson851/ha-edf-freephase-dynamic-tariff?refresh=1)
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-blue.svg)](https://hacs.xyz/)
 
 This custom integration brings EDF’s FreePhase Dynamic 12‑month tariff into Home Assistant, giving you live pricing, colour‑coded slot classification, and a full 24‑hour forecast directly from the EDF Kraken API.
 
@@ -30,6 +31,33 @@ Device grouping for a clean Home Assistant UI
 Automatic slot classification based on EDF’s schedule and negative wholesale prices
 
 📦 Installation
+
+## Installation via HACS (recommended)
+[![Install with HACS](https://img.shields.io/badge/HACS-Install-41BDF5.svg)](https://hacs.xyz/docs/usage/custom_repositories/)
+This integration is fully compatible with HACS and can be installed as a custom repository.
+
+### 1. Add the repository to HACS
+1. In Home Assistant, go to **HACS → Integrations**
+2. Select the three‑dot menu in the top‑right
+3. Choose **Custom repositories**
+4. Add this repository URL:
+https://github.com/jswilkinson851/ha-edf-freephase-dynamic-tariff
+5. Set the category to **Integration**
+6. Click **Add**
+
+### 2. Install the integration
+Once added, search for **EDF FreePhase Dynamic Tariff** in HACS and click **Install**.
+
+### 3. Restart Home Assistant
+A restart is required for Home Assistant to load the integration.
+
+### 4. Add the integration in Home Assistant
+Go to **Settings → Devices & Services → Add Integration** and search for:
+
+**EDF FreePhase Dynamic Tariff**
+
+Follow the setup flow to complete configuration.
+
 Manual installation
 Download or clone this repository.
 
