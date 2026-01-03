@@ -81,8 +81,34 @@ class EDFCoordinator(DataUpdateCoordinator):
     
                 results = data["results"]
     
-                current_price = results[0]["value_inc_vat"]
-                next_price = results[1]["value_inc_vat"]
+                # --- Determine the correct current price ---
+                from datetime import datetime, timezone
+                import dateutil.parser
+                
+                now = datetime.now(timezone.utc)
+                
+                current_slot = None
+                for item in results:
+                    start = dateutil.parser.isoparse(item["valid_from"])
+                    end = dateutil.parser.isoparse(item["valid_to"])
+                    if start <= now < end:
+                        current_slot = item
+                        break
+                
+                if current_slot:
+                    current_price = current_slot["value_inc_vat"]
+                else:
+                    # Fallback to EDF's own "current" price (first item)
+                    current_price = results[0]["value_inc_vat"]
+
+                # Next slot price (first future slot)
+                next_price = None
+                for item in results:
+                    start = dateutil.parser.isoparse(item["valid_from"])
+                    if start > now:
+                        next_price = item["value_inc_vat"]
+                        break
+
     
                 # Build the next 24 hours forecast (48 half‑hour slots)
                 next_24_hours = []
