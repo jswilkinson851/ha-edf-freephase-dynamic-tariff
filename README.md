@@ -1,4 +1,5 @@
 # ha-edf-freephase-dynamic-tariff
+
 EDF FreePhase Dynamic Tariff — Home Assistant Integration
 
 ![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)
