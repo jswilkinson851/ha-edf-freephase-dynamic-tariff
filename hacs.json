@@ -3,5 +3,6 @@
   "domains": ["sensor"],
   "country": ["GB"],
   "homeassistant": "2024.1.0",
-  "render_readme": true
+  "render_readme": true,
+  "github": "jswilkinson851/ha-edf-freephase-dynamic-tariff"
 }
