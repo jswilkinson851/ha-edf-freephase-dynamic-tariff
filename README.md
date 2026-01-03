@@ -34,6 +34,7 @@ Automatic slot classification based on EDF’s schedule and negative wholesale p
 
 ## Installation via HACS (recommended)
 [![Install with HACS](https://img.shields.io/badge/HACS-Install-41BDF5.svg)](https://hacs.xyz/docs/usage/custom_repositories/)
+
 This integration is fully compatible with HACS and can be installed as a custom repository.
 
 ### 1. Add the repository to HACS
