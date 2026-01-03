@@ -1,0 +1,12 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "tariff_code": "",
+          "scan_interval": ""
+        }
+      }
+    }
+  }
+}

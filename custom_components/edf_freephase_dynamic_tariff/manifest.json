@@ -1,0 +1,11 @@
+{
+  "domain": "edf_freephase_dynamic_tariff",
+  "name": "EDF FreePhase Dynamic Tariff",
+  "version": "0.2.0",
+  "requirements": ["aiohttp>=3.8.0"],
+  "codeowners": ["@yourgithub"],
+  "iot_class": "cloud_polling",
+  "config_flow": true,
+  "logo": "logo.png",
+  "icon": "icon.png"
+}

@@ -1,0 +1,17 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "EDF FreePhase Dynamic Tariff Setup",
+        "description": "Select your tariff and scan interval.",
+        "data": {
+          "tariff_code": "Relevant Tariff Code",
+          "scan_interval": "Scan Interval (minutes)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the EDF API. Please try again."
+    }
+  }
+}
