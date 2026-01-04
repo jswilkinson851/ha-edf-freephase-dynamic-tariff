@@ -1,17 +1,33 @@
 {
+  "title": "EDF FreePhase Dynamic Tariff",
   "config": {
     "step": {
       "user": {
-        "title": "EDF FreePhase Dynamic Tariff Setup",
-        "description": "Select your tariff and scan interval.",
+        "title": "EDF FreePhase Dynamic Tariff",
+        "description": "Enter your tariff code to begin.",
         "data": {
-          "tariff_code": "Relevant Tariff Code",
-          "scan_interval": "Scan Interval (minutes)"
+          "tariff_code": "Tariff Code"
         }
       }
     },
     "error": {
-      "cannot_connect": "Unable to connect to the EDF API. Please try again."
+      "invalid_tariff": "Invalid tariff code"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "EDF FreePhase Dynamic Tariff Options",
+        "description": "Configure advanced settings.",
+        "data": {
+          "api_url": "Custom API URL (optional)",
+          "scan_interval": "Scan Interval (minutes)",
+          "forecast_hours": "Forecast Window (hours)",
+          "include_past_slots": "Include Past Slots",
+          "timeout": "API Timeout (seconds)",
+          "retry_attempts": "Retry Attempts"
+        }
+      }
     }
   }
 }

@@ -1,130 +1,121 @@
-# ha-edf-freephase-dynamic-tariff
+# EDF FreePhase Dynamic Tariff – Home Assistant Integration
 
-EDF FreePhase Dynamic Tariff — Home Assistant Integration
+A custom Home Assistant integration that provides real‑time and forecasted electricity pricing for the **EDF FreePhase Dynamic** tariff.  
+This integration fetches half‑hourly unit rates directly from the EDF Kraken API and exposes them as rich, structured sensors for automations, dashboards, and energy optimisation.
 
-![Version](https://img.shields.io/github/v/release/jswilkinson851/ha-edf-freephase-dynamic-tariff)
-![License](https://img.shields.io/github/license/jswilkinson851/ha-edf-freephase-dynamic-tariff?refresh=1)
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-blue.svg)](https://hacs.xyz/)
-
-This custom integration brings EDF’s FreePhase Dynamic 12‑month tariff into Home Assistant, giving you live pricing, colour‑coded slot classification, and a full 24‑hour forecast directly from the EDF Kraken API.
-
-It’s designed for UK users on the FreePhase tariff who want deeper insight into when electricity is cheapest, most expensive, or completely free.
+---
 
 ## ✨ Features
-- Live current price — automatically updated
-- Next slot price — the upcoming 30‑minute period
-- Full 24‑hour forecast — 48 half‑hour slots
-- Cheapest and most expensive slots
-- Next green, amber, and red slots
-- Current slot colour (green/amber/red)
-- Binary sensor for “Is it green right now?”
-- Device grouping for a clean Home Assistant UI
-- Automatic slot classification based on EDF’s schedule and negative wholesale prices
 
+- Live **current unit rate**
+- **Next half‑hour** slot price
+- Full **forecast window** (configurable, default 24 hours)
+- Cheapest and most expensive slots
+- Next **green**, **amber**, and **red** slots
+- Current slot colour (green/amber/red)
+- API diagnostics:
+  - Last checked
+  - Last updated
+  - API latency
+- Timeseries‑friendly current price sensor for charts
+- Options flow for:
+  - Scan interval  
+  - Forecast window  
+  - API timeout  
+  - Retry attempts  
+  - Custom API URL  
+  - Include/exclude past slots  
+
+---
 
 ## 📦 Installation
 
-### Installation via HACS (recommended)
-[![Install with HACS](https://img.shields.io/badge/HACS-Install-41BDF5.svg)](https://github.com/hacs/integration)
+### Option 1 — HACS (recommended)
+Once this repository is added to HACS as a custom repository:
 
-This integration is fully compatible with HACS and can be installed as a custom repository.
+1. Go to **HACS → Integrations**
+2. Click **⋮ → Custom repositories**
+3. Add your repository URL  
+   Category: **Integration**
+4. Search for **EDF FreePhase Dynamic Tariff**
+5. Install and restart Home Assistant
 
-### 1. Add the repository to HACS
-1. In Home Assistant, go to **HACS → Integrations**
-2. Select the three‑dot menu in the top‑right
-3. Choose **Custom repositories**
-4. Add this repository URL:
-https://github.com/jswilkinson851/ha-edf-freephase-dynamic-tariff
-5. Set the category to **Integration**
-6. Click **Add**
-
-### 2. Install the integration
-Once added, search for **EDF FreePhase Dynamic Tariff** in HACS and click **Install**.
-
-### 3. Restart Home Assistant
-A restart is required for Home Assistant to load the integration.
-
-### 4. Add the integration in Home Assistant
-Go to **Settings → Devices & Services → Add Integration** and search for:
-
-**EDF FreePhase Dynamic Tariff**
-
-Follow the setup flow to complete configuration.
-
-### Manual installation
-Download or clone this repository.
+### Option 2 — Manual installation (not recommended)
 
 Copy the folder:
 
+```
 custom_components/edf_freephase_dynamic_tariff
-into your Home Assistant custom_components directory.
+```
 
-Restart Home Assistant.
+into:
 
-Go to Settings → Devices & Services → Add Integration.
+```
+config/custom_components/
+```
 
-Search for EDF FreePhase Dynamic Tariff.
+Then restart Home Assistant.
 
-Select your tariff code from the dropdown and choose your scan interval.
+---
 
 ## ⚙️ Configuration
-When adding the integration, you’ll be asked for:
 
-- Tariff Code  
-  - Pulled live from the EDF API (e.g., E-1R-EDF_FREEPHASE_DYNAMIC_12M_HH-{Region_Code})
-  - Just select the API which corresponds with your region code (see https://energy-stats.uk/dno-region-codes-explained/#UK_DNO_Region_Codes_A%E2%80%93P_List_and_Map for more information)
+1. Go to **Settings → Devices & Services**
+2. Click **Add Integration**
+3. Search for **EDF FreePhase Dynamic Tariff**
+4. Enter your **tariff code**, e.g.:
 
-- Scan Interval (minutes)  
-  - How often to refresh pricing (default: 30 minutes)
+```
+E-1R-EDF_FREEPHASE_DYNAMIC_12M_HH-E
+```
 
-No API keys or authentication are required.
+After setup, you can adjust advanced settings in the **Options** menu.
 
-## 🧠 How slot classification works
-Each half‑hour slot is assigned a colour:
+---
 
-- Green — free or overnight
+## 🧠 Sensors Provided
 
-- Amber — daytime or evening
+| Sensor | Description |
+|-------|-------------|
+| Current Price | Current half‑hour unit rate |
+| Next Slot Price | Price of the next half‑hour slot |
+| Tariff Forecast | Full forecast list (attributes) |
+| Cheapest Slot | Lowest price in forecast window |
+| Most Expensive Slot | Highest price in forecast window |
+| Next Green Slot | Next green‑phase slot |
+| Next Amber Slot | Next amber‑phase slot |
+| Next Red Slot | Next red‑phase slot |
+| Current Slot Colour | green / amber / red |
+| Is Green Slot | Boolean indicator |
+| API Last Checked | Timestamp of last API call |
+| Data Last Updated | Timestamp of last processed data |
+| API Latency | Response time in ms |
+| Current Price (Timeseries) | Chart‑friendly numeric sensor |
 
-- Red — peak (normally 16:00–19:00)
+---
 
-Negative wholesale prices automatically count as green.
+## 🛠️ Requirements
 
-## 🗂️ Entities created
-You’ll get the following sensors:
+- Home Assistant 2024.6 or newer
+- Internet access to EDF Kraken API
+- Python dependencies installed automatically
 
-- Current price
+---
 
-- Next slot price
+## 🧩 Known Limitations
 
-- 24‑hour forecast
+- The integration currently supports electricity unit rates only.
+- EDF may occasionally return incomplete forecast windows during maintenance.
 
-- Cheapest slot
-
-- Most expensive slot
-
-- Next green slot
-
-- Next amber slot
-
-- Next red slot
-
-- Current slot colour
-
-- Binary sensor: Is now a green slot?
-
-Each sensor includes useful attributes such as start time, end time, value, and phase.
-
-## 🧪 Known limitations
-This integration currently supports single‑register electricity tariffs only.
-
-Pricing is pulled directly from the EDF Kraken API; outages or changes in structure may affect availability.
-
-No standing charge data is included yet (planned).
+---
 
 ## 🤝 Contributing
-Pull requests, issues, and suggestions are always welcome.
-If you’re using this integration and want to help improve it, feel free to open an issue or PR.
+
+Pull requests, issues, and feature suggestions are welcome.  
+This integration was built with UK users in mind, but contributions for wider tariff support are encouraged.
+
+---
 
 ## 📄 License
-This project is licensed under the MIT License.
+
+MIT License.
