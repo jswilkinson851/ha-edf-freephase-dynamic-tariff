@@ -35,6 +35,8 @@ This integration fetches half‑hourly unit rates directly from the EDF Kraken A
 ## 📦 Installation
 
 ### Option 1 — HACS (recommended)
+[![Install with HACS](https://img.shields.io/badge/HACS-Install-41BDF5.svg)](https://github.com/hacs/integration)
+
 Once this repository is added to HACS as a custom repository:
 
 1. Go to **HACS → Integrations**
