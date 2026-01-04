@@ -85,7 +85,7 @@ After setup, you can adjust advanced settings in the **Options** menu.
 |-------|-------------|
 | Current Price | Current half‑hour unit rate |
 | Next Slot Price | Price of the next half‑hour slot |
-| Tariff Forecast | Full forecast list (attributes) |
+| 24-Hour Forecast | Full forecast list (attributes) |
 | Cheapest Slot | Lowest price in forecast window |
 | Most Expensive Slot | Highest price in forecast window |
 | Next Green Slot | Next green‑phase slot |
@@ -93,10 +93,8 @@ After setup, you can adjust advanced settings in the **Options** menu.
 | Next Red Slot | Next red‑phase slot |
 | Current Slot Colour | green / amber / red |
 | Is Green Slot | Boolean indicator |
-| API Last Checked | Timestamp of last API call |
-| Data Last Updated | Timestamp of last processed data |
+| Last Updated | Timestamp of last processed data |
 | API Latency | Response time in ms |
-| Current Price (Timeseries) | Chart‑friendly numeric sensor |
 
 ---
 
