@@ -1,5 +1,9 @@
 # EDF FreePhase Dynamic Tariff – Home Assistant Integration
 
+![Version](https://img.shields.io/github/v/release/jswilkinson851/ha-edf-freephase-dynamic-tariff)
+![License](https://img.shields.io/github/license/jswilkinson851/ha-edf-freephase-dynamic-tariff?refresh=1)
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-blue.svg)](https://hacs.xyz/)
+
 A custom Home Assistant integration that provides real‑time and forecasted electricity pricing for the **EDF FreePhase Dynamic** tariff.  
 This integration fetches half‑hourly unit rates directly from the EDF Kraken API and exposes them as rich, structured sensors for automations, dashboards, and energy optimisation.
 
