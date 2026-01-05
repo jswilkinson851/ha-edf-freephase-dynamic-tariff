@@ -4,9 +4,12 @@
     "step": {
       "user": {
         "title": "EDF FreePhase Dynamic Tariff",
-        "description": "Enter your tariff code to begin.",
+        "description": "Select your region and configure the tariff settings.",
         "data": {
-          "tariff_code": "Tariff Code"
+          "tariff_code": "Region Code",
+          "scan_interval": "Scan Interval (minutes)",
+          "forecast_window": "Forecast Window (hours)",
+          "include_past_slots": "Include Past Slots"
         }
       }
     },
@@ -22,7 +25,7 @@
         "data": {
           "api_url": "Custom API URL (optional)",
           "scan_interval": "Scan Interval (minutes)",
-          "forecast_hours": "Forecast Window (hours)",
+          "forecast_window": "Forecast Window (hours)",
           "include_past_slots": "Include Past Slots",
           "timeout": "API Timeout (seconds)",
           "retry_attempts": "Retry Attempts"

@@ -3,8 +3,10 @@
     "step": {
       "user": {
         "data": {
-          "tariff_code": "",
-          "scan_interval": ""
+          "tariff_code": "Region Code",
+          "scan_interval": "Scan Interval (minutes)",
+          "forecast_window": "Forecast Window (hours)",
+          "include_past_slots": "Include Past Slots"
         }
       }
     }

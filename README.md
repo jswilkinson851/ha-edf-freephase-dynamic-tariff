@@ -1,144 +1,126 @@
-# EDF FreePhase Dynamic Tariff – Home Assistant Integration
+# EDF FreePhase Dynamic Tariff — Home Assistant Integration
 
-![Version](https://img.shields.io/github/v/release/jswilkinson851/ha-edf-freephase-dynamic-tariff)
-![License](https://img.shields.io/github/license/jswilkinson851/ha-edf-freephase-dynamic-tariff?refresh=1)
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-blue.svg)](https://hacs.xyz/)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/)
+![GitHub release](https://img.shields.io/github/v/release/jswilkinson851/edf_freephase_dynamic_tariff)
+![GitHub license](https://img.shields.io/github/license/jswilkinson851/edf_freephase_dynamic_tariff)
+![GitHub last commit](https://img.shields.io/github/last-commit/jswilkinson851/edf_freephase_dynamic_tariff)
 
-A custom Home Assistant integration providing real‑time and forecasted electricity pricing for the **EDF FreePhase Dynamic** tariff.  
-Half‑hourly unit rates are retrieved directly from the EDF Kraken API and exposed as structured sensors designed for automations, dashboards, and energy optimisation.
+This custom integration provides live and forecasted pricing for the **EDF FreePhase Dynamic 12‑month half‑hourly tariff**, using data from the EDF/Octopus Kraken API. It is designed for UK users on the FreePhase Dynamic tariff and supports multiple regions, multiple devices, and fully dynamic tariff‑code detection.
 
----
-
-## ✨ Features
-
-- Live **current unit rate**
-- **Next half‑hour** slot price
-- Full **24‑hour forecast**
-- Cheapest and most expensive slots
-- Next **green**, **amber**, and **red** slots
-- Current slot colour (green / amber / red)
-- **Today’s merged rate blocks** (colour, start, end, duration, price)
-- **Tomorrow’s merged rate blocks**
-- API diagnostics:
-  - Last updated
-  - API latency
-  - Coordinator status (OK / Error)
-- Timeseries‑friendly sensors for charts
-- Resilient coordinator with graceful error‑handling
-- Options flow for:
-  - Scan interval  
-  - Forecast window  
-  - API timeout  
-  - Retry attempts  
-  - Custom API URL  
-  - Include/exclude past slots  
+The integration retrieves tariff information directly from the Kraken API and exposes it as Home Assistant sensors, allowing you to automate, visualise, and optimise your energy usage based on real‑time and forecasted pricing.
 
 ---
 
-## 📦 Installation
+## Features
 
-### Option 1 — HACS (recommended)
+- **Dynamic tariff code detection**  
+  Tariff codes are fetched directly from the Kraken API, ensuring the region list stays accurate even if EDF updates their product codes.
 
-Once this repository is added to HACS as a custom repository:
+- **Human‑friendly region selection**  
+  Regions are displayed as:  
+  **Region A: Eastern England**, **Region B: East Midlands**, etc.  
+  This mapping follows Ofgem’s official DNO region definitions.
 
-1. Go to **HACS → Integrations**
-2. Click **⋮ → Custom repositories**
-3. Add the repository URL  
-   Category: **Integration**
-4. Search for **EDF FreePhase Dynamic Tariff**
-5. Install and restart Home Assistant
+- **Multiple devices supported**  
+  You can add more than one region as separate devices, each with its own sensors and coordinator.
 
-### Option 2 — Manual installation
+- **Configurable scan interval**  
+  Entered in minutes, stored internally in seconds.
 
-Copy the folder:
+- **Forecast window control**  
+  Choose how many hours of future pricing to fetch.
 
-custom_components/edf_freephase_dynamic_tariff
+- **Option to include past slots**  
+  Useful for visualisations, graphs, and energy‑usage analysis.
 
-into:
-
-config/custom_components/
-
-
-Then restart Home Assistant.
-
----
-
-## ⚙️ Configuration
-
-1. Go to **Settings → Devices & Services**
-2. Click **Add Integration**
-3. Search for **EDF FreePhase Dynamic Tariff**
-4. Enter your **tariff code**, for example:
-
-E-1R-EDF_FREEPHASE_DYNAMIC_12M_HH-E
-
-
-Advanced settings can be adjusted later via the **Options** menu.
+- **Prefix‑agnostic tariff handling**  
+  If EDF changes the tariff code prefix in future, the integration will automatically adapt.
 
 ---
 
-## 🧠 Sensors Provided
+## Installation (HACS)
 
-### Pricing & Forecast
+### Option 1 — Add via HACS (Custom Repository)
 
-| Sensor | Description |
-|-------|-------------|
-| Current Price | Current half‑hour unit rate |
-| Next Slot Price | Price of the next half‑hour slot |
-| 24‑Hour Forecast | Full forecast list (attributes) |
-| Cheapest Slot | Lowest price in the forecast window |
-| Most Expensive Slot | Highest price in the forecast window |
+1. Go to **HACS → Integrations → Custom Repositories**  
+2. Add your repository URL  
+3. Select category: **Integration**  
+4. Install the integration  
+5. Restart Home Assistant  
+6. Add the integration via **Settings → Devices & Services → Add Integration**
 
-### Slot Colour & Phase
+### Option 2 — Manual Installation
 
-| Sensor | Description |
-|-------|-------------|
-| Current Slot Colour | green / amber / red |
-| Next Green Slot | Next green‑phase slot |
-| Next Amber Slot | Next amber‑phase slot |
-| Next Red Slot | Next red‑phase slot |
-| Is Green Slot | Boolean indicator |
-
-### Merged Block Summaries
-
-| Sensor | Description |
-|-------|-------------|
-| Today’s Rates Summary | Merged blocks for today (colour, start, end, duration, price) |
-| Tomorrow’s Rates Summary | Merged blocks for tomorrow |
-
-### Diagnostics
-
-| Sensor | Description |
-|-------|-------------|
-| Last Updated | Timestamp of last processed data |
-| API Latency | Response time in ms |
-| Coordinator Status | OK / Error |
+1. Copy this repository into your Home Assistant `custom_components` directory  
+2. Restart Home Assistant  
+3. Add the integration via **Settings → Devices & Services → Add Integration**
 
 ---
 
-## 🛠️ Requirements
+## Region Codes
 
-- Home Assistant 2024.6 or newer  
-- Internet access to the EDF Kraken API  
-- Python dependencies installed automatically  
+The integration automatically retrieves tariff codes from:
 
----
+https://api.edfgb-kraken.energy/v1/products/EDF_FREEPHASE_DYNAMIC_12M_HH/
 
-## 🧩 Known Limitations
 
-- Only electricity unit rates are supported at this time  
-- EDF may occasionally return incomplete or delayed forecast data  
-- Tomorrow’s data depends on EDF publishing the next day’s slots  (normally avalable by around 16:00 on the previous day)
+Each tariff code ends with a letter (A, B, C, … P) that corresponds to a UK DNO region.
 
----
+For a clear explanation of these region letters, you can refer to:
 
-## 🤝 Contributing
+**https://energy-stats.uk/dno-region-codes-explained/#UK_DNO_Region_Codes_A%E2%80%93P_List_and_Map**
 
-Issues, feature requests, and pull requests are welcome.  
-This integration is built primarily for UK users, but contributions for broader tariff support are encouraged.
+This page provides a helpful breakdown of each region and its operator.
+
+If the API is temporarily unavailable, the integration falls back to a complete static list of regions A–P (excluding I and O, which do not exist).
 
 ---
 
-## 📄 License
+## Configuration Options
 
-MIT License.
+- **Region Code**  
+  Select your region from the dynamically generated list.
+
+- **Scan Interval (minutes)**  
+  How often to refresh tariff data.  
+  Default: 5 minutes.
+
+- **Forecast Window (hours)**  
+  How many hours of future pricing to fetch.  
+  Default: 24 hours.
+
+- **Include Past Slots**  
+  Whether to include historical half‑hour slots.  
+  Default: enabled.
+
+---
+
+## Multiple Instances
+
+You can add multiple regions as separate devices.  
+Each instance creates its own:
+
+- device  
+- coordinator  
+- sensors  
+- entity IDs  
+
+This is useful if you want to compare regions or monitor multiple properties.
+
+---
+
+## Troubleshooting
+
+- If the region list only shows a few entries, the API may be temporarily unavailable.  
+  The integration will fall back to a complete static list of regions A–P.
+
+- If you previously added the integration before updating, removing and re‑adding it ensures the new dynamic region list is used.
+
+- If tariff codes ever change in future, the integration will automatically detect the new prefix and continue working without modification.
+
+---
+
+## License
+
+MIT License.  
+Feel free to fork, improve, and contribute.
