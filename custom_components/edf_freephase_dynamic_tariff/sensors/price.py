@@ -96,8 +96,9 @@ class EDFFreePhaseDynamicNextSlotPriceSensor(CoordinatorEntity, SensorEntity):
         self._attr_icon = "mdi:currency-gbp"
 
     def _find_next_slot(self):
+        """Return the next future slot from today's data."""
         slots = sorted(
-            self.coordinator.data.get("next_24_hours", []),
+            self.coordinator.data.get("todays_24_hours", []),
             key=lambda s: s["start"]
         )
         return slots[0] if slots else None
@@ -122,6 +123,75 @@ class EDFFreePhaseDynamicNextSlotPriceSensor(CoordinatorEntity, SensorEntity):
             "duration_minutes": duration,
             "icon": _icon_for_phase(slot["phase"]),
         }
+
+    @property
+    def device_info(self):
+        return edf_device_info()
+
+# ---------------------------------------------------------------------------
+# Cheapest Slot (Today)
+# ---------------------------------------------------------------------------
+
+class EDFFreePhaseDynamicCheapestSlotSensor(CoordinatorEntity, SensorEntity):
+    """Cheapest remaining slot today."""
+
+    _attr_icon = "mdi:cash"
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_name = "Cheapest Slot"
+        self._attr_unique_id = "edf_freephase_dynamic_tariff_cheapest_slot"
+
+    @property
+    def native_value(self):
+        slots = self.coordinator.data.get("todays_24_hours", [])
+        if not slots:
+            return None
+        cheapest = min(slots, key=lambda s: s["value"])
+        return cheapest["value"]
+
+    @property
+    def extra_state_attributes(self):
+        slots = self.coordinator.data.get("todays_24_hours", [])
+        if not slots:
+            return {}
+        cheapest = min(slots, key=lambda s: s["value"])
+        return cheapest
+
+    @property
+    def device_info(self):
+        return edf_device_info()
+
+
+# ---------------------------------------------------------------------------
+# Most Expensive Slot (Today)
+# ---------------------------------------------------------------------------
+
+class EDFFreePhaseDynamicMostExpensiveSlotSensor(CoordinatorEntity, SensorEntity):
+    """Most expensive remaining slot today."""
+
+    _attr_icon = "mdi:cash-remove"
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_name = "Most Expensive Slot"
+        self._attr_unique_id = "edf_freephase_dynamic_tariff_most_expensive_slot"
+
+    @property
+    def native_value(self):
+        slots = self.coordinator.data.get("todays_24_hours", [])
+        if not slots:
+            return None
+        expensive = max(slots, key=lambda s: s["value"])
+        return expensive["value"]
+
+    @property
+    def extra_state_attributes(self):
+        slots = self.coordinator.data.get("todays_24_hours", [])
+        if not slots:
+            return {}
+        expensive = max(slots, key=lambda s: s["value"])
+        return expensive
 
     @property
     def device_info(self):

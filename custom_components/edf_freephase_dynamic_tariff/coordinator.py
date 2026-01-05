@@ -51,6 +51,7 @@ class EDFCoordinator(DataUpdateCoordinator):
         """Fetch and process data from the EDF API with retries and fallback."""
 
         now = datetime.now(timezone.utc)
+        today = now.date()
         tomorrow = (now + timedelta(days=1)).date()
         api_latency_ms: int | None = None
 
@@ -71,10 +72,9 @@ class EDFCoordinator(DataUpdateCoordinator):
                     attempt,
                     api_latency_ms,
                 )
+                break
 
-                break  # Success, exit retry loop
-
-            except Exception as err:  # Broad by design: we never want to kill the coordinator
+            except Exception as err:
                 last_error = err
                 _LOGGER.warning(
                     "API request attempt %s/%s failed: %s",
@@ -83,13 +83,12 @@ class EDFCoordinator(DataUpdateCoordinator):
                     err,
                 )
 
-        # If all attempts failed, fall back to last_successful_data if available
+        # --- Fallback if all attempts failed ---
         if last_error is not None and api_latency_ms is None:
             _LOGGER.error("All API attempts failed: %s", last_error)
 
             if self.last_successful_data:
                 _LOGGER.warning("Using last successful data due to repeated API failures")
-                # Enrich the cached data with current health info
                 payload = dict(self.last_successful_data)
                 payload["coordinator_status"] = "degraded"
                 if self.last_successful_update:
@@ -99,11 +98,10 @@ class EDFCoordinator(DataUpdateCoordinator):
                     payload["data_age_seconds"] = None
                 return payload
 
-            # No cached data to fall back to: return a safe error payload
             return {
                 "current_price": None,
                 "next_price": None,
-                "next_24_hours": [],
+                "todays_24_hours": [],
                 "current_slot": None,
                 "api_latency_ms": None,
                 "last_updated": None,
@@ -113,24 +111,28 @@ class EDFCoordinator(DataUpdateCoordinator):
                 "data_age_seconds": None,
             }
 
-        # At this point, we have a successful `data` from the API
+        # --- Successful API response ---
         results = data.get("results", [])
 
+        # --- Build today's slots ---
+        todays_24_hours = []
         tomorrow_24_hours = []
+
         for item in results:
             start_dt = dateutil.parser.isoparse(item["valid_from"])
-            if start_dt.date() == tomorrow:
-                tomorrow_24_hours.append(
-                    {
-                        "start": item["valid_from"],
-                        "end": item["valid_to"],
-                        "value": item["value_inc_vat"],
-                        "phase": classify_slot(
-                            item["valid_from"], item["value_inc_vat"]
-                        ),
-                    }
-                )
+            slot = {
+                "start": item["valid_from"],
+                "end": item["valid_to"],
+                "value": item["value_inc_vat"],
+                "phase": classify_slot(item["valid_from"], item["value_inc_vat"]),
+            }
 
+            if start_dt.date() == today:
+                todays_24_hours.append(slot)
+            elif start_dt.date() == tomorrow:
+                tomorrow_24_hours.append(slot)
+
+        # --- Current slot ---
         current_slot = None
         for item in results:
             start = dateutil.parser.isoparse(item["valid_from"])
@@ -140,9 +142,7 @@ class EDFCoordinator(DataUpdateCoordinator):
                     "start": item["valid_from"],
                     "end": item["valid_to"],
                     "value": item["value_inc_vat"],
-                    "phase": classify_slot(
-                        item["valid_from"], item["value_inc_vat"]
-                    ),
+                    "phase": classify_slot(item["valid_from"], item["value_inc_vat"]),
                 }
                 break
 
@@ -151,19 +151,15 @@ class EDFCoordinator(DataUpdateCoordinator):
         else:
             current_price = results[0]["value_inc_vat"] if results else None
 
-        if not current_slot:
-            if results:
-                current_slot = {
-                    "start": None,
-                    "end": None,
-                    "value": current_price,
-                    "phase": classify_slot(
-                        results[0]["valid_from"], results[0]["value_inc_vat"]
-                    ),
-                }
-            else:
-                current_slot = None
+        if not current_slot and results:
+            current_slot = {
+                "start": None,
+                "end": None,
+                "value": current_price,
+                "phase": classify_slot(results[0]["valid_from"], results[0]["value_inc_vat"]),
+            }
 
+        # --- Next price ---
         next_price = None
         for item in results:
             start = dateutil.parser.isoparse(item["valid_from"])
@@ -171,31 +167,13 @@ class EDFCoordinator(DataUpdateCoordinator):
                 next_price = item["value_inc_vat"]
                 break
 
-        next_24_hours = []
-        for item in results[:48]:
-            start = item["valid_from"]
-            end = item["valid_to"]
-            value = item["value_inc_vat"]
-            phase = classify_slot(start, value)
-
-            next_24_hours.append(
-                {
-                    "start": start,
-                    "end": end,
-                    "value": value,
-                    "phase": phase,
-                }
-            )
-
         last_updated_iso = datetime.now(timezone.utc).isoformat()
-
-        # Successful update: track last successful update time
         self.last_successful_update = now
 
         payload = {
             "current_price": current_price,
             "next_price": next_price,
-            "next_24_hours": next_24_hours,
+            "todays_24_hours": todays_24_hours,
             "current_slot": current_slot,
             "api_latency_ms": api_latency_ms,
             "last_updated": last_updated_iso,

@@ -8,7 +8,6 @@
         "data": {
           "tariff_code": "Region Code",
           "scan_interval": "Scan Interval (minutes)",
-          "forecast_window": "Forecast Window (hours)",
           "include_past_slots": "Include Past Slots"
         }
       }
@@ -25,7 +24,6 @@
         "data": {
           "api_url": "Custom API URL (optional)",
           "scan_interval": "Scan Interval (minutes)",
-          "forecast_window": "Forecast Window (hours)",
           "include_past_slots": "Include Past Slots",
           "timeout": "API Timeout (seconds)",
           "retry_attempts": "Retry Attempts"

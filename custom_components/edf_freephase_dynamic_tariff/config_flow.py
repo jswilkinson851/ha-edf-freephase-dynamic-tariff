@@ -11,10 +11,8 @@ from .const import (
     DOMAIN,
     CONF_TARIFF_CODE,
     CONF_SCAN_INTERVAL,
-    CONF_FORECAST_WINDOW,
     CONF_INCLUDE_PAST_SLOTS,
     DEFAULT_SCAN_INTERVAL_SECONDS,
-    DEFAULT_FORECAST_WINDOW,
     DEFAULT_INCLUDE_PAST_SLOTS,
 )
 
@@ -113,7 +111,6 @@ class EDFFreePhaseDynamicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             tariff_code = dropdown_map.get(selected_label)
 
             scan_interval_minutes = user_input.get(CONF_SCAN_INTERVAL)
-            forecast_window = user_input.get(CONF_FORECAST_WINDOW)
             include_past_slots = user_input.get(CONF_INCLUDE_PAST_SLOTS)
 
             if not tariff_code:
@@ -127,7 +124,6 @@ class EDFFreePhaseDynamicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_TARIFF_CODE: tariff_code,
                         CONF_SCAN_INTERVAL: scan_interval_seconds,
-                        CONF_FORECAST_WINDOW: forecast_window,
                         CONF_INCLUDE_PAST_SLOTS: include_past_slots,
                     },
                 )
@@ -141,10 +137,6 @@ class EDFFreePhaseDynamicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_SCAN_INTERVAL,
                     default=DEFAULT_SCAN_INTERVAL_SECONDS // 60,
-                ): vol.All(vol.Coerce(int), vol.Range(min=1)),
-                vol.Required(
-                    CONF_FORECAST_WINDOW,
-                    default=DEFAULT_FORECAST_WINDOW,
                 ): vol.All(vol.Coerce(int), vol.Range(min=1)),
                 vol.Required(
                     CONF_INCLUDE_PAST_SLOTS,
@@ -188,7 +180,6 @@ class EDFFreePhaseDynamicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             tariff_code = dropdown_map.get(selected_label)
 
             scan_interval_minutes = user_input.get(CONF_SCAN_INTERVAL)
-            forecast_window = user_input.get(CONF_FORECAST_WINDOW)
             include_past_slots = user_input.get(CONF_INCLUDE_PAST_SLOTS)
 
             if not tariff_code:
@@ -202,7 +193,6 @@ class EDFFreePhaseDynamicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_TARIFF_CODE: tariff_code,
                         CONF_SCAN_INTERVAL: scan_interval_seconds,
-                        CONF_FORECAST_WINDOW: forecast_window,
                         CONF_INCLUDE_PAST_SLOTS: include_past_slots,
                     },
                 )
@@ -216,10 +206,6 @@ class EDFFreePhaseDynamicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_SCAN_INTERVAL, default=current_scan_minutes): vol.All(
                     vol.Coerce(int), vol.Range(min=1)
                 ),
-                vol.Required(
-                    CONF_FORECAST_WINDOW,
-                    default=entry.data.get(CONF_FORECAST_WINDOW, DEFAULT_FORECAST_WINDOW),
-                ): vol.All(vol.Coerce(int), vol.Range(min=1)),
                 vol.Required(
                     CONF_INCLUDE_PAST_SLOTS,
                     default=entry.data.get(CONF_INCLUDE_PAST_SLOTS, DEFAULT_INCLUDE_PAST_SLOTS),

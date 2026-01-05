@@ -6,15 +6,11 @@ from .meta import (
     EDFFreePhaseDynamicDataAgeSensor,
 )
 
-from .forecast import (
-    EDFFreePhaseDynamic24HourForecastSensor,
-    EDFFreePhaseDynamicCheapestSlotSensor,
-    EDFFreePhaseDynamicMostExpensiveSlotSensor,
-)
-
 from .price import (
     EDFFreePhaseDynamicCurrentPriceSensor,
     EDFFreePhaseDynamicNextSlotPriceSensor,
+    EDFFreePhaseDynamicCheapestSlotSensor,
+    EDFFreePhaseDynamicMostExpensiveSlotSensor,
 )
 
 from .slots import (
@@ -30,6 +26,8 @@ from .slots import (
 from .rates import (
     EDFFreePhaseDynamicTodaysRatesSummarySensor,
     EDFFreePhaseDynamicTomorrowsRatesSummarySensor,
+    EDFFreePhaseDynamicTodaysRatesFullSensor,
+    EDFFreePhaseDynamicTomorrowsRatesFullSensor,
 )
 
 ALL_SENSORS = [
@@ -40,14 +38,11 @@ ALL_SENSORS = [
     EDFFreePhaseDynamicLastSuccessfulUpdateSensor,
     EDFFreePhaseDynamicDataAgeSensor,
 
-    # Forecast sensors
-    EDFFreePhaseDynamic24HourForecastSensor,
-    EDFFreePhaseDynamicCheapestSlotSensor,
-    EDFFreePhaseDynamicMostExpensiveSlotSensor,
-
     # Price sensors
     EDFFreePhaseDynamicCurrentPriceSensor,
     EDFFreePhaseDynamicNextSlotPriceSensor,
+    EDFFreePhaseDynamicCheapestSlotSensor,
+    EDFFreePhaseDynamicMostExpensiveSlotSensor,
 
     # Slot sensors
     EDFFreePhaseDynamicCurrentSlotColourSensor,
@@ -61,4 +56,6 @@ ALL_SENSORS = [
     # Rates sensors
     EDFFreePhaseDynamicTodaysRatesSummarySensor,
     EDFFreePhaseDynamicTomorrowsRatesSummarySensor,
+    EDFFreePhaseDynamicTodaysRatesFullSensor,
+    EDFFreePhaseDynamicTomorrowsRatesFullSensor,
 ]
