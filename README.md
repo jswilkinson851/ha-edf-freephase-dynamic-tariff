@@ -1,9 +1,9 @@
 # EDF FreePhase Dynamic Tariff — Home Assistant Integration
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/)
-![GitHub release](https://img.shields.io/github/v/release/jswilkinson851/edf_freephase_dynamic_tariff)
-![GitHub license](https://img.shields.io/github/license/jswilkinson851/edf_freephase_dynamic_tariff)
-![GitHub last commit](https://img.shields.io/github/last-commit/jswilkinson851/edf_freephase_dynamic_tariff)
+![GitHub release](https://img.shields.io/github/v/release/jswilkinson851/ha-edf-freephase-dynamic-tariff)
+![GitHub license](https://img.shields.io/github/license/jswilkinson851/ha-edf-freephase-dynamic-tariff)
+![GitHub last commit](https://img.shields.io/github/last-commit/jswilkinson851/ha-edf-freephase-dynamic-tariff)
 
 This custom integration provides live and forecasted pricing for the **EDF FreePhase Dynamic 12‑month half‑hourly tariff**, using data from the EDF/Octopus Kraken API. It is designed for UK users on the FreePhase Dynamic tariff and supports multiple regions, multiple devices, and fully dynamic tariff‑code detection.
 
