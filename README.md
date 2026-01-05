@@ -5,9 +5,10 @@
 ![GitHub license](https://img.shields.io/github/license/jswilkinson851/ha-edf-freephase-dynamic-tariff)
 ![GitHub last commit](https://img.shields.io/github/last-commit/jswilkinson851/ha-edf-freephase-dynamic-tariff)
 
-This custom integration provides live and forecasted pricing for the **EDF FreePhase Dynamic 12‑month half‑hourly tariff**, using data from the EDF/Octopus Kraken API. It is designed for UK users on the FreePhase Dynamic tariff and supports multiple regions, multiple devices, and fully dynamic tariff‑code detection.
+This custom integration provides **live pricing and full‑day half‑hourly rate data** for the **EDF FreePhase Dynamic 12‑month tariff**, using the EDF/Octopus Kraken API.  
+It is designed for UK users on the FreePhase Dynamic tariff and supports multiple regions, multiple devices, and fully dynamic tariff‑code detection.
 
-The integration retrieves tariff information directly from the Kraken API and exposes it as Home Assistant sensors, allowing you to automate, visualise, and optimise your energy usage based on real‑time and forecasted pricing.
+The integration retrieves tariff information directly from the Kraken API and exposes it as Home Assistant sensors, allowing you to automate, visualise, and optimise your energy usage based on real‑time and upcoming pricing.
 
 ---
 
@@ -18,23 +19,19 @@ The integration retrieves tariff information directly from the Kraken API and ex
 
 - **Human‑friendly region selection**  
   Regions are displayed as:  
-  **Region A: Eastern England**, **Region B: East Midlands**, etc.  
-  This mapping follows Ofgem’s official DNO region definitions.
+  **Region A: Eastern England**, **Region B: East Midlands**, etc.
 
 - **Multiple devices supported**  
-  You can add more than one region as separate devices, each with its own sensors and coordinator.
+  Add more than one region as separate devices, each with its own coordinator and sensors.
 
 - **Configurable scan interval**  
   Entered in minutes, stored internally in seconds.
 
-- **Forecast window control**  
-  Choose how many hours of future pricing to fetch.
+- **Full‑day pricing sensors**  
+  Provides all available half‑hour slots for **today** and **tomorrow**, including raw UTC timestamps and local formatted times.
 
 - **Option to include past slots**  
-  Useful for visualisations, graphs, and energy‑usage analysis.
-
-- **Prefix‑agnostic tariff handling**  
-  If EDF changes the tariff code prefix in future, the integration will automatically adapt.
+  Useful for charts and energy‑usage analysis.
 
 - **Coordinator failsafe & retry logic**  
   Automatic retry/backoff and a “last known good data” fallback prevent sensors from going unavailable during temporary API outages.
@@ -49,10 +46,10 @@ The integration retrieves tariff information directly from the Kraken API and ex
 ### Option 1 — Add via HACS (Custom Repository)
 
 1. Go to **HACS → Integrations → Custom Repositories**  
-2. Add the repository URL:  
+2. Add:  
    `https://github.com/jswilkinson851/ha-edf-freephase-dynamic-tariff`
 3. Select category: **Integration**  
-4. Install the integration  
+4. Install  
 5. Restart Home Assistant  
 6. Add the integration via **Settings → Devices & Services → Add Integration**
 
@@ -66,17 +63,17 @@ The integration retrieves tariff information directly from the Kraken API and ex
 
 ## Region Codes
 
-The integration automatically retrieves tariff codes from:
+Tariff codes are retrieved from:
 
 https://api.edfgb-kraken.energy/v1/products/EDF_FREEPHASE_DYNAMIC_12M_HH/
 
-Each tariff code ends with a letter (A, B, C, … P) that corresponds to a UK DNO region.
+Each tariff code ends with a letter (A–P, excluding I and O) corresponding to a UK DNO region.
 
-For a clear explanation of these region letters, you can refer to:
+For a clear explanation of these region letters:
 
 **https://energy-stats.uk/dno-region-codes-explained/#UK_DNO_Region_Codes_A%E2%80%93P_List_and_Map**
 
-If the API is temporarily unavailable, the integration falls back to a complete static list of regions A–P (excluding I and O, which do not exist).
+If the API is unavailable, the integration falls back to a complete static list of regions.
 
 ---
 
@@ -88,10 +85,6 @@ If the API is temporarily unavailable, the integration falls back to a complete 
 - **Scan Interval (minutes)**  
   How often to refresh tariff data.  
   Default: 5 minutes.
-
-- **Forecast Window (hours)**  
-  How many hours of future pricing to fetch.  
-  Default: 24 hours.
 
 - **Include Past Slots**  
   Whether to include historical half‑hour slots.  
@@ -109,7 +102,7 @@ Each instance creates its own:
 - sensors  
 - entity IDs  
 
-This is useful if you want to compare regions or monitor multiple properties.
+Useful for comparing regions or monitoring multiple properties.
 
 ---
 
@@ -121,9 +114,13 @@ This is useful if you want to compare regions or monitor multiple properties.
 - `sensor.cheapest_slot`
 - `sensor.most_expensive_slot`
 
-### Forecast Sensors
-- `sensor.24_hour_forecast`  
-  Includes attributes: `slot_1`, `slot_2`, … with phase, value, start, end, duration, and icon.
+### Full‑Day Rate Sensors
+- `sensor.todays_rates_full`
+- `sensor.tomorrows_rates_full`
+
+### Daily Summary Sensors
+- `sensor.today_s_rates_summary`
+- `sensor.tomorrow_s_rates_summary`
 
 ### Slot & Block Sensors
 - `sensor.current_slot_colour`
@@ -133,10 +130,6 @@ This is useful if you want to compare regions or monitor multiple properties.
 - `sensor.next_amber_slot`
 - `sensor.next_red_slot`
 - `sensor.is_green_slot`
-
-### Daily Summary Sensors
-- `sensor.today_s_rates_summary`
-- `sensor.tomorrow_s_rates_summary`
 
 ### Metadata / Health Sensors
 - `sensor.api_latency`
@@ -148,8 +141,6 @@ This is useful if you want to compare regions or monitor multiple properties.
 ---
 
 ## Example Dashboards (ApexCharts & Lovelace)
-
-These examples show how you can visualise your EDF FreePhase Dynamic tariff data using ApexCharts and standard Lovelace cards.
 
 ### Daily Summary Card
 
@@ -175,19 +166,24 @@ A clean line chart showing the next 24 hours of half‑hourly pricing.
 ```yaml
 type: custom:apexcharts-card
 header:
-  title: Next 24 Hours Price Forecast
+  title: Today’s Price Profile
   show: true
 graph_span: 24h
 span:
-  start: hour
+  start: day
 series:
-  - entity: sensor.24_hour_forecast
+  - entity: sensor.todays_rates_full
     name: Price
     type: line
     stroke_width: 2
     color: '#3b82f6'
-    show:
-      legend_value: false
+    data_generator: |
+      const out = [];
+      for (const [key, slot] of Object.entries(entity.attributes)) {
+        if (!key.startsWith("slot_")) continue;
+        out.push([new Date(slot.start_utc).getTime(), slot.value]);
+      }
+      return out.sort((a,b) => a[0] - b[0]);
 apex_config:
   yaxis:
     labels:

@@ -61,27 +61,26 @@ class EDFFreePhaseDynamicCurrentSlotColourSensor(CoordinatorEntity, SensorEntity
 
         phase = current["phase"]
 
-        # Sort chronologically
         slots = sorted(
-            self.coordinator.data.get("next_24_hours", []),
+            self.coordinator.data.get("todays_24_hours", []),
             key=lambda s: s["start"]
         )
 
-        # Find the index of the current slot
         try:
             idx = next(i for i, s in enumerate(slots) if s["start"] == current["start"])
         except StopIteration:
             return None
 
-        # Expand backwards
         block = [current]
+
+        # Backwards
         for s in reversed(slots[:idx]):
             if s["phase"] == phase:
                 block.insert(0, s)
             else:
                 break
 
-        # Expand forwards
+        # Forwards
         for s in slots[idx + 1:]:
             if s["phase"] == phase:
                 block.append(s)
@@ -118,8 +117,9 @@ class EDFFreePhaseDynamicCurrentSlotColourSensor(CoordinatorEntity, SensorEntity
     def device_info(self):
         return edf_device_info()
 
+
 # ---------------------------------------------------------------------------
-# Current Slot (Block) Category Summary
+# Current Block Summary
 # ---------------------------------------------------------------------------
 
 class EDFFreePhaseDynamicCurrentBlockSummarySensor(CoordinatorEntity, SensorEntity):
@@ -139,7 +139,7 @@ class EDFFreePhaseDynamicCurrentBlockSummarySensor(CoordinatorEntity, SensorEnti
         phase = current["phase"]
 
         slots = sorted(
-            self.coordinator.data.get("next_24_hours", []),
+            self.coordinator.data.get("todays_24_hours", []),
             key=lambda s: s["start"]
         )
 
@@ -150,14 +150,14 @@ class EDFFreePhaseDynamicCurrentBlockSummarySensor(CoordinatorEntity, SensorEnti
 
         block = [current]
 
-        # Expand backwards
+        # Backwards
         for s in reversed(slots[:idx]):
             if s["phase"] == phase:
                 block.insert(0, s)
             else:
                 break
 
-        # Expand forwards
+        # Forwards
         for s in slots[idx + 1:]:
             if s["phase"] == phase:
                 block.append(s)
@@ -197,7 +197,7 @@ class EDFFreePhaseDynamicCurrentBlockSummarySensor(CoordinatorEntity, SensorEnti
 
 
 # ---------------------------------------------------------------------------
-# Next Slot (Block) Category Summary
+# Next Block Summary
 # ---------------------------------------------------------------------------
 
 class EDFFreePhaseDynamicNextBlockSummarySensor(CoordinatorEntity, SensorEntity):
@@ -210,22 +210,19 @@ class EDFFreePhaseDynamicNextBlockSummarySensor(CoordinatorEntity, SensorEntity)
         self._attr_icon = "mdi:timeline-clock-outline"
 
     def _find_block(self):
-        # Sort chronologically
         slots = sorted(
-            self.coordinator.data.get("next_24_hours", []),
+            self.coordinator.data.get("todays_24_hours", []),
             key=lambda s: s["start"]
         )
 
         if not slots:
             return None
 
-        # The next block begins with the first slot in the list
         first = slots[0]
         phase = first["phase"]
 
         block = [first]
 
-        # Expand forward to include all consecutive slots of the same phase
         for s in slots[1:]:
             if s["phase"] == phase:
                 block.append(s)
@@ -245,7 +242,6 @@ class EDFFreePhaseDynamicNextBlockSummarySensor(CoordinatorEntity, SensorEntity)
         if not block:
             return {}
 
-        # Format the true block start/end/duration
         start_fmt, end_fmt, duration = _format_slot_times({
             "start": block[0]["start"],
             "end": block[-1]["end"]
@@ -280,22 +276,19 @@ class EDFFreePhaseDynamicNextGreenSlotSensor(CoordinatorEntity, SensorEntity):
         self._attr_icon = "mdi:leaf"
 
     def _find_block(self):
-        # Sort chronologically
         slots = sorted(
-            self.coordinator.data.get("next_24_hours", []),
+            self.coordinator.data.get("todays_24_hours", []),
             key=lambda s: s["start"]
         )
 
-        # Find the first green slot
         first = next((s for s in slots if s["phase"] == "green"), None)
         if not first:
             return None
 
-        # Collect all consecutive green slots starting from the first
         block = [first]
-        first_index = slots.index(first)
+        idx = slots.index(first)
 
-        for s in slots[first_index + 1:]:
+        for s in slots[idx + 1:]:
             if s["phase"] == "green":
                 block.append(s)
             else:
@@ -348,7 +341,7 @@ class EDFFreePhaseDynamicNextAmberSlotSensor(CoordinatorEntity, SensorEntity):
 
     def _find_block(self):
         slots = sorted(
-            self.coordinator.data.get("next_24_hours", []),
+            self.coordinator.data.get("todays_24_hours", []),
             key=lambda s: s["start"]
         )
 
@@ -357,9 +350,9 @@ class EDFFreePhaseDynamicNextAmberSlotSensor(CoordinatorEntity, SensorEntity):
             return None
 
         block = [first]
-        first_index = slots.index(first)
+        idx = slots.index(first)
 
-        for s in slots[first_index + 1:]:
+        for s in slots[idx + 1:]:
             if s["phase"] == "amber":
                 block.append(s)
             else:
@@ -412,7 +405,7 @@ class EDFFreePhaseDynamicNextRedSlotSensor(CoordinatorEntity, SensorEntity):
 
     def _find_block(self):
         slots = sorted(
-            self.coordinator.data.get("next_24_hours", []),
+            self.coordinator.data.get("todays_24_hours", []),
             key=lambda s: s["start"]
         )
 
@@ -421,9 +414,9 @@ class EDFFreePhaseDynamicNextRedSlotSensor(CoordinatorEntity, SensorEntity):
             return None
 
         block = [first]
-        first_index = slots.index(first)
+        idx = slots.index(first)
 
-        for s in slots[first_index + 1:]:
+        for s in slots[idx + 1:]:
             if s["phase"] == "red":
                 block.append(s)
             else:
