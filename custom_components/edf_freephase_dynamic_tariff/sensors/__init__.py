@@ -1,32 +1,22 @@
-from __future__ import annotations
+from .meta import (
+    EDFFreePhaseDynamicLastUpdatedSensor,
+    EDFFreePhaseDynamicAPILatencySensor,
+    EDFFreePhaseDynamicCoordinatorStatusSensor,
+    EDFFreePhaseDynamicLastSuccessfulUpdateSensor,
+    EDFFreePhaseDynamicDataAgeSensor,
+)
 
-#Import: Forecast sensors
 from .forecast import (
     EDFFreePhaseDynamic24HourForecastSensor,
     EDFFreePhaseDynamicCheapestSlotSensor,
     EDFFreePhaseDynamicMostExpensiveSlotSensor,
 )
 
-#Import: Meta data sensors
-from .meta import (
-    EDFFreePhaseDynamicLastUpdatedSensor,
-    EDFFreePhaseDynamicAPILatencySensor,
-    EDFFreePhaseDynamicCoordinatorStatusSensor,
-)
-
-#Import: Price sensors
 from .price import (
     EDFFreePhaseDynamicCurrentPriceSensor,
     EDFFreePhaseDynamicNextSlotPriceSensor,
 )
 
-#Import: Rates sensors
-from .rates import (
-    EDFFreePhaseDynamicTodaysRatesSummarySensor,
-    EDFFreePhaseDynamicTomorrowsRatesSummarySensor,
-)
-
-#Import: Slots sensors
 from .slots import (
     EDFFreePhaseDynamicCurrentSlotColourSensor,
     EDFFreePhaseDynamicCurrentBlockSummarySensor,
@@ -37,25 +27,27 @@ from .slots import (
     EDFFreePhaseDynamicIsGreenSlotBinarySensor,
 )
 
+from .rates import (
+    EDFFreePhaseDynamicTodaysRatesSummarySensor,
+    EDFFreePhaseDynamicTomorrowsRatesSummarySensor,
+)
 
 ALL_SENSORS = [
+    # Meta sensors
+    EDFFreePhaseDynamicLastUpdatedSensor,
+    EDFFreePhaseDynamicAPILatencySensor,
+    EDFFreePhaseDynamicCoordinatorStatusSensor,
+    EDFFreePhaseDynamicLastSuccessfulUpdateSensor,
+    EDFFreePhaseDynamicDataAgeSensor,
+
     # Forecast sensors
     EDFFreePhaseDynamic24HourForecastSensor,
     EDFFreePhaseDynamicCheapestSlotSensor,
     EDFFreePhaseDynamicMostExpensiveSlotSensor,
 
-    # Meta sensors
-    EDFFreePhaseDynamicLastUpdatedSensor,
-    EDFFreePhaseDynamicAPILatencySensor,
-    EDFFreePhaseDynamicCoordinatorStatusSensor,
-
     # Price sensors
     EDFFreePhaseDynamicCurrentPriceSensor,
     EDFFreePhaseDynamicNextSlotPriceSensor,
-
-    # Rates sensors
-    EDFFreePhaseDynamicTodaysRatesSummarySensor,
-    EDFFreePhaseDynamicTomorrowsRatesSummarySensor,
 
     # Slot sensors
     EDFFreePhaseDynamicCurrentSlotColourSensor,
@@ -65,4 +57,8 @@ ALL_SENSORS = [
     EDFFreePhaseDynamicNextAmberSlotSensor,
     EDFFreePhaseDynamicNextRedSlotSensor,
     EDFFreePhaseDynamicIsGreenSlotBinarySensor,
+
+    # Rates sensors
+    EDFFreePhaseDynamicTodaysRatesSummarySensor,
+    EDFFreePhaseDynamicTomorrowsRatesSummarySensor,
 ]

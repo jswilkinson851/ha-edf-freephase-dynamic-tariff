@@ -36,6 +36,12 @@ The integration retrieves tariff information directly from the Kraken API and ex
 - **Prefix‑agnostic tariff handling**  
   If EDF changes the tariff code prefix in future, the integration will automatically adapt.
 
+- **Coordinator failsafe & retry logic**  
+  Automatic retry/backoff and a “last known good data” fallback prevent sensors from going unavailable during temporary API outages.
+
+- **Rich metadata sensors**  
+  Includes API latency, coordinator health, last successful update, and data age.
+
 ---
 
 ## Installation (HACS)
@@ -43,7 +49,8 @@ The integration retrieves tariff information directly from the Kraken API and ex
 ### Option 1 — Add via HACS (Custom Repository)
 
 1. Go to **HACS → Integrations → Custom Repositories**  
-2. Add your repository URL  
+2. Add the repository URL:  
+   `https://github.com/jswilkinson851/ha-edf-freephase-dynamic-tariff`
 3. Select category: **Integration**  
 4. Install the integration  
 5. Restart Home Assistant  
@@ -63,14 +70,11 @@ The integration automatically retrieves tariff codes from:
 
 https://api.edfgb-kraken.energy/v1/products/EDF_FREEPHASE_DYNAMIC_12M_HH/
 
-
 Each tariff code ends with a letter (A, B, C, … P) that corresponds to a UK DNO region.
 
 For a clear explanation of these region letters, you can refer to:
 
 **https://energy-stats.uk/dno-region-codes-explained/#UK_DNO_Region_Codes_A%E2%80%93P_List_and_Map**
-
-This page provides a helpful breakdown of each region and its operator.
 
 If the API is temporarily unavailable, the integration falls back to a complete static list of regions A–P (excluding I and O, which do not exist).
 
@@ -109,14 +113,134 @@ This is useful if you want to compare regions or monitor multiple properties.
 
 ---
 
+## Available Sensors
+
+### Pricing Sensors
+- `sensor.current_price`
+- `sensor.next_slot_price`
+- `sensor.cheapest_slot`
+- `sensor.most_expensive_slot`
+
+### Forecast Sensors
+- `sensor.24_hour_forecast`  
+  Includes attributes: `slot_1`, `slot_2`, … with phase, value, start, end, duration, and icon.
+
+### Slot & Block Sensors
+- `sensor.current_slot_colour`
+- `sensor.current_block_summary`
+- `sensor.next_block_summary`
+- `sensor.next_green_slot`
+- `sensor.next_amber_slot`
+- `sensor.next_red_slot`
+- `sensor.is_green_slot`
+
+### Daily Summary Sensors
+- `sensor.today_s_rates_summary`
+- `sensor.tomorrow_s_rates_summary`
+
+### Metadata / Health Sensors
+- `sensor.api_latency`
+- `sensor.last_updated`
+- `sensor.last_successful_update`
+- `sensor.data_age`
+- `sensor.coordinator_status`
+
+---
+
+## Example Dashboards (ApexCharts & Lovelace)
+
+These examples show how you can visualise your EDF FreePhase Dynamic tariff data using ApexCharts and standard Lovelace cards.
+
+### Daily Summary Card
+
+```yaml
+type: entities
+title: Daily Tariff Summary
+entities:
+  - entity: sensor.today_s_rates_summary
+    name: Today’s Rates
+  - entity: sensor.tomorrow_s_rates_summary
+    name: Tomorrow’s Rates
+  - type: divider
+  - entity: sensor.current_price
+    name: Current Price
+  - entity: sensor.next_slot_price
+    name: Next Slot Price
+  - entity: sensor.current_slot_colour
+    name: Current Slot Colour
+```
+
+A clean line chart showing the next 24 hours of half‑hourly pricing.
+
+```yaml
+type: custom:apexcharts-card
+header:
+  title: Next 24 Hours Price Forecast
+  show: true
+graph_span: 24h
+span:
+  start: hour
+series:
+  - entity: sensor.24_hour_forecast
+    name: Price
+    type: line
+    stroke_width: 2
+    color: '#3b82f6'
+    show:
+      legend_value: false
+apex_config:
+  yaxis:
+    labels:
+      formatter: |
+        EVAL:function (value) { return value.toFixed(2) + 'p'; }
+  xaxis:
+    labels:
+      datetimeUTC: false
+```
+
+---
+
+## Integration Health & Diagnostics
+
+This integration includes several metadata sensors that help you understand the health of the EDF FreePhase Dynamic Tariff API and the coordinator.
+
+### Included Health Sensors
+
+| Sensor | Description |
+|--------|-------------|
+| `sensor.coordinator_status` | Shows `ok`, `degraded`, or `error` depending on API success and fallback behaviour. |
+| `sensor.last_successful_update` | Timestamp of the last time fresh data was successfully fetched. |
+| `sensor.data_age` | Number of seconds since the last successful update. |
+| `sensor.last_updated` | When the coordinator last ran (even if the API failed). |
+| `sensor.api_latency` | API response time in milliseconds. |
+
+These sensors make it easy to build a “Health Panel” in Lovelace:
+
+```yaml
+type: entities
+title: EDF FreePhase Dynamic – Health Panel
+entities:
+  - entity: sensor.coordinator_status
+  - entity: sensor.last_successful_update
+  - entity: sensor.data_age
+  - entity: sensor.last_updated
+  - entity: sensor.api_latency
+```
+
+This helps you quickly diagnose API outages, stale data, or connectivity issues.
+
+---
+
 ## Troubleshooting
 
-- If the region list only shows a few entries, the API may be temporarily unavailable.  
-  The integration will fall back to a complete static list of regions A–P.
+- If the region list only shows a few entries, the API may be temporarily unavailable.
+The integration will fall back to a complete static list of regions A–P.
 
 - If you previously added the integration before updating, removing and re‑adding it ensures the new dynamic region list is used.
 
 - If tariff codes ever change in future, the integration will automatically detect the new prefix and continue working without modification.
+
+- If the API becomes unavailable, the integration will continue operating using the last successful data until the API recovers.
 
 ---
 
