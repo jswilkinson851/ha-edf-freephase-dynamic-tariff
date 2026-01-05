@@ -3,10 +3,12 @@
     "step": {
       "user": {
         "title": "EDF FreePhase Dynamic Tariff Setup",
-        "description": "Select your tariff and scan interval.",
+        "description": "Select your region and configure the tariff settings.",
         "data": {
-          "tariff_code": "Relevant Tariff Code",
-          "scan_interval": "Scan Interval (minutes)"
+          "tariff_code": "Region Code",
+          "scan_interval": "Scan Interval (minutes)",
+          "forecast_window": "Forecast Window (hours)",
+          "include_past_slots": "Include Past Slots"
         }
       }
     },
