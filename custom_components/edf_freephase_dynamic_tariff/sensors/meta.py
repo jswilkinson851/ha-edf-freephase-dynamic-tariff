@@ -1,5 +1,6 @@
 """
-Metadata sensors such as last-updated time and API latency.
+Metadata sensors such as last-updated time, API latency, coordinator health,
+and data age.
 """
 
 from __future__ import annotations
@@ -102,11 +103,14 @@ class EDFFreePhaseDynamicAPILatencySensor(CoordinatorEntity, SensorEntity):
     def device_info(self):
         return edf_device_info()
 
+
 # ---------------------------------------------------------------------------
 # Coordinator Status Sensor
 # ---------------------------------------------------------------------------
 
 class EDFFreePhaseDynamicCoordinatorStatusSensor(CoordinatorEntity, SensorEntity):
+    """Sensor showing coordinator health: ok / degraded / error."""
+
     def __init__(self, coordinator):
         super().__init__(coordinator)
         self._attr_name = "Coordinator Status"
@@ -122,6 +126,82 @@ class EDFFreePhaseDynamicCoordinatorStatusSensor(CoordinatorEntity, SensorEntity
         return {
             "last_updated": self.coordinator.data.get("last_updated"),
             "api_latency_ms": self.coordinator.data.get("api_latency_ms"),
+            "last_successful_update": self.coordinator.data.get("last_successful_update"),
+            "data_age_seconds": self.coordinator.data.get("data_age_seconds"),
+        }
+
+    @property
+    def device_info(self):
+        return edf_device_info()
+
+
+# ---------------------------------------------------------------------------
+# Last Successful Update Sensor
+# ---------------------------------------------------------------------------
+
+class EDFFreePhaseDynamicLastSuccessfulUpdateSensor(CoordinatorEntity, SensorEntity):
+    """Sensor showing when the coordinator last successfully fetched fresh data."""
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_name = "Last Successful Update"
+        self._attr_unique_id = "edf_freephase_dynamic_tariff_last_successful_update"
+        self._attr_icon = "mdi:check-circle"
+
+    @property
+    def native_value(self):
+        ts = self.coordinator.data.get("last_successful_update")
+        return _format_timestamp(ts)
+
+    @property
+    def extra_state_attributes(self):
+        ts = self.coordinator.data.get("last_successful_update")
+        if not ts:
+            return {}
+
+        dt = parse_datetime(ts)
+        if dt:
+            dt = as_local(dt)
+            age_seconds = (datetime.now(timezone.utc).astimezone() - dt).total_seconds()
+        else:
+            age_seconds = None
+
+        return {
+            "raw_timestamp": ts,
+            "formatted": _format_timestamp(ts),
+            "age_seconds": age_seconds,
+            "icon": "mdi:check-circle",
+        }
+
+    @property
+    def device_info(self):
+        return edf_device_info()
+
+
+# ---------------------------------------------------------------------------
+# Data Age Sensor
+# ---------------------------------------------------------------------------
+
+class EDFFreePhaseDynamicDataAgeSensor(CoordinatorEntity, SensorEntity):
+    """Sensor showing how old the coordinator data is (seconds)."""
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_name = "Data Age"
+        self._attr_unique_id = "edf_freephase_dynamic_tariff_data_age"
+        self._attr_native_unit_of_measurement = "s"
+        self._attr_icon = "mdi:timer-sand"
+
+    @property
+    def native_value(self):
+        return self.coordinator.data.get("data_age_seconds")
+
+    @property
+    def extra_state_attributes(self):
+        return {
+            "last_successful_update": self.coordinator.data.get("last_successful_update"),
+            "coordinator_status": self.coordinator.data.get("coordinator_status"),
+            "icon": "mdi:timer-sand",
         }
 
     @property
