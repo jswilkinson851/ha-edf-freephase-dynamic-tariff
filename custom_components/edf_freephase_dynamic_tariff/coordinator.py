@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import aiohttp
 import async_timeout
 import logging
@@ -14,32 +13,30 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def classify_slot(start_time, price):
+    """Return capitalised phase name based on time-of-day and price."""
     dt = dateutil.parser.isoparse(start_time)
     t = dt.time()
 
     if price <= 0:
-        return "green"
+        return "Green"
 
     if time(23, 0) <= t or t < time(6, 0):
-        return "green"
+        return "Green"
     if time(6, 0) <= t < time(16, 0):
-        return "amber"
+        return "Amber"
     if time(16, 0) <= t < time(19, 0):
-        return "red"
+        return "Red"
     if time(19, 0) <= t < time(23, 0):
-        return "amber"
+        return "Amber"
 
-    return "amber"
+    return "Amber"
 
 
 class EDFCoordinator(DataUpdateCoordinator):
-    def __init__(self, hass, api_url, scan_interval, api_timeout, retry_attempts):
-        self.api_url = api_url
-        self._api_timeout = api_timeout
-        self._retry_attempts = retry_attempts
-        self.last_successful_data: dict = {}
-        self.last_successful_update: datetime | None = None
+    """Coordinator for EDF FreePhase Dynamic Tariff."""
 
+    def __init__(self, hass, api_url, scan_interval):
+        self.api_url = api_url
         super().__init__(
             hass,
             _LOGGER,
@@ -48,140 +45,164 @@ class EDFCoordinator(DataUpdateCoordinator):
         )
 
     async def _async_update_data(self):
-        """Fetch and process data from the EDF API with retries and fallback."""
-
+        start_time = monotonic()
         now = datetime.now(timezone.utc)
-        today = now.date()
         tomorrow = (now + timedelta(days=1)).date()
-        api_latency_ms: int | None = None
 
-        # --- Retry loop for transient failures ---
-        last_error: Exception | None = None
-        for attempt in range(1, self._retry_attempts + 1):
-            start_time = monotonic()
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with async_timeout.timeout(self._api_timeout):
-                        resp = await session.get(self.api_url)
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with async_timeout.timeout(10):
+                    all_results = []
+                    url = self.api_url
+                    page_count = 0
+                    max_pages = 3  # yesterday + today + tomorrow
+
+                    while url and page_count < max_pages:
+                        page_count += 1
+                        resp = await session.get(url)
                         resp.raise_for_status()
-                        data = await resp.json()
 
-                api_latency_ms = int((monotonic() - start_time) * 1000)
-                _LOGGER.debug(
-                    "API call succeeded on attempt %s (latency: %sms)",
-                    attempt,
-                    api_latency_ms,
-                )
-                break
+                        try:
+                            data = await resp.json()
+                        except Exception:
+                            _LOGGER.error("EDF API returned non-JSON on page %s", page_count)
+                            break
 
-            except Exception as err:
-                last_error = err
-                _LOGGER.warning(
-                    "API request attempt %s/%s failed: %s",
-                    attempt,
-                    self._retry_attempts,
-                    err,
-                )
+                        results_page = data.get("results")
+                        if not isinstance(results_page, list):
+                            _LOGGER.error("EDF API page %s missing/invalid results", page_count)
+                            break
 
-        # --- Fallback if all attempts failed ---
-        if last_error is not None and api_latency_ms is None:
-            _LOGGER.error("All API attempts failed: %s", last_error)
+                        all_results.extend(results_page)
+                        url = data.get("next")
 
-            if self.last_successful_data:
-                _LOGGER.warning("Using last successful data due to repeated API failures")
-                payload = dict(self.last_successful_data)
-                payload["coordinator_status"] = "degraded"
-                if self.last_successful_update:
-                    age = (now - self.last_successful_update).total_seconds()
-                    payload["data_age_seconds"] = int(age)
-                else:
-                    payload["data_age_seconds"] = None
-                return payload
+            api_latency_ms = int((monotonic() - start_time) * 1000)
 
+            if not all_results:
+                raise ValueError("EDF API returned no results")
+
+            #
+            # ---- BUILD UNIFIED SORTED DATASET ----
+            #
+            unified = []
+            for item in all_results:
+                start_raw = item["valid_from"]
+                end_raw = item["valid_to"]
+
+                start_dt = dateutil.parser.isoparse(start_raw)
+                end_dt = dateutil.parser.isoparse(end_raw)
+
+                unified.append({
+                    "start": start_raw,                     # raw EDF UTC
+                    "end": end_raw,                         # raw EDF UTC
+                    "start_dt": start_dt.isoformat(),       # parsed ISO8601
+                    "end_dt": end_dt.isoformat(),
+                    "value": item["value_inc_vat"],
+                    "phase": classify_slot(start_raw, item["value_inc_vat"]),
+                    "currency": "GBP",
+                    "_start_dt_obj": start_dt,              # internal only
+                    "_end_dt_obj": end_dt,
+                })
+
+            # Sort ascending by parsed datetime
+            unified.sort(key=lambda s: s["_start_dt_obj"])
+
+            #
+            # ---- ROLLING 24-HOUR FORECAST ----
+            #
+            future = [slot for slot in unified if slot["_start_dt_obj"] >= now]
+            next_24_hours = future[:48]
+
+            #
+            # ---- TOMORROW'S FORECAST ----
+            #
+            tomorrow_24_hours = [
+                slot for slot in unified
+                if slot["_start_dt_obj"].date() == tomorrow
+            ]
+
+            #
+            # ---- CURRENT SLOT ----
+            #
+            current_slot = None
+            for slot in unified:
+                if slot["_start_dt_obj"] <= now < slot["_end_dt_obj"]:
+                    current_slot = {
+                        "start": slot["start"],
+                        "end": slot["end"],
+                        "start_dt": slot["start_dt"],
+                        "end_dt": slot["end_dt"],
+                        "value": slot["value"],
+                        "phase": slot["phase"],
+                        "currency": "GBP",
+                    }
+                    break
+
+            if current_slot:
+                current_price = current_slot["value"]
+            else:
+                # fallback to most recent price
+                current_price = unified[0]["value"]
+                current_slot = {
+                    "start": None,
+                    "end": None,
+                    "start_dt": None,
+                    "end_dt": None,
+                    "value": current_price,
+                    "phase": unified[0]["phase"],
+                    "currency": "GBP",
+                }
+
+            #
+            # ---- NEXT PRICE ----
+            #
+            next_price = None
+            for slot in unified:
+                if slot["_start_dt_obj"] > now:
+                    next_price = slot["value"]
+                    break
+
+            #
+            # ---- CLEAN INTERNAL FIELDS ----
+            #
+            def strip_internal(slots):
+                cleaned = []
+                for s in slots:
+                    s2 = dict(s)
+                    s2.pop("_start_dt_obj", None)
+                    s2.pop("_end_dt_obj", None)
+                    cleaned.append(s2)
+                return cleaned
+
+            all_slots_sorted = strip_internal(unified)
+            next_24_hours = strip_internal(next_24_hours)
+            tomorrow_24_hours = strip_internal(tomorrow_24_hours)
+
+            #
+            # ---- RETURN PAYLOAD ----
+            #
+            return {
+                "current_price": current_price,
+                "next_price": next_price,
+                "current_slot": current_slot,
+                "next_24_hours": next_24_hours,
+                "tomorrow_24_hours": tomorrow_24_hours,
+                "all_slots_sorted": all_slots_sorted,
+                "api_latency_ms": api_latency_ms,
+                "last_updated": datetime.now(timezone.utc).isoformat(),
+                "coordinator_status": "ok",
+            }
+
+        except Exception as err:
+            _LOGGER.error("API request failed: %s", err)
             return {
                 "current_price": None,
                 "next_price": None,
-                "todays_24_hours": [],
                 "current_slot": None,
+                "next_24_hours": [],
+                "tomorrow_24_hours": [],
+                "all_slots_sorted": [],
                 "api_latency_ms": None,
                 "last_updated": None,
-                "tomorrow_24_hours": [],
                 "coordinator_status": "error",
-                "last_successful_update": None,
-                "data_age_seconds": None,
             }
-
-        # --- Successful API response ---
-        results = data.get("results", [])
-
-        # --- Build today's slots ---
-        todays_24_hours = []
-        tomorrow_24_hours = []
-
-        for item in results:
-            start_dt = dateutil.parser.isoparse(item["valid_from"])
-            slot = {
-                "start": item["valid_from"],
-                "end": item["valid_to"],
-                "value": item["value_inc_vat"],
-                "phase": classify_slot(item["valid_from"], item["value_inc_vat"]),
-            }
-
-            if start_dt.date() == today:
-                todays_24_hours.append(slot)
-            elif start_dt.date() == tomorrow:
-                tomorrow_24_hours.append(slot)
-
-        # --- Current slot ---
-        current_slot = None
-        for item in results:
-            start = dateutil.parser.isoparse(item["valid_from"])
-            end = dateutil.parser.isoparse(item["valid_to"])
-            if start <= now < end:
-                current_slot = {
-                    "start": item["valid_from"],
-                    "end": item["valid_to"],
-                    "value": item["value_inc_vat"],
-                    "phase": classify_slot(item["valid_from"], item["value_inc_vat"]),
-                }
-                break
-
-        if current_slot:
-            current_price = current_slot["value"]
-        else:
-            current_price = results[0]["value_inc_vat"] if results else None
-
-        if not current_slot and results:
-            current_slot = {
-                "start": None,
-                "end": None,
-                "value": current_price,
-                "phase": classify_slot(results[0]["valid_from"], results[0]["value_inc_vat"]),
-            }
-
-        # --- Next price ---
-        next_price = None
-        for item in results:
-            start = dateutil.parser.isoparse(item["valid_from"])
-            if start > now:
-                next_price = item["value_inc_vat"]
-                break
-
-        last_updated_iso = datetime.now(timezone.utc).isoformat()
-        self.last_successful_update = now
-
-        payload = {
-            "current_price": current_price,
-            "next_price": next_price,
-            "todays_24_hours": todays_24_hours,
-            "current_slot": current_slot,
-            "api_latency_ms": api_latency_ms,
-            "last_updated": last_updated_iso,
-            "tomorrow_24_hours": tomorrow_24_hours,
-            "coordinator_status": "ok",
-            "last_successful_update": last_updated_iso,
-            "data_age_seconds": 0,
-        }
-
-        self.last_successful_data = payload
-        return payload
