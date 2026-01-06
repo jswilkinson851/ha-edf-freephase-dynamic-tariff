@@ -46,7 +46,8 @@ The integration retrieves tariff information directly from the Kraken API and ex
 
 ## Installation (HACS)
 
-### Option 1 — Add via HACS (Custom Repository)
+### Option 1 — Add via HACS Custom Repository (recommended)
+[![Add to HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=jswilkinson851&repository=ha-edf-freephase-dynamic-tariff)
 
 1. Go to **HACS → Integrations → Custom Repositories**  
 2. Add:  
@@ -54,13 +55,13 @@ The integration retrieves tariff information directly from the Kraken API and ex
 3. Select category: **Integration**  
 4. Install  
 5. Restart Home Assistant  
-6. Add the integration via **Settings → Devices & Services → Add Integration**
+6. Add the integration via **Settings → Devices & Services → Add Integration → "EDF FreePhase Dynamic Tariff"**
 
-### Option 2 — Manual Installation
+### Option 2 — Manual Installation (not recommended)
 
 1. Copy this repository into your Home Assistant `custom_components` directory  
 2. Restart Home Assistant  
-3. Add the integration via **Settings → Devices & Services → Add Integration**
+3. Add the integration via **Settings → Devices & Services → Add Integration → "EDF FreePhase Dynamic Tariff"**
 
 ---
 
@@ -68,13 +69,13 @@ The integration retrieves tariff information directly from the Kraken API and ex
 
 Tariff codes are retrieved from:
 
-https://api.edfgb-kraken.energy/v1/products/EDF_FREEPHASE_DYNAMIC_12M_HH/
+  - https://api.edfgb-kraken.energy/v1/products/EDF_FREEPHASE_DYNAMIC_12M_HH/
 
 Each tariff code ends with a letter (A–P, excluding I and O) corresponding to a UK DNO region.
 
 For a clear explanation of these region letters:
 
-**https://energy-stats.uk/dno-region-codes-explained/#UK_DNO_Region_Codes_A%E2%80%93P_List_and_Map**
+  - https://energy-stats.uk/dno-region-codes-explained/#UK_DNO_Region_Codes_A%E2%80%93P_List_and_Map
 
 If the API is unavailable, the integration falls back to a complete static list of regions.
 
@@ -87,25 +88,7 @@ If the API is unavailable, the integration falls back to a complete static list 
 
 - **Scan Interval (minutes)**  
   How often to refresh tariff data.  
-  Default: 5 minutes.
-
-- **Include Past Slots**  
-  Whether to include historical half‑hour slots.  
-  Default: enabled.
-
----
-
-## Multiple Instances
-
-You can add multiple regions as separate devices.  
-Each instance creates its own:
-
-- device  
-- coordinator  
-- sensors  
-- entity IDs  
-
-Useful for comparing regions or monitoring multiple properties.
+  Default: 30 minutes.
 
 ---
 
@@ -162,39 +145,6 @@ entities:
     name: Current Slot Colour
 ```
 
-A clean line chart showing the next 24 hours of half‑hourly pricing.
-
-```yaml
-type: custom:apexcharts-card
-header:
-  title: Today’s Price Profile
-  show: true
-graph_span: 24h
-span:
-  start: day
-series:
-  - entity: sensor.today_s_rates_summary
-    name: Price
-    type: line
-    stroke_width: 2
-    color: '#3b82f6'
-    data_generator: |
-      const out = [];
-      for (const [key, block] of Object.entries(entity.attributes)) {
-        if (!key.startsWith("block_")) continue;
-        out.push([new Date(block.start).getTime(), block.price_gbp]);
-      }
-      return out.sort((a,b) => a[0] - b[0]);
-apex_config:
-  yaxis:
-    labels:
-      formatter: |
-        EVAL:function (value) { return value.toFixed(2) + 'p'; }
-  xaxis:
-    labels:
-      datetimeUTC: false
-```
-
 ---
 
 ## Integration Health & Diagnostics
@@ -231,7 +181,7 @@ This helps you quickly diagnose API outages, stale data, or connectivity issues.
 ## Troubleshooting
 
 - If the region list only shows a few entries, the API may be temporarily unavailable.
-The integration will fall back to a complete static list of regions A–P.
+  - The integration will fall back to a complete static list of regions A–P.
 
 - If you previously added the integration before updating, removing and re‑adding it ensures the new dynamic region list is used.
 
