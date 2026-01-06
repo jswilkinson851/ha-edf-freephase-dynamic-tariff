@@ -5,7 +5,7 @@
 ![GitHub license](https://img.shields.io/github/license/jswilkinson851/ha-edf-freephase-dynamic-tariff)
 ![GitHub last commit](https://img.shields.io/github/last-commit/jswilkinson851/ha-edf-freephase-dynamic-tariff)
 
-This custom integration provides **live pricing and full‑day half‑hourly rate data** for the **EDF FreePhase Dynamic 12‑month tariff**, using the EDF/Octopus Kraken API.  
+This custom integration provides **live pricing and full half‑hourly rate data** for the **EDF FreePhase Dynamic 12‑month tariff**, using the EDF/Octopus Kraken API.  
 It is designed for UK users on the FreePhase Dynamic tariff and supports multiple regions, multiple devices, and fully dynamic tariff‑code detection.
 
 The integration retrieves tariff information directly from the Kraken API and exposes it as Home Assistant sensors, allowing you to automate, visualise, and optimise your energy usage based on real‑time and upcoming pricing.
@@ -27,11 +27,14 @@ The integration retrieves tariff information directly from the Kraken API and ex
 - **Configurable scan interval**  
   Entered in minutes, stored internally in seconds.
 
-- **Full‑day pricing sensors**  
-  Provides all available half‑hour slots for **today** and **tomorrow**, including raw UTC timestamps and local formatted times.
+- **Unified slot dataset**  
+  All sensors now use a single authoritative list of half‑hour slots, ensuring consistent behaviour across the integration.
 
-- **Option to include past slots**  
-  Useful for charts and energy‑usage analysis.
+- **Accurate block detection**  
+  Current and next block summaries merge consecutive slots of the same colour, matching the real tariff structure.
+
+- **Daily summaries**  
+  Clean, merged summaries for **today** and **tomorrow**, including start, end, duration, price, and colour.
 
 - **Coordinator failsafe & retry logic**  
   Automatic retry/backoff and a “last known good data” fallback prevent sensors from going unavailable during temporary API outages.
@@ -108,28 +111,26 @@ Useful for comparing regions or monitoring multiple properties.
 
 ## Available Sensors
 
+Below is the list of **short, user‑friendly entity names** (Option B), matching your dashboard usage.
+
 ### Pricing Sensors
 - `sensor.current_price`
-- `sensor.next_slot_price`
-- `sensor.cheapest_slot`
-- `sensor.most_expensive_slot`
-
-### Full‑Day Rate Sensors
-- `sensor.todays_rates_full`
-- `sensor.tomorrows_rates_full`
+- `sensor.edf_freephase_dynamic_next_slot_price`
+- `sensor.edf_freephase_dynamic_cheapest_slot_next_24_hours`
+- `sensor.edf_freephase_dynamic_most_expensive_slot_next_24_hours`
 
 ### Daily Summary Sensors
 - `sensor.today_s_rates_summary`
 - `sensor.tomorrow_s_rates_summary`
 
 ### Slot & Block Sensors
-- `sensor.current_slot_colour`
+- `sensor.edf_freephase_dynamic_current_slot_colour`
 - `sensor.current_block_summary`
 - `sensor.next_block_summary`
-- `sensor.next_green_slot`
-- `sensor.next_amber_slot`
-- `sensor.next_red_slot`
-- `sensor.is_green_slot`
+- `sensor.edf_freephase_dynamic_next_green_slot`
+- `sensor.edf_freephase_dynamic_next_amber_slot`
+- `sensor.edf_freephase_dynamic_next_red_slot`
+- `sensor.edf_freephase_dynamic_is_now_a_green_slot`
 
 ### Metadata / Health Sensors
 - `sensor.api_latency`
@@ -155,9 +156,9 @@ entities:
   - type: divider
   - entity: sensor.current_price
     name: Current Price
-  - entity: sensor.next_slot_price
+  - entity: sensor.edf_freephase_dynamic_next_slot_price
     name: Next Slot Price
-  - entity: sensor.current_slot_colour
+  - entity: sensor.edf_freephase_dynamic_current_slot_colour
     name: Current Slot Colour
 ```
 
@@ -172,16 +173,16 @@ graph_span: 24h
 span:
   start: day
 series:
-  - entity: sensor.todays_rates_full
+  - entity: sensor.today_s_rates_summary
     name: Price
     type: line
     stroke_width: 2
     color: '#3b82f6'
     data_generator: |
       const out = [];
-      for (const [key, slot] of Object.entries(entity.attributes)) {
-        if (!key.startsWith("slot_")) continue;
-        out.push([new Date(slot.start_utc).getTime(), slot.value]);
+      for (const [key, block] of Object.entries(entity.attributes)) {
+        if (!key.startsWith("block_")) continue;
+        out.push([new Date(block.start).getTime(), block.price_gbp]);
       }
       return out.sort((a,b) => a[0] - b[0]);
 apex_config:
