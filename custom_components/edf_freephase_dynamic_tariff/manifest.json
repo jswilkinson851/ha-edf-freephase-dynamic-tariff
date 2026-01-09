@@ -1,11 +1,12 @@
 {
   "domain": "edf_freephase_dynamic_tariff",
   "name": "EDF FreePhase Dynamic Tariff",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "requirements": ["aiohttp>=3.8.0"],
   "codeowners": ["@jswilkinson851"],
   "iot_class": "cloud_polling",
   "config_flow": true,
+  "translations": "translations",
   "logo": "logo.png",
   "icon": "mdi:chart-bar",
   "documentation": "https://github.com/jswilkinson851/ha-edf-freephase-dynamic-tariff",

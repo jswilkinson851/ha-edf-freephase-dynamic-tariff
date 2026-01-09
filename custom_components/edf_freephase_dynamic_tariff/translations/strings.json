@@ -4,7 +4,19 @@
       "user": {
         "data": {
           "tariff_code": "",
-          "scan_interval": ""
+          "scan_interval": "",
+          "import_sensor": ""
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "tariff_code": "",
+          "scan_interval": "",
+          "import_sensor": ""
         }
       }
     }
