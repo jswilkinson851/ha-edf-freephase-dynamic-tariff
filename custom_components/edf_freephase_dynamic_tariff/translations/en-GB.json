@@ -3,15 +3,29 @@
     "step": {
       "user": {
         "title": "EDF FreePhase Dynamic Tariff Setup",
-        "description": "Select your tariff and scan interval.",
+        "description": "Select your region, scan interval, and optional import sensor.",
         "data": {
-          "tariff_code": "Relevant Tariff Code",
-          "scan_interval": "Scan Interval (minutes)"
+          "tariff_code": "Region",
+          "scan_interval": "Scan Interval (minutes)",
+          "import_sensor": "Import Sensor (optional)"
         }
       }
     },
     "error": {
       "cannot_connect": "Unable to connect to the EDF API. Please try again."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "EDF FreePhase Dynamic Tariff Options",
+        "description": "Update your region, scan interval, or import sensor.",
+        "data": {
+          "tariff_code": "Region",
+          "scan_interval": "Scan Interval (minutes)",
+          "import_sensor": "Import Sensor (optional)"
+        }
+      }
     }
   }
 }

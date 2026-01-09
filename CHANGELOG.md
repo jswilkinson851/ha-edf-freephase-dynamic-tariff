@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## 0.3.5 – Improved Config Flow UI & Selector Support
+- **Enhanced setup and options flows** with Home Assistant–native selectors for region, scan interval, and import sensor.
+- **Added number selector** for *Scan Interval (minutes)*, providing both slider and free‑text input for improved usability.
+- **Implemented alphabetical region ordering** for a cleaner, more intuitive dropdown experience.
+- **Moved all field labels to translation files**, ensuring consistent, localised UI text across setup and options flows.
+- **Refactored config flow schema** to align with Home Assistant’s selector requirements, resolving previous 400/500 errors.
+- **Improved internal region‑mapping logic**, ensuring reliable fallback behaviour when the EDF API is unavailable.
+- General code cleanup and structural improvements for long‑term maintainability.
+
+---
+
 ## [0.3.4] — 2026‑01‑06
 ### Added
 - Unified slot dataset (`all_slots_sorted`) used consistently across all sensors.

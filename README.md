@@ -90,6 +90,10 @@ If the API is unavailable, the integration falls back to a complete static list 
   How often to refresh tariff data.  
   Default: 30 minutes.
 
+- **Import Sensor (optional)**
+  The electricity import sensor used by your system to determine your real usage.
+  N.B. This field is being added ahead of further updates to be made to make it so you can compare your real usage against historic EDF slots.
+
 ---
 
 ## Available Sensors
