@@ -26,6 +26,12 @@ The integration retrieves tariff information directly from the Kraken API and ex
 
 - **Configurable scan interval**  
   Entered in minutes, stored internally in seconds.
+  API refreshes now occur on precise wall‑clock boundaries based on your configured scan interval **(new in v0.3.7)**.
+  Examples:  
+  - 30 minutes → 12:00, 12:30, 13:00, 13:30  
+  - 5 minutes → 12:00, 12:05, 12:10, 12:15  
+  - 1 minute → exactly on the minute  
+  A small random jitter (0–5 seconds) is added to avoid simultaneous API hits across multiple Home Assistant instances.
 
 - **Unified slot dataset**  
   All sensors now use a single authoritative list of half‑hour slots, ensuring consistent behaviour across the integration.
@@ -125,6 +131,10 @@ Below is the list of **short, user‑friendly entity names** (Option B), matchin
 - `sensor.last_successful_update`
 - `sensor.data_age`
 - `sensor.coordinator_status`
+
+### Debug Sensors
+
+- `sensor.edf_freephase_dynamic_next_refresh_time` *(added in v0.3.7)*
 
 ---
 
