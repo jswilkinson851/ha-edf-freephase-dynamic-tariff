@@ -143,7 +143,7 @@ class EDFFreePhaseDynamicNextRefreshSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
-        dt = self.coordinator._next_refresh_datetime
+        dt = self.coordinator._next_boundary_utc
         if not dt:
             return None
         # Local timezone formatting for readability
@@ -152,9 +152,9 @@ class EDFFreePhaseDynamicNextRefreshSensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self):
         return {
-            "next_refresh_utc": (
-                self.coordinator._next_refresh_datetime.isoformat()
-                if self.coordinator._next_refresh_datetime
+            "next_boundary_utc": (
+                self.coordinator._next_boundary_utc.isoformat()
+                if self.coordinator._next_boundary_utc
                 else None
             ),
             "seconds_until_refresh": self.coordinator._next_refresh_delay,
