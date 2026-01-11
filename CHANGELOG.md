@@ -5,6 +5,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
+## [0.3.7] — 2026‑01‑11
+
+### Added
+- **Aligned scheduling** for API polling. Refreshes now occur on precise wall‑clock boundaries based on the configured scan interval (e.g., every 5 minutes at :00, :05, :10, etc.).
+- **Random jitter** (0–5 seconds) added to each refresh to reduce simultaneous API hits across multiple Home Assistant instances.
+- **New debug sensor**: `sensor.edf_freephase_dynamic_next_refresh_time`, exposing:
+  - Next scheduled refresh time (local timezone)
+  - UTC timestamp of the next refresh
+  - Seconds until refresh
+  - Jitter applied
+  - Configured scan interval
+
+### Changed
+- Coordinator now manages its own refresh cycle instead of relying on `update_interval`.
+- Improved logging around refresh timing and scheduling behaviour.
+
+### Notes
+- No breaking changes.
+- All existing sensors continue to function normally.
+
+---
 
 ## [0.3.6] — 2026-01-11
 
@@ -219,3 +240,4 @@ This update improves robustness, simplifies configuration, and ensures long‑te
 ## [Unreleased]
 
 - Future improvements will be tracked here.
+
