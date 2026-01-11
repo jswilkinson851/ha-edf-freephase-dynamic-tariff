@@ -5,6 +5,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
+
+## [v0.3.7.1] — 2026-01-11 (hotfix release)
+
+### 🛠 Fixes & Improvements
+
+- Corrected aligned scheduling logic to ensure refreshes occur exactly on the next boundary.
+- Fixed timing issue where the "Next Refresh Time" sensor displayed the previous boundary instead of the upcoming one.
+- Added `async_update_listeners()` to ensure metadata sensors update immediately after boundary advancement.
+- Replaced unsafe `async_create_task` usage with proper async callback handling via `async_call_later`.
+- Eliminated Home Assistant warnings about thread safety and un-awaited coroutines.
+- Improved stability and predictability of the 2‑minute aligned refresh cycle.
+- Enhanced debug sensor accuracy by switching from `_next_refresh_datetime` to `_next_boundary_utc`.
+
+### 📦 Notes
+
+This release contains **no breaking changes** and is safe for all users to install.  
+Recommended for anyone running v0.3.7, as it resolves several timing and async‑related issues.
+
+---
+
 ## [0.3.7] — 2026‑01‑11
 
 ### Added

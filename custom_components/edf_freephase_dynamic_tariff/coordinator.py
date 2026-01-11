@@ -47,10 +47,13 @@ class EDFCoordinator(DataUpdateCoordinator):
         self._scan_interval = scan_interval
 
         # Debug fields for the new debug sensor
-        self._next_refresh_datetime = None
-        self._next_refresh_delay = None
-        self._next_refresh_jitter = None
+        self._next_refresh_datetime: datetime | None = None
+        self._next_refresh_delay: float | None = None
+        self._next_refresh_jitter: float | None = None
         self._unsub_refresh = None
+
+        # Internal aligned boundary tracking (UTC)
+        self._next_boundary_utc: datetime | None = None
 
         super().__init__(
             hass,
@@ -81,12 +84,16 @@ class EDFCoordinator(DataUpdateCoordinator):
                         try:
                             data = await resp.json()
                         except Exception:
-                            _LOGGER.error("EDF API returned non-JSON on page %s", page_count)
+                            _LOGGER.error(
+                                "EDF API returned non-JSON on page %s", page_count
+                            )
                             break
 
                         results_page = data.get("results")
                         if not isinstance(results_page, list):
-                            _LOGGER.error("EDF API page %s missing/invalid results", page_count)
+                            _LOGGER.error(
+                                "EDF API page %s missing/invalid results", page_count
+                            )
                             break
 
                         all_results.extend(results_page)
@@ -106,17 +113,19 @@ class EDFCoordinator(DataUpdateCoordinator):
                 start_dt = dateutil.parser.isoparse(start_raw)
                 end_dt = dateutil.parser.isoparse(end_raw)
 
-                unified.append({
-                    "start": start_raw,
-                    "end": end_raw,
-                    "start_dt": start_dt.isoformat(),
-                    "end_dt": end_dt.isoformat(),
-                    "value": item["value_inc_vat"],
-                    "phase": classify_slot(start_raw, item["value_inc_vat"]),
-                    "currency": "GBP",
-                    "_start_dt_obj": start_dt,
-                    "_end_dt_obj": end_dt,
-                })
+                unified.append(
+                    {
+                        "start": start_raw,
+                        "end": end_raw,
+                        "start_dt": start_dt.isoformat(),
+                        "end_dt": end_dt.isoformat(),
+                        "value": item["value_inc_vat"],
+                        "phase": classify_slot(start_raw, item["value_inc_vat"]),
+                        "currency": "GBP",
+                        "_start_dt_obj": start_dt,
+                        "_end_dt_obj": end_dt,
+                    }
+                )
 
             unified.sort(key=lambda s: s["_start_dt_obj"])
 
@@ -126,8 +135,7 @@ class EDFCoordinator(DataUpdateCoordinator):
 
             # ---- TOMORROW'S FORECAST ----
             tomorrow_24_hours = [
-                slot for slot in unified
-                if slot["_start_dt_obj"].date() == tomorrow
+                slot for slot in unified if slot["_start_dt_obj"].date() == tomorrow
             ]
 
             # ---- CURRENT SLOT ----
@@ -210,27 +218,56 @@ class EDFCoordinator(DataUpdateCoordinator):
     # Aligned scheduling logic
     # -------------------------------------------------------------------------
 
-    def _seconds_until_next_boundary(self) -> float:
+    def _initialise_boundary_if_needed(self) -> None:
+        """Initialise the next aligned boundary based on current time."""
+        if self._next_boundary_utc is not None:
+            return
+
         now = datetime.now(timezone.utc)
         interval_seconds = int(self._scan_interval.total_seconds())
 
         seconds_today = now.hour * 3600 + now.minute * 60 + now.second
-        next_boundary = ((seconds_today // interval_seconds) + 1) * interval_seconds
-        delta = next_boundary - seconds_today
+        next_boundary_seconds = ((seconds_today // interval_seconds) + 1) * interval_seconds
+
+        day_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+        self._next_boundary_utc = day_start + timedelta(seconds=next_boundary_seconds)
+
+        _LOGGER.debug("Initial aligned boundary set to %s", self._next_boundary_utc)
+
+    def _advance_boundary_past_now(self) -> None:
+        """Ensure the internal boundary is always in the future, advancing by scan_interval."""
+        if self._next_boundary_utc is None:
+            self._initialise_boundary_if_needed()
+            return
+
+        now = datetime.now(timezone.utc)
+        while self._next_boundary_utc <= now:
+            self._next_boundary_utc += self._scan_interval
+
+    def _seconds_until_next_boundary(self) -> float:
+        """Return seconds until the next aligned boundary based on scan interval."""
+        self._initialise_boundary_if_needed()
+        self._advance_boundary_past_now()
+
+        now = datetime.now(timezone.utc)
+        delta = (self._next_boundary_utc - now).total_seconds()
 
         if delta <= 0:
-            delta = interval_seconds
+            delta = self._scan_interval.total_seconds()
 
         return float(delta)
 
     def _compute_next_delay_with_jitter(self) -> float:
+        """Compute delay until next aligned refresh, including jitter."""
         base_delay = self._seconds_until_next_boundary()
         jitter = random.uniform(0, 5)
         delay_with_jitter = base_delay + jitter
 
         self._next_refresh_delay = delay_with_jitter
         self._next_refresh_jitter = jitter
-        self._next_refresh_datetime = datetime.now(timezone.utc) + timedelta(seconds=delay_with_jitter)
+        self._next_refresh_datetime = datetime.now(timezone.utc) + timedelta(
+            seconds=delay_with_jitter
+        )
 
         _LOGGER.debug(
             "Next aligned refresh in %.1f seconds (base=%.1f, jitter=%.1f) at %s",
@@ -243,28 +280,33 @@ class EDFCoordinator(DataUpdateCoordinator):
         return delay_with_jitter
 
     async def _schedule_next_refresh(self) -> None:
+        """Schedule the next aligned refresh."""
         if self._unsub_refresh is not None:
             self._unsub_refresh()
             self._unsub_refresh = None
 
         delay = self._compute_next_delay_with_jitter()
 
-        def _cb(_now):
-            self.hass.async_create_task(self._handle_refresh())
-
         _LOGGER.debug("Scheduling next EDF coordinator refresh in %.1f seconds", delay)
-        self._unsub_refresh = async_call_later(self.hass, delay, _cb)
+        self._unsub_refresh = async_call_later(self.hass, delay, self._handle_refresh)
 
-    async def _handle_refresh(self) -> None:
+    async def _handle_refresh(self, _now=None) -> None:
+        """Perform a refresh and then schedule the next one."""
         _LOGGER.debug("Running aligned EDF coordinator refresh")
         await self.async_refresh()
+        # Ensure boundary advances immediately after refresh
+        self._advance_boundary_past_now()
+        self.async_update_listeners()  # <-- force sensors to update immediately
         await self._schedule_next_refresh()
 
     async def async_config_entry_first_refresh(self) -> None:
+        """Perform the first refresh immediately, then start aligned scheduling."""
+        _LOGGER.debug("Performing immediate first refresh for EDF coordinator")
         await super().async_config_entry_first_refresh()
         await self._schedule_next_refresh()
 
     async def async_shutdown(self) -> None:
+        """Clean up scheduled callbacks."""
         if self._unsub_refresh is not None:
             self._unsub_refresh()
             self._unsub_refresh = None
