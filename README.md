@@ -209,3 +209,10 @@ This helps you quickly diagnose API outages, stale data, or connectivity issues.
 
 MIT License.  
 Feel free to fork, improve, and contribute.
+
+
+---
+
+## Disclaimer
+
+This project is an **independent, community‑developed integration** and is **not affiliated with, endorsed by, or supported by EDF Energy** or the Octopus/EDF Kraken platform. All trademarks, logos, and brand names used in this repository remain the property of their respective owners and are used **solely for identification purposes**. This integration interacts with publicly accessible endpoints of the Kraken API but is **not an official EDF product**. 
