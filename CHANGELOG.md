@@ -6,7 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## 0.3.5 – Improved Config Flow UI & Selector Support
+## [0.3.6] — 2026-01-11
+
+### Changed
+- Refactored the root `__init__.py` to follow modern Home Assistant integration architecture.
+- Moved `EDFCoordinator` creation into `async_setup_entry`, ensuring a single coordinator instance per config entry.
+- Coordinator is now stored under `hass.data[DOMAIN][entry.entry_id]` for shared access across platforms.
+- Added an update listener so changes made in the Options Flow (e.g., region or scan interval) trigger a clean integration reload.
+- Ensured the coordinator performs its initial refresh before sensor entities are created, improving startup reliability.
+- Improved unload behaviour by removing coordinator data from `hass.data` and unloading platforms cleanly.
+
+### Notes
+- These changes affect internal architecture only; no breaking changes for users.
+- All existing sensors continue to function normally, now backed by a more robust and maintainable setup flow.
+
+---
+
+## [0.3.5] – 2026-01-09
 - **Enhanced setup and options flows** with Home Assistant–native selectors for region, scan interval, and import sensor.
 - **Added number selector** for *Scan Interval (minutes)*, providing both slider and free‑text input for improved usability.
 - **Implemented alphabetical region ordering** for a cleaner, more intuitive dropdown experience.
@@ -201,4 +217,5 @@ This update improves robustness, simplifies configuration, and ensures long‑te
 ---
 
 ## [Unreleased]
+
 - Future improvements will be tracked here.
