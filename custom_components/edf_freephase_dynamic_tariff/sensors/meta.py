@@ -127,3 +127,41 @@ class EDFFreePhaseDynamicCoordinatorStatusSensor(CoordinatorEntity, SensorEntity
     @property
     def device_info(self):
         return edf_device_info()
+
+# ---------------------------------------------------------------------------
+# Next Refresh Sensor <-- Added in v.0.3.7
+# ---------------------------------------------------------------------------
+
+class EDFFreePhaseDynamicNextRefreshSensor(CoordinatorEntity, SensorEntity):
+    """Debug sensor showing when the next coordinator refresh is scheduled."""
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_name = "Next Refresh Time"
+        self._attr_unique_id = "edf_freephase_dynamic_tariff_next_refresh_time"
+        self._attr_icon = "mdi:clock-start"
+
+    @property
+    def native_value(self):
+        dt = self.coordinator._next_refresh_datetime
+        if not dt:
+            return None
+        # Local timezone formatting for readability
+        return dt.astimezone().strftime("%H:%M:%S on %d/%m/%Y")
+
+    @property
+    def extra_state_attributes(self):
+        return {
+            "next_refresh_utc": (
+                self.coordinator._next_refresh_datetime.isoformat()
+                if self.coordinator._next_refresh_datetime
+                else None
+            ),
+            "seconds_until_refresh": self.coordinator._next_refresh_delay,
+            "jitter_seconds": self.coordinator._next_refresh_jitter,
+            "scan_interval_minutes": self.coordinator._scan_interval.total_seconds() / 60,
+        }
+
+    @property
+    def device_info(self):
+        return edf_device_info()

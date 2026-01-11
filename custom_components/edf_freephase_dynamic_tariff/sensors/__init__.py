@@ -12,6 +12,7 @@ from .meta import (
     EDFFreePhaseDynamicLastUpdatedSensor,
     EDFFreePhaseDynamicAPILatencySensor,
     EDFFreePhaseDynamicCoordinatorStatusSensor,
+    EDFFreePhaseDynamicNextRefreshSensor,
 )
 
 #Import: Price sensors
@@ -48,6 +49,7 @@ ALL_SENSORS = [
     EDFFreePhaseDynamicLastUpdatedSensor,
     EDFFreePhaseDynamicAPILatencySensor,
     EDFFreePhaseDynamicCoordinatorStatusSensor,
+    EDFFreePhaseDynamicNextRefreshSensor,
 
     # Price sensors
     EDFFreePhaseDynamicCurrentPriceSensor,
