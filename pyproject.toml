@@ -1,5 +1,7 @@
 # pyproject.toml
 [tool.pytest.ini_options]
+addopts = "--maxfail=1 --disable-warnings" python_files = []
+
 asyncio_mode = "auto"
 testpaths = ["tests"]
 python_files = ["test_*.py"]

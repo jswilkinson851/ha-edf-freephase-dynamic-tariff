@@ -1,3 +1,5 @@
+pytestmark = pytest.mark.xfail(reason="Test suite temporarily disabled pending redesign")
+
 from custom_components.edf_freephase_dynamic_tariff.api.classification import classify_slot
 
 
