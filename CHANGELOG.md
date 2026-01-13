@@ -6,6 +6,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v0.4.0] — 2026-01-13
+
+### Added
+- Unified helpers for slot/phase formatting across all sensors.
+- Expanded coordinator dataset:
+  - `today_24_hours`
+  - `yesterday_24_hours`
+  - `next_24_hours`
+  - `all_slots_sorted`
+  - Normalised slot objects used consistently across the integration.
+- New aligned refresh scheduler with jitter and exposed internal timing fields.
+- Diagnostics now include:
+  - Raw forecast datasets
+  - Phase‑window breakdowns (yesterday, today, tomorrow, next 24h)
+  - Classification thresholds
+  - Coordinator internal scheduling state.
+- New next‑phase sensor factory replacing fixed next‑green/amber/red sensors.
+
+### Improved
+- Forecast, slot, and metadata sensors now use unified formatting helpers.
+- More consistent timestamp formatting and attribute structures.
+- Cleaner internal architecture with reduced duplication and improved maintainability.
+
+### Fixed
+- More robust handling of API pagination and non‑JSON responses.
+- Improved fallback behaviour when current slot cannot be determined.
+
+### Notes
+- No breaking changes to entity IDs.
+- Existing configurations continue to work without modification.
+
+---
+
 ## [v0.3.7.1] — 2026-01-11 (hotfix release)
 
 ### 🛠 Fixes & Improvements
@@ -260,4 +293,5 @@ This update improves robustness, simplifies configuration, and ensures long‑te
 ## [Unreleased]
 
 - Future improvements will be tracked here.
+
 
