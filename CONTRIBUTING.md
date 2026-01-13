@@ -1,0 +1,98 @@
+# 🧪 Contributing Guide — Running Tests Locally
+
+Thank you for contributing to the EDF FreePhase Dynamic Tariff integration.  
+This guide explains how to run the test suite locally so you can verify changes before opening a pull request.
+
+---
+
+## 1. Install dependencies
+
+Make sure you have Python 3.12 installed.
+
+Then install the development dependencies:
+
+```bash
+pip install -r requirements.txt
+pip install pytest pytest-asyncio pytest-cov aioresponses
+```
+
+If you use a virtual environment (recommended):
+
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+---
+
+## 2. Run the full test suite
+
+This will:
+
+- run all tests in the tests/ directory
+
+- generate a coverage report in the terminal
+
+- produce an HTML coverage report in coverage_html/
+
+---
+
+## 3. View the coverage report
+
+After running tests:
+
+```bash
+open coverage_html/index.html
+```
+or on Linux:
+```bash
+xdg-open coverage_html/index.html
+``` 
+
+This gives you a visual breakdown of which lines are covered.
+
+---
+
+## 4. Run a single test file
+
+```bash
+pytest tests/test_coordinator.py
+```
+
+Or a single test:
+
+```bash
+pytest tests/test_coordinator.py::test_coordinator_success
+```
+
+---
+
+## 5. Linting (optional but recommended)
+
+If you use Ruff:
+
+```bash
+ruff check .
+```
+
+---
+
+## 6. Before submitting a PR
+
+Please ensure:
+
+- All tests pass
+
+- Coverage is reasonable
+
+- No new warnings appear
+
+- The integration loads correctly in Home Assistant
+
+---
+
+If you have any questions or want help writing tests, feel free to open a discussion or ask in the Facebook group.
+
+---
+
+Thank you for helping improve the EDF FreePhase Dynamic Tariff integration! Your contributions are greatly appreciated. 🙏

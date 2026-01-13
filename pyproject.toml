@@ -1,0 +1,36 @@
+# pyproject.toml
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = [
+    "--strict-markers",
+    "--disable-warnings",
+    "--cov=custom_components.edf_freephase_dynamic_tariff",
+    "--cov-report=term-missing",
+    "--cov-report=html"
+]
+
+[tool.coverage.run]
+branch = true
+source = ["custom_components/edf_freephase_dynamic_tariff"]
+omit = [
+    "*/__init__.py",
+    "*/const.py",
+    "*/manifest.json",
+    "*/translations/*",
+    "*/tests/*"
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+precision = 2
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:"
+]
+
+[tool.coverage.html]
+directory = "coverage_html"
