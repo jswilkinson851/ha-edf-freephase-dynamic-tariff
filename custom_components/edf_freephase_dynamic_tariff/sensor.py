@@ -17,5 +17,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = EDFCoordinator(hass, api_url, scan_interval)
     await coordinator.async_config_entry_first_refresh()
 
-    entities = [sensor_class(coordinator) for sensor_class in ALL_SENSORS]
+    entities = []
+
+    for sensor in ALL_SENSORS:
+        if callable(sensor) and sensor.__name__ == "create_next_phase_sensors":
+            entities.extend(sensor(coordinator))
+        else:
+            entities.append(sensor(coordinator))
+    
     async_add_entities(entities)

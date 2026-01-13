@@ -1,181 +1,259 @@
-# EDF FreePhase Dynamic — Entities Documentation
+# EDF FreePhase Dynamic — Entities Documentation (v0.4.0)
 
-> **Planned:** _To be implemented in v0.3.8._
+This document describes all entities exposed by the **EDF FreePhase Dynamic Tariff** integration as of v0.4.0.
 
-## Overview
+A future release (v0.5.x) will introduce a simplified naming scheme.
 
-The EDF FreePhase Dynamic integration exposes a set of sensors that provide real‑time and forecasted tariff information. These entities allow dashboards, automations, and scripts to react to:
+---
 
-- the current tariff slot  
-- the current phase  
-- the upcoming phase window  
-- the full 48‑slot forecast  
-- summary statistics (cheapest, most expensive, free slots)
+# Overview
 
-All entities are updated whenever new tariff data is fetched from EDF or when the current slot boundary is reached.
+The integration exposes sensors that provide:
+
+- the current tariff slot and phase  
+- next slot information for each phase  
+- block summaries (current and next)  
+- cheapest and most expensive slots  
+- yesterday/tomorrow phase summaries  
+- forecast window information  
+- internal/debug sensors  
+
+All price‑based sensors use **p/kWh** as the native unit.  
+All timestamps are ISO 8601.
 
 ---
 
 # Sensor Entities
 
-## 1. `sensor.edf_fpd_current_price`
+Below is the authoritative list of all sensors created by the integration.
 
-### Description
-Shows the **current half‑hour slot price** for the EDF FreePhase Dynamic tariff.
+---
+
+# Detailed Sensors
+
+These sensors expose structured attributes and are typically used in dashboards and automations.
+
+---
+
+## Current Price  
+**Entity ID:** `sensor.current_price`  
+**Unit:** `p/kWh`
+
+Shows the **current half‑hour slot price**.
 
 ### Attributes
 
-| Attribute | Type   | Description                          |
-|-----------|--------|--------------------------------------|
-| unit      | string | Price unit (e.g., `p/kWh`)           |
-| slot_start | datetime | Start time of the current slot     |
-| slot_end   | datetime | End time of the current slot       |
-| slot_index | integer | Index of the slot (0–47)           |
+| Attribute | Description |
+|----------|-------------|
+| start | Slot start time |
+| end | Slot end time |
+| duration_minutes | Duration of the slot |
+| price_pen_per_kwh | Price formatted in p/kWh |
+| price_pou_per_kwh | Price formatted in £/kWh |
+| icon | Phase icon |
 
-### Example State
-`33.55`
-
----
-
-## 2. `sensor.edf_fpd_current_phase`
-
-### Description
-Shows the **current phase** derived from the current slot price.
-
-Possible values:
-
-- `green`
-- `amber`
-- `red`
-- `free`
-
-### Attributes
-
-| Attribute | Type     | Description                              |
-|-----------|----------|------------------------------------------|
-| phase_start | datetime | Start of the current phase window       |
-| phase_end   | datetime | End of the current phase window         |
-| phase_duration | string | Total duration of the phase window     |
-| slot_index | integer | Index of the current slot                |
-
-### Example State
-`amber`
+### Example State  
+33.55
 
 ---
 
-## 3. `sensor.edf_fpd_next_phase`
+## Current Block Summary  
+**Entity ID:** `sensor.current_block_summary`  
+**Unit:** `p/kWh`
 
-### Description
-Shows the **next upcoming phase**, based on the forecast.
+Shows the **average price of the current phase block** (all consecutive slots of the same phase).
 
-### Attributes
-
-| Attribute | Type     | Description                              |
-|-----------|----------|------------------------------------------|
-| next_phase_start | datetime | When the next phase begins         |
-| next_phase_end   | datetime | When the next phase ends           |
-| next_phase_duration | string | Duration of the next phase        |
-
-### Example State
-`green`
+### Attributes  
+- phase  
+- start  
+- end  
+- duration_minutes  
+- price fields  
+- icon  
 
 ---
 
-## 4. `sensor.edf_fpd_cheapest_slot`
+## Next Block Summary  
+**Entity ID:** `sensor.next_block_summary`  
+**Unit:** `p/kWh`
 
-### Description
-Shows the **start time of the cheapest slot** in the current 48‑slot forecast.
+Shows the **average price of the next phase block** (of a different colour).
 
-### Attributes
-
-| Attribute | Type   | Description                          |
-|-----------|--------|--------------------------------------|
-| price     | float  | Price of the cheapest slot           |
-| unit      | string | Price unit (e.g., `p/kWh`)           |
-
-### Example State
-`2026-01-13T03:00:00+00:00`
+### Attributes  
+Same as above.
 
 ---
 
-## 5. `sensor.edf_fpd_most_expensive_slot`
+## Next Slot Price  
+**Entity ID:** `sensor.edf_freephase_dynamic_next_slot_price`  
+**Unit:** `p/kWh`
 
-### Description
-Shows the **start time of the most expensive slot** in the forecast.
+Shows the **price of the next half‑hour slot**, regardless of phase.
 
-### Attributes
-
-| Attribute | Type   | Description                              |
-|-----------|--------|------------------------------------------|
-| price     | float  | Price of the most expensive slot         |
-| unit      | string | Price unit                               |
-
-### Example State
-`2026-01-13T17:00:00+00:00`
+### Attributes  
+- start  
+- end  
+- duration_minutes  
+- price fields  
+- icon  
 
 ---
 
-## 6. `sensor.edf_fpd_free_slots`
+## Next Green Slot  
+**Entity ID:** `sensor.edf_freephase_dynamic_next_green_slot`  
+**Unit:** `p/kWh`
 
-### Description
-Shows the **number of free (negative‑price) slots** in the forecast.
+Shows the **price of the next green slot**.
 
-### Example State
-`0`
-
----
-
-## 7. `sensor.edf_fpd_forecast_window`
-
-### Description
-Shows the **start and end timestamps** of the current EDF forecast window.
-
-### Attributes
-
-| Attribute      | Type     | Description                              |
-|----------------|----------|------------------------------------------|
-| effective_from | datetime | Start of the forecast window (23:00 D)   |
-| effective_to   | datetime | End of the forecast window (23:00 D+1)   |
-| slots          | integer  | Number of slots (always 48)              |
-
-### Example State
-`2026-01-12T23:00:00+00:00 → 2026-01-13T23:00:00+00:00`
+### Attributes  
+Full block details via `format_phase_block`.
 
 ---
 
-# Internal / Debug Entities
+## Next Amber Slot  
+**Entity ID:** `sensor.edf_freephase_dynamic_next_amber_slot`  
+**Unit:** `p/kWh`
 
-These entities are optional but useful for troubleshooting and advanced dashboards.
-
-## 8. `sensor.edf_fpd_slot_index`
-
-### Description
-Shows the **current slot index** (0–47).
-
-### Example State
-`32`
+Shows the **price of the next amber slot**.
 
 ---
 
-## 9. `sensor.edf_fpd_raw_forecast`
+## Next Red Slot  
+**Entity ID:** `sensor.edf_freephase_dynamic_next_red_slot`  
+**Unit:** `p/kWh`
 
-### Description
-Contains the **full 48‑slot forecast** as a JSON attribute.
+Shows the **price of the next red slot**.
 
-### Attributes
+---
 
-| Attribute | Type  | Description                          |
-|-----------|-------|--------------------------------------|
-| forecast  | list  | List of 48 slot objects              |
+## Cheapest Slot (Next 24 Hours)  
+**Entity ID:** `sensor.edf_freephase_dynamic_cheapest_slot_next_24_hours`  
+**Unit:** `p/kWh`
 
-### Example State
-`48 slots`
+Shows the **price of the cheapest slot** in the next 24 hours.
+
+### Attributes  
+- start  
+- end  
+- duration_minutes  
+- price fields  
+- icon  
+
+---
+
+## Most Expensive Slot (Next 24 Hours)  
+**Entity ID:** `sensor.edf_freephase_dynamic_most_expensive_slot_next_24_hours`  
+**Unit:** `p/kWh`
+
+Shows the **price of the most expensive slot** in the next 24 hours.
+
+---
+
+## Yesterday Phases Summary  
+**Entity ID:** `sensor.yesterday_phases_summary`
+
+Shows the **number of phase windows** yesterday.
+
+### Attributes  
+`phase_1`, `phase_2`, … each containing:
+
+- phase  
+- start  
+- end  
+- duration_minutes  
+- price fields  
+- icon  
+
+---
+
+## Today’s Rates Summary  
+**Entity ID:** `sensor.today_s_rates_summary`
+
+Shows the **number of phase windows** today.
+
+### Attributes  
+Same structure as yesterday’s summary.
+
+---
+
+## Tomorrow’s Rates Summary  
+**Entity ID:** `sensor.tomorrow_s_rates_summary`
+
+Shows the **number of phase windows** tomorrow.
+
+### Attributes  
+Same structure as yesterday’s summary.
+
+---
+
+# Forecast & API Sensors
+
+These sensors provide metadata about the EDF API and forecast window.
+
+---
+
+## 24‑Hour Forecast  
+**Entity ID:** `sensor.24_hour_forecast`
+
+Contains the **full 48‑slot forecast** as attributes.
+
+### Attributes  
+- forecast: list of slot dictionaries  
+
+---
+
+## Next Refresh Time  
+**Entity ID:** `sensor.next_refresh_time`
+
+Shows when the integration will next refresh data from EDF.
+
+---
+
+## Last Updated  
+**Entity ID:** `sensor.last_updated`
+
+Shows the timestamp of the last successful data update.
+
+---
+
+## API Latency  
+**Entity ID:** `sensor.api_latency`  
+**Unit:** milliseconds
+
+Shows the **round‑trip latency** of the EDF API request.
+
+---
+
+# Internal / Debug Sensors
+
+These sensors are primarily for troubleshooting.
+
+---
+
+## Coordinator Status  
+**Entity ID:** `sensor.coordinator_status`
+
+Shows the internal state of the update coordinator.
+
+---
+
+## Is Now a Green Slot  
+**Entity ID:** `sensor.edf_freephase_dynamic_is_now_a_green_slot`
+
+Boolean‑style sensor indicating whether the **current slot is green**.
+
+---
+
+## Current Slot Colour  
+**Entity ID:** `sensor.edf_freephase_dynamic_current_slot_colour`
+
+Shows the **current phase colour** (`green`, `amber`, `red`).
 
 ---
 
 # Notes
 
-- All timestamps are in ISO 8601 format.  
-- All price values use the unit provided by EDF (typically `p/kWh`).  
+- All price sensors use **p/kWh**.  
+- Negative prices represent “free” slots; there is no separate `free` phase.  
+- Phase windows are derived from consecutive slots with the same phase.  
 - Entities update at slot boundaries and when new data is fetched.  
-- Phase windows are derived from consecutive slots with the same phase classification.

@@ -1,6 +1,6 @@
 # EDF FreePhase Dynamic — Naming Conventions
 
-> **Planned:** _To be implemented in v0.3.8._
+> **Planned:** _To be implemented in a later version_
 
 ## Overview
 

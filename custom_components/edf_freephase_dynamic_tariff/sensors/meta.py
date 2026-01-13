@@ -6,11 +6,13 @@ from __future__ import annotations
 #---DO NOT ADD ANYTHING ABOVE THIS LINE---
 
 from datetime import datetime, timezone
+
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import parse_datetime, as_local
-from .helpers import edf_device_info
 
+from .helpers import edf_device_info
 
 def _format_timestamp(ts: str | None):
     """Format an ISO timestamp into 'HH:MM on DD/MM/YYYY'."""
@@ -37,6 +39,7 @@ class EDFFreePhaseDynamicLastUpdatedSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = "Last Updated"
         self._attr_unique_id = "edf_freephase_dynamic_tariff_last_updated"
         self._attr_icon = "mdi:update"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def native_value(self):
@@ -81,6 +84,7 @@ class EDFFreePhaseDynamicAPILatencySensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = "edf_freephase_dynamic_tariff_api_latency"
         self._attr_native_unit_of_measurement = "ms"
         self._attr_icon = "mdi:speedometer"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def native_value(self):
@@ -112,6 +116,7 @@ class EDFFreePhaseDynamicCoordinatorStatusSensor(CoordinatorEntity, SensorEntity
         self._attr_name = "Coordinator Status"
         self._attr_unique_id = "edf_freephase_dynamic_tariff_coordinator_status"
         self._attr_icon = "mdi:heart-pulse"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def native_value(self):
@@ -140,6 +145,7 @@ class EDFFreePhaseDynamicNextRefreshSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = "Next Refresh Time"
         self._attr_unique_id = "edf_freephase_dynamic_tariff_next_refresh_time"
         self._attr_icon = "mdi:clock-start"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def native_value(self):
