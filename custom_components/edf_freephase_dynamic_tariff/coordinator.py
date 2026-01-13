@@ -1,42 +1,17 @@
 from __future__ import annotations
 
-import aiohttp
-import async_timeout
 import logging
-import random
-
-from datetime import datetime, time, timezone, timedelta
+from datetime import datetime, timezone
 from time import monotonic
 
-import dateutil.parser
-
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
-# Helpers live inside sensors/
+from .api.client import fetch_all_pages
+from .api.parsing import build_unified_dataset, build_forecasts, strip_internal
+from .api.scheduler import AlignedScheduler
 from .sensors.helpers import normalise_slot
 
-
-def classify_slot(start_time, price):
-    """Return capitalised phase name based on time-of-day and price."""
-    dt = dateutil.parser.isoparse(start_time)
-    t = dt.time()
-
-    if price <= 0:
-        return "Green"
-
-    if time(23, 0) <= t or t < time(6, 0):
-        return "Green"
-    if time(6, 0) <= t < time(16, 0):
-        return "Amber"
-    if time(16, 0) <= t < time(19, 0):
-        return "Red"
-    if time(19, 0) <= t < time(23, 0):
-        return "Amber"
-
-    return "Amber"
+_LOGGER = logging.getLogger(__name__)
 
 
 class EDFCoordinator(DataUpdateCoordinator):
@@ -46,17 +21,17 @@ class EDFCoordinator(DataUpdateCoordinator):
         self.hass = hass
         self.api_url = api_url
 
-        # Store scan interval for aligned scheduling
+        # Scan interval (used by diagnostics + scheduler)
         self._scan_interval = scan_interval
 
-        # Debug fields for diagnostics
-        self._next_refresh_datetime: datetime | None = None
-        self._next_refresh_delay: float | None = None
-        self._next_refresh_jitter: float | None = None
-        self._unsub_refresh = None
+        # Scheduler (aligned refresh with jitter)
+        self.scheduler = AlignedScheduler(hass, scan_interval)
 
-        # Internal aligned boundary tracking (UTC)
-        self._next_boundary_utc: datetime | None = None
+        # Exposed for diagnostics (kept for backward compatibility)
+        self._next_boundary_utc = None
+        self._next_refresh_datetime = None
+        self._next_refresh_delay = None
+        self._next_refresh_jitter = None
 
         super().__init__(
             hass,
@@ -69,132 +44,46 @@ class EDFCoordinator(DataUpdateCoordinator):
         """Fetch data from EDF API and build unified datasets."""
         start_time = monotonic()
         now = datetime.now(timezone.utc)
-        tomorrow = (now + timedelta(days=1)).date()
-        yesterday = (now - timedelta(days=1)).date()
-        today = now.date()
+        now_iso = now.isoformat()
 
         try:
-            # -------------------------------
-            # Fetch all pages from EDF API
-            # -------------------------------
-            async with aiohttp.ClientSession() as session:
-                async with async_timeout.timeout(10):
-                    all_results = []
-                    url = self.api_url
-                    page_count = 0
-                    max_pages = 3  # yesterday + today + tomorrow
+            # --------------------------------------
+            # Fetch raw pages from EDF API
+            # --------------------------------------
+            raw_items = await fetch_all_pages(self.api_url, max_pages=3)
 
-                    while url and page_count < max_pages:
-                        page_count += 1
-                        resp = await session.get(url)
-                        resp.raise_for_status()
-
-                        try:
-                            data = await resp.json()
-                        except Exception:
-                            _LOGGER.error(
-                                "EDF API returned non-JSON on page %s", page_count
-                            )
-                            break
-
-                        results_page = data.get("results")
-                        if not isinstance(results_page, list):
-                            _LOGGER.error(
-                                "EDF API page %s missing/invalid results", page_count
-                            )
-                            break
-
-                        all_results.extend(results_page)
-                        url = data.get("next")
-
-            api_latency_ms = int((monotonic() - start_time) * 1000)
-
-            if not all_results:
+            if not raw_items:
                 raise ValueError("EDF API returned no results")
 
-            # -------------------------------
-            # Build unified sorted dataset
-            # (INTERNAL FIELDS PRESERVED)
-            # -------------------------------
-            unified = []
-            for item in all_results:
-                start_raw = item["valid_from"]
-                end_raw = item["valid_to"]
+            # --------------------------------------
+            # Build unified internal dataset
+            # --------------------------------------
+            unified = build_unified_dataset(raw_items)
 
-                start_dt = dateutil.parser.isoparse(start_raw)
-                end_dt = dateutil.parser.isoparse(end_raw)
+            # --------------------------------------
+            # Build forecast views (today/tomorrow/yesterday/next24)
+            # --------------------------------------
+            forecasts = build_forecasts(unified, now)
 
-                unified.append(
-                    {
-                        "start": start_raw,
-                        "end": end_raw,
-                        "start_dt": start_dt.isoformat(),
-                        "end_dt": end_dt.isoformat(),
-                        "value": item["value_inc_vat"],
-                        "phase": classify_slot(start_raw, item["value_inc_vat"]),
-                        "currency": "GBP",
-                        "_start_dt_obj": start_dt,
-                        "_end_dt_obj": end_dt,
-                    }
-                )
+            # --------------------------------------
+            # Determine current slot
+            # --------------------------------------
+            current_raw = next(
+                (
+                    slot
+                    for slot in unified
+                    if slot["_start_dt_obj"] <= now < slot["_end_dt_obj"]
+                ),
+                None,
+            )
 
-            unified.sort(key=lambda s: s["_start_dt_obj"])
-
-            # -------------------------------
-            # Helper to strip internal fields
-            # -------------------------------
-            def strip_internal(slots):
-                cleaned = []
-                for s in slots:
-                    s2 = dict(s)
-                    s2.pop("_start_dt_obj", None)
-                    s2.pop("_end_dt_obj", None)
-                    cleaned.append(s2)
-                return cleaned
-
-            # -------------------------------
-            # Rolling 24-hour forecast
-            # -------------------------------
-            future = [slot for slot in unified if slot["_start_dt_obj"] >= now]
-            next_24_hours = future[:48]
-
-            # -------------------------------
-            # Today / Tomorrow / Yesterday
-            # -------------------------------
-            today_24_hours = [
-                slot for slot in unified if slot["_start_dt_obj"].date() == today
-            ]
-            tomorrow_24_hours = [
-                slot for slot in unified if slot["_start_dt_obj"].date() == tomorrow
-            ]
-            yesterday_24_hours = [
-                slot for slot in unified if slot["_start_dt_obj"].date() == yesterday
-            ]
-
-            # -------------------------------
-            # Current slot
-            # -------------------------------
-            current_slot = None
-            for slot in unified:
-                if slot["_start_dt_obj"] <= now < slot["_end_dt_obj"]:
-                    current_slot = normalise_slot(
-                        {
-                            "start": slot["start"],
-                            "end": slot["end"],
-                            "start_dt": slot["start_dt"],
-                            "end_dt": slot["end_dt"],
-                            "value": slot["value"],
-                            "phase": slot["phase"],
-                            "currency": "GBP",
-                        }
-                    )
-                    break
-
-            if current_slot:
+            if current_raw:
+                current_slot = normalise_slot(strip_internal([current_raw])[0])
                 current_price = current_slot["value"]
             else:
-                # Fallback: before first slot or after last slot
-                current_price = unified[0]["value"]
+                # Fallback: if now is outside all slot ranges, use the first slot’s phase
+                first = unified[0]
+                current_price = first["value"]
                 current_slot = normalise_slot(
                     {
                         "start": None,
@@ -202,32 +91,48 @@ class EDFCoordinator(DataUpdateCoordinator):
                         "start_dt": None,
                         "end_dt": None,
                         "value": current_price,
-                        "phase": unified[0]["phase"],
+                        "phase": first["phase"],
                         "currency": "GBP",
                     }
                 )
 
-            # -------------------------------
+            # --------------------------------------
             # Next price
-            # -------------------------------
-            next_price = None
-            for slot in unified:
-                if slot["_start_dt_obj"] > now:
-                    next_price = slot["value"]
-                    break
+            # --------------------------------------
+            next_price = next(
+                (slot["value"] for slot in unified if slot["_start_dt_obj"] > now),
+                None,
+            )
 
-            # -------------------------------
+            # --------------------------------------
             # Strip internal fields + normalise
-            # -------------------------------
-            all_slots_sorted = [normalise_slot(s) for s in strip_internal(unified)]
-            next_24_hours = [normalise_slot(s) for s in strip_internal(next_24_hours)]
-            today_24_hours = [normalise_slot(s) for s in strip_internal(today_24_hours)]
-            tomorrow_24_hours = [normalise_slot(s) for s in strip_internal(tomorrow_24_hours)]
-            yesterday_24_hours = [normalise_slot(s) for s in strip_internal(yesterday_24_hours)]
+            # --------------------------------------
+            all_slots_sorted = [
+                normalise_slot(slot) for slot in strip_internal(unified)
+            ]
 
-            # -------------------------------
+            next_24_hours = [
+                normalise_slot(slot)
+                for slot in strip_internal(forecasts["next_24_hours"])
+            ]
+            today_24_hours = [
+                normalise_slot(slot)
+                for slot in strip_internal(forecasts["today_24_hours"])
+            ]
+            tomorrow_24_hours = [
+                normalise_slot(slot)
+                for slot in strip_internal(forecasts["tomorrow_24_hours"])
+            ]
+            yesterday_24_hours = [
+                normalise_slot(slot)
+                for slot in strip_internal(forecasts["yesterday_24_hours"])
+            ]
+
+            api_latency_ms = int((monotonic() - start_time) * 1000)
+
+            # --------------------------------------
             # Final coordinator data
-            # -------------------------------
+            # --------------------------------------
             return {
                 "current_price": current_price,
                 "next_price": next_price,
@@ -238,7 +143,7 @@ class EDFCoordinator(DataUpdateCoordinator):
                 "yesterday_24_hours": yesterday_24_hours,
                 "all_slots_sorted": all_slots_sorted,
                 "api_latency_ms": api_latency_ms,
-                "last_updated": datetime.now(timezone.utc).isoformat(),
+                "last_updated": now_iso,
                 "coordinator_status": "ok",
             }
 
@@ -259,89 +164,35 @@ class EDFCoordinator(DataUpdateCoordinator):
             }
 
     # -------------------------------------------------------------------------
-    # Aligned scheduling logic
+    # Aligned scheduling (delegated to AlignedScheduler)
     # -------------------------------------------------------------------------
 
-    def _initialise_boundary_if_needed(self) -> None:
-        if self._next_boundary_utc is not None:
-            return
-
-        now = datetime.now(timezone.utc)
-        interval_seconds = int(self._scan_interval.total_seconds())
-
-        seconds_today = now.hour * 3600 + now.minute * 60 + now.second
-        next_boundary_seconds = ((seconds_today // interval_seconds) + 1) * interval_seconds
-
-        day_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
-        self._next_boundary_utc = day_start + timedelta(seconds=next_boundary_seconds)
-
-        _LOGGER.debug("Initial aligned boundary set to %s", self._next_boundary_utc)
-
-    def _advance_boundary_past_now(self) -> None:
-        if self._next_boundary_utc is None:
-            self._initialise_boundary_if_needed()
-            return
-
-        now = datetime.now(timezone.utc)
-        while self._next_boundary_utc <= now:
-            self._next_boundary_utc += self._scan_interval
-
-    def _seconds_until_next_boundary(self) -> float:
-        self._initialise_boundary_if_needed()
-        self._advance_boundary_past_now()
-
-        now = datetime.now(timezone.utc)
-        delta = (self._next_boundary_utc - now).total_seconds()
-
-        if delta <= 0:
-            delta = self._scan_interval.total_seconds()
-
-        return float(delta)
-
-    def _compute_next_delay_with_jitter(self) -> float:
-        base_delay = self._seconds_until_next_boundary()
-        jitter = random.uniform(0, 5)
-        delay_with_jitter = base_delay + jitter
-
-        self._next_refresh_delay = delay_with_jitter
-        self._next_refresh_jitter = jitter
-        self._next_refresh_datetime = datetime.now(timezone.utc) + timedelta(
-            seconds=delay_with_jitter
+    def _sync_scheduler_state(self) -> None:
+        """Copy scheduler state onto coordinator fields for diagnostics."""
+        self._next_boundary_utc = getattr(self.scheduler, "_next_boundary_utc", None)
+        self._next_refresh_datetime = getattr(
+            self.scheduler, "next_refresh_datetime", None
         )
-
-        _LOGGER.debug(
-            "Next aligned refresh in %.1f seconds (base=%.1f, jitter=%.1f) at %s",
-            delay_with_jitter,
-            base_delay,
-            jitter,
-            self._next_refresh_datetime,
+        self._next_refresh_delay = self.scheduler.next_refresh_delay
+        self._next_refresh_jitter = getattr(
+            self.scheduler, "next_refresh_jitter", None
         )
-
-        return delay_with_jitter
-
-    async def _schedule_next_refresh(self) -> None:
-        if self._unsub_refresh is not None:
-            self._unsub_refresh()
-            self._unsub_refresh = None
-
-        delay = self._compute_next_delay_with_jitter()
-
-        _LOGGER.debug("Scheduling next EDF coordinator refresh in %.1f seconds", delay)
-        self._unsub_refresh = async_call_later(self.hass, delay, self._handle_refresh)
-
-    async def _handle_refresh(self, _now=None) -> None:
-        _LOGGER.debug("Running aligned EDF coordinator refresh")
-        await self.async_refresh()
-        self._advance_boundary_past_now()
-        self.async_update_listeners()
-        await self._schedule_next_refresh()
 
     async def async_config_entry_first_refresh(self) -> None:
+        """Perform the first refresh immediately, then start aligned scheduling."""
         _LOGGER.debug("Performing immediate first refresh for EDF coordinator")
         await super().async_config_entry_first_refresh()
-        await self._schedule_next_refresh()
+        await self.scheduler.schedule(self._handle_refresh)
+        self._sync_scheduler_state()
+
+    async def _handle_refresh(self, _now=None) -> None:
+        """Perform a refresh and then schedule the next one."""
+        _LOGGER.debug("Running aligned EDF coordinator refresh")
+        await self.async_refresh()
+        self.async_update_listeners()
+        await self.scheduler.schedule(self._handle_refresh)
+        self._sync_scheduler_state()
 
     async def async_shutdown(self) -> None:
-        if self._unsub_refresh is not None:
-            self._unsub_refresh()
-            self._unsub_refresh = None
+        """Clean up scheduled callbacks."""
+        await self.scheduler.shutdown()
