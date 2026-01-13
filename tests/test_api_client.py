@@ -1,4 +1,3 @@
-import aiohttp
 import pytest
 from aioresponses import aioresponses
 
@@ -10,10 +9,8 @@ async def test_fetch_all_pages_single_page():
     url = "https://example.com/api"
 
     with aioresponses() as mock:
-        mock.get(
-            url,
-            payload={"results": [{"x": 1}], "next": None},
-        )
+        mock._thread_checker = lambda: True  # disable HA thread check
+        mock.get(url, payload={"results": [{"x": 1}], "next": None})
 
         results = await fetch_all_pages(url)
         assert results == [{"x": 1}]
@@ -24,14 +21,9 @@ async def test_fetch_all_pages_pagination():
     url = "https://example.com/api"
 
     with aioresponses() as mock:
-        mock.get(
-            url,
-            payload={"results": [{"x": 1}], "next": url + "?page=2"},
-        )
-        mock.get(
-            url + "?page=2",
-            payload={"results": [{"x": 2}], "next": None},
-        )
+        mock._thread_checker = lambda: True
+        mock.get(url, payload={"results": [{"x": 1}], "next": url + "?page=2"})
+        mock.get(url + "?page=2", payload={"results": [{"x": 2}], "next": None})
 
         results = await fetch_all_pages(url)
         assert results == [{"x": 1}, {"x": 2}]
@@ -42,7 +34,8 @@ async def test_fetch_all_pages_invalid_json():
     url = "https://example.com/api"
 
     with aioresponses() as mock:
+        mock._thread_checker = lambda: True
         mock.get(url, body="not json", status=200)
 
         results = await fetch_all_pages(url)
-        assert results == []  # stops early
+        assert results == []

@@ -1,16 +1,18 @@
 import pytest
 from unittest.mock import patch
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.edf_freephase_dynamic_tariff.sensor import async_setup_entry
 
 
 @pytest.mark.asyncio
 async def test_sensor_reads_current_price(hass):
-    entry = hass.config_entries.async_create_entry(
+    entry = MockConfigEntry(
         domain="edf_freephase_dynamic_tariff",
         data={"tariff_code": "X", "scan_interval": 30},
         title="EDF",
     )
+    entry.add_to_hass(hass)
 
     fake_data = {
         "current_price": 12.34,
