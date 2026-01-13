@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from custom_components.edf_freephase_dynamic_tariff.coordinator import EDFCoordinator
 
@@ -10,7 +10,7 @@ async def test_coordinator_success(hass):
     coordinator = EDFCoordinator(
         hass,
         "https://example.com/api",
-        30,
+        timedelta(minutes=30),
     )
 
     fake_raw = [
@@ -21,22 +21,34 @@ async def test_coordinator_success(hass):
         }
     ]
 
+    fake_unified = [
+        {
+            "_start_dt_obj": datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc),
+            "_end_dt_obj": datetime(2024, 1, 1, 0, 30, tzinfo=timezone.utc),
+            "start": "2024-01-01T00:00:00Z",
+            "end": "2024-01-01T00:30:00Z",
+            "value": 10,
+            "phase": "Green",
+            "currency": "GBP",
+        }
+    ]
+
+    fake_forecasts = {
+        "next_24_hours": [],
+        "today_24_hours": [],
+        "tomorrow_24_hours": [],
+        "yesterday_24_hours": [],
+    }
+
     with patch(
         "custom_components.edf_freephase_dynamic_tariff.api.client.fetch_all_pages",
         return_value=fake_raw,
     ), patch(
         "custom_components.edf_freephase_dynamic_tariff.api.parsing.build_unified_dataset",
-        return_value=[
-            {
-                "start": "2024-01-01T00:00:00Z",
-                "end": "2024-01-01T00:30:00Z",
-                "value": 10,
-                "phase": "Green",
-            }
-        ],
+        return_value=fake_unified,
     ), patch(
         "custom_components.edf_freephase_dynamic_tariff.api.parsing.build_forecasts",
-        return_value={"next_24_hours": []},
+        return_value=fake_forecasts,
     ):
         data = await coordinator._async_update_data()
 
@@ -46,7 +58,7 @@ async def test_coordinator_success(hass):
 
 @pytest.mark.asyncio
 async def test_coordinator_error(hass):
-    coordinator = EDFCoordinator(hass, "https://example.com/api", 30)
+    coordinator = EDFCoordinator(hass, "https://example.com/api", timedelta(minutes=30))
 
     with patch(
         "custom_components.edf_freephase_dynamic_tariff.api.client.fetch_all_pages",
