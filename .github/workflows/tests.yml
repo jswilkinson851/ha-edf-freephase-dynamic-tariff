@@ -25,6 +25,9 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-asyncio pytest-cov aioresponses
 
+      - name: Add repo root to PYTHONPATH
+        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
+
       - name: Run tests with coverage
         run: |
           pytest --cov=custom_components.edf_freephase_dynamic_tariff --cov-report=xml --cov-report=term-missing
