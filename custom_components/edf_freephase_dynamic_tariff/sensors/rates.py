@@ -27,6 +27,11 @@ class EDFFreePhaseDynamicTodaysRatesSummarySensor(CoordinatorEntity, SensorEntit
         self._attr_unique_id = "edf_freephase_dynamic_tariff_todays_rates_summary"
         self._attr_icon = "mdi:calendar-clock"
 
+        # Ensure HA state updates when coordinator updates
+        self.async_on_remove(
+            coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
     def _merge_blocks(self):
         slots = self.coordinator.data.get("today_24_hours") or []
         return group_phase_blocks(slots)
@@ -65,6 +70,11 @@ class EDFFreePhaseDynamicTomorrowsRatesSummarySensor(CoordinatorEntity, SensorEn
         self._attr_unique_id = "edf_freephase_dynamic_tariff_tomorrows_rates_summary"
         self._attr_icon = "mdi:calendar-arrow-right"
 
+        # Ensure HA state updates when coordinator updates
+        self.async_on_remove(
+            coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
     def _merge_blocks(self):
         slots = self.coordinator.data.get("tomorrow_24_hours") or []
         return group_phase_blocks(slots)
@@ -89,7 +99,6 @@ class EDFFreePhaseDynamicTomorrowsRatesSummarySensor(CoordinatorEntity, SensorEn
     def device_info(self):
         return edf_device_info()
 
-
 # ---------------------------------------------------------------------------
 # Yesterday's Rates Summary
 # ---------------------------------------------------------------------------
@@ -102,6 +111,11 @@ class EDFFreePhaseDynamicYesterdayPhasesSummarySensor(CoordinatorEntity, SensorE
         self._attr_name = "Yesterday Phases Summary"
         self._attr_unique_id = "edf_freephase_dynamic_tariff_yesterdays_phases_summary"
         self._attr_icon = "mdi:calendar-clock"
+
+        # Ensure HA state updates when coordinator updates
+        self.async_on_remove(
+            coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     @property
     def native_value(self):

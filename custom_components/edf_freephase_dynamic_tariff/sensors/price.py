@@ -3,7 +3,6 @@ Price-related sensors for the EDF FreePhase Dynamic Tariff integration.
 """
 
 from __future__ import annotations
-#---DO NOT ADD ANYTHING ABOVE THIS LINE---
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
