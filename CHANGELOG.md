@@ -6,6 +6,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+# Changelog
+
+## [0.4.2] — 2026-01-14
+### Added
+- **Diagnostics module (`diagnostics.py`)**  
+  - Fully added and integrated (previously missing from v0.4.1).  
+  - Exposes scheduler state, raw forecast data, phase windows, thresholds, API latency, and timestamps.
+
+- **Phase block summaries**  
+  - New `current_block_summary` and `next_block_summary` fields.  
+  - Uses unified helpers for consistent grouping and formatting.
+
+### Changed
+- **Aligned scheduler behaviour**  
+  - Next refresh is now scheduled *before* the current refresh runs.  
+  - Improves timing stability and avoids latency‑driven drift.  
+  - Internal scheduler state now exposed for diagnostics.
+
+- **Dataset and forecast handling**  
+  - More consistent slot normalisation.  
+  - Cleaner forecast slices for today, tomorrow, yesterday, and next 24 hours.
+
+### Fixed
+- Minor consistency fixes across sensors and helpers.  
+- Improved internal datetime handling and stripping of internal fields.
+
+---
+
+## [0.4.1] — 2026-01-13
+*(Previous release — diagnostics module was intended but not included)*
+
+---
+
 ## [v0.4.0] — 2026-01-13
 
 ### Added
@@ -293,5 +326,6 @@ This update improves robustness, simplifies configuration, and ensures long‑te
 ## [Unreleased]
 
 - Future improvements will be tracked here.
+
 
 
