@@ -3,7 +3,6 @@ Slot colour and next-slot sensors for the EDF FreePhase Dynamic Tariff integrati
 """
 
 from __future__ import annotations
-#---DO NOT ADD ANYTHING ABOVE THIS LINE---
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -13,8 +12,8 @@ from .helpers import (
     format_phase_block,
     find_current_block,
     find_next_phase_block,
+    group_phase_blocks,
 )
-
 
 # ---------------------------------------------------------------------------
 # Current Slot Colour
@@ -102,56 +101,41 @@ class EDFFreePhaseDynamicNextBlockSummarySensor(CoordinatorEntity, SensorEntity)
         self._attr_native_unit_of_measurement = "p/kWh"
         self._attr_icon = "mdi:timeline-clock-outline"
 
-    @property
-    def native_value(self):
+    def _find_next_block(self):
+        all_slots = self.coordinator.data.get("all_slots_sorted", [])
         current = self.coordinator.data.get("current_slot")
-        next_slots = self.coordinator.data.get("next_24_hours", [])
 
-        if not current:
+        if not current or not all_slots:
             return None
 
-        current_phase = current["phase"]
-        block = find_next_phase_block(
-            next_slots,
-            phase=current_phase  # find next block of a *different* phase
-        )
+        # Find current block
+        current_block = find_current_block(all_slots, current)
+        if not current_block:
+            return None
 
-        # Actually find next block of a different phase
-        block = next(
-            (find_next_phase_block(next_slots, p)
-             for p in ("green", "amber", "red")
-             if p != current_phase),
-            None
-        )
+        # Group all blocks
+        blocks = group_phase_blocks(all_slots)
 
+        # Find next block after current block
+        try:
+            idx = blocks.index(current_block)
+            return blocks[idx + 1] if idx + 1 < len(blocks) else None
+        except ValueError:
+            return None
+
+    @property
+    def native_value(self):
+        block = self._find_next_block()
         return block[0]["value"] if block else None
 
     @property
     def extra_state_attributes(self):
-        current = self.coordinator.data.get("current_slot")
-        next_slots = self.coordinator.data.get("next_24_hours", [])
-
-        if not current:
-            return {}
-
-        current_phase = current["phase"]
-
-        block = next(
-            (find_next_phase_block(next_slots, p)
-             for p in ("green", "amber", "red")
-             if p != current_phase),
-            None
-        )
-
-        if not block:
-            return {}
-
-        return format_phase_block(block)
+        block = self._find_next_block()
+        return format_phase_block(block) if block else {}
 
     @property
     def device_info(self):
         return edf_device_info()
-
 
 # ---------------------------------------------------------------------------
 # Next {Colour} Slot — parameterised class

@@ -3,7 +3,6 @@ Forecast and pricing trend sensors for the EDF FreePhase Dynamic Tariff integrat
 """
 
 from __future__ import annotations
-#---DO NOT ADD ANYTHING ABOVE THIS LINE---
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity

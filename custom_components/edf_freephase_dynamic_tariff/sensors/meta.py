@@ -3,7 +3,6 @@ Metadata sensors such as last-updated time and API latency.
 """
 
 from __future__ import annotations
-#---DO NOT ADD ANYTHING ABOVE THIS LINE---
 
 from datetime import datetime, timezone
 
@@ -149,16 +148,20 @@ class EDFFreePhaseDynamicNextRefreshSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
-        dt = self.coordinator._next_boundary_utc
+        dt = self.coordinator._next_refresh_datetime
         if not dt:
             return None
-        # Local timezone formatting for readability
         return dt.astimezone().strftime("%H:%M:%S on %d/%m/%Y")
 
     @property
     def extra_state_attributes(self):
         return {
-            "next_boundary_utc": (
+            "next_refresh_datetime": (
+                self.coordinator._next_refresh_datetime.isoformat()
+                if self.coordinator._next_refresh_datetime
+                else None
+            ),
+            "aligned_boundary_utc": (
                 self.coordinator._next_boundary_utc.isoformat()
                 if self.coordinator._next_boundary_utc
                 else None
