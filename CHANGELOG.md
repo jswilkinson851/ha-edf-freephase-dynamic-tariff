@@ -6,7 +6,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-# Changelog
+## 🚀 [v0.5.0] — 2026-01-16
+
+## Metadata Expansion, URL Unification & Coordinator Refactor
+
+### ✨ New Features
+- 📦 Added full product metadata support via a dedicated product_url endpoint, including cleaned and normalised metadata exposed through coordinator data and diagnostics.
+- 🏷️ Introduced region label persistence (tariff_region_label) stored in the config entry and surfaced in diagnostics.
+- 🧰 Added a new helpers module (helpers.py) containing URL builders, metadata extraction, device info, and phase utilities.
+- 🌐 Implemented canonical URL builder (build_edf_urls) to replace hard‑coded API paths across the integration.
+- 🔍 Expanded diagnostics with tariff metadata, region label, product/api URLs, and richer coordinator internals.
+
+### 🔧 Improvements
+- 🧠 Refactored coordinator to support dual‑endpoint fetching (product metadata + unit rates) and cleaner orchestration.
+- 🧹 Simplified sensor setup: coordinator is now created once in __init__.py and reused by sensor.py.
+- 🛠️ Improved config flow with product URL validation, consistent region selection, and explicit region label storage.
+- 🔗 Unified URL handling across config flow, coordinator, sensors, and diagnostics.
+- 📊 Diagnostics now include current slot, current/next block summaries, and full tariff metadata.
+
+### 🐞 Fixes
+- 🔄 Corrected coordinator instantiation in sensor.py by reusing the coordinator created during integration setup.
+- 🛡️ Improved fallback behaviour when product metadata cannot be fetched.
+- 🧽 Cleaned up internal field exposure in diagnostics and coordinator.
+
+### 🏗️ Internal Changes
+- 🗂️ Added new API modules: metadata.py, phases.py, product.py.
+- 🧩 Consolidated phase grouping and formatting logic into helpers for consistency.
+- 📝 Normalised metadata keys to snake_case across the integration.
+- 🐛 Added additional debug logging hooks (commented out by default).
+
+
+---
 
 ## [0.4.2] — 2026-01-14
 ### Added
@@ -326,6 +356,3 @@ This update improves robustness, simplifies configuration, and ensures long‑te
 ## [Unreleased]
 
 - Future improvements will be tracked here.
-
-
-

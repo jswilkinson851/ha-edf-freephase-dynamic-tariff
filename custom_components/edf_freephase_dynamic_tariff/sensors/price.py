@@ -29,12 +29,14 @@ class EDFFreePhaseDynamicCurrentPriceSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
-        slot = self.coordinator.data.get("current_slot")
-        return slot["value"] if slot else None
+        data = self.coordinator.data or {}
+        slot = data.get("current_slot")
+        return slot.get("value") if slot else None
 
     @property
     def extra_state_attributes(self):
-        slot = self.coordinator.data.get("current_slot")
+        data = self.coordinator.data or {}
+        slot = data.get("current_slot")
         if not slot:
             return {}
 
@@ -60,16 +62,23 @@ class EDFFreePhaseDynamicNextSlotPriceSensor(CoordinatorEntity, SensorEntity):
         self._attr_icon = "mdi:currency-gbp"
 
     def _find_next_slot(self):
-        slots = sorted(
-            self.coordinator.data.get("next_24_hours", []),
-            key=lambda s: s["start"]
-        )
+        data = self.coordinator.data or {}
+        slots = data.get("next_24_hours", [])
+        if not slots:
+            return None
+
+        # Use start_dt (normalised) instead of raw start string
+        try:
+            slots = sorted(slots, key=lambda s: s["start_dt"])
+        except KeyError:
+            slots = sorted(slots, key=lambda s: s.get("start"))
+
         return slots[0] if slots else None
 
     @property
     def native_value(self):
         slot = self._find_next_slot()
-        return slot["value"] if slot else None
+        return slot.get("value") if slot else None
 
     @property
     def extra_state_attributes(self):

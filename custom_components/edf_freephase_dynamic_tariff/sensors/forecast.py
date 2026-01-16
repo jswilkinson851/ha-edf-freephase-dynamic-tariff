@@ -14,25 +14,28 @@ from .helpers import (
 
 
 # ---------------------------------------------------------------------------
-# 24-Hour Forecast Sensor
+# 24‑Hour Forecast Sensor
 # ---------------------------------------------------------------------------
 
 class EDFFreePhaseDynamic24HourForecastSensor(CoordinatorEntity, SensorEntity):
-    """Sensor providing the next 24-hour price forecast."""
+    """Sensor providing the next 24‑hour price forecast."""
 
     def __init__(self, coordinator):
         super().__init__(coordinator)
-        self._attr_name = "24-Hour Forecast"
+        self._attr_name = "24‑Hour Forecast"
         self._attr_unique_id = "edf_freephase_dynamic_tariff_24h_forecast"
         self._attr_icon = "mdi:chart-line"
 
     @property
     def native_value(self):
-        return len(self.coordinator.data.get("next_24_hours", []))
+        data = self.coordinator.data or {}
+        slots = data.get("next_24_hours", [])
+        return len(slots) if slots else None
 
     @property
     def extra_state_attributes(self):
-        slots = self.coordinator.data.get("next_24_hours", [])
+        data = self.coordinator.data or {}
+        slots = data.get("next_24_hours", [])
         if not slots:
             return {}
 
@@ -62,14 +65,17 @@ class EDFFreePhaseDynamicCheapestSlotSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
-        slots = self.coordinator.data.get("next_24_hours", [])
+        data = self.coordinator.data or {}
+        slots = data.get("next_24_hours", [])
         if not slots:
             return None
+
         return min(slots, key=lambda s: s["value"])["value"]
 
     @property
     def extra_state_attributes(self):
-        slots = self.coordinator.data.get("next_24_hours", [])
+        data = self.coordinator.data or {}
+        slots = data.get("next_24_hours", [])
         if not slots:
             return {}
 
@@ -97,14 +103,17 @@ class EDFFreePhaseDynamicMostExpensiveSlotSensor(CoordinatorEntity, SensorEntity
 
     @property
     def native_value(self):
-        slots = self.coordinator.data.get("next_24_hours", [])
+        data = self.coordinator.data or {}
+        slots = data.get("next_24_hours", [])
         if not slots:
             return None
+
         return max(slots, key=lambda s: s["value"])["value"]
 
     @property
     def extra_state_attributes(self):
-        slots = self.coordinator.data.get("next_24_hours", [])
+        data = self.coordinator.data or {}
+        slots = data.get("next_24_hours", [])
         if not slots:
             return {}
 

@@ -146,6 +146,19 @@ The integration uses the following prefixes consistently:
 
 ---
 
+# Naming Conventions (Updated for v0.5.0)
+
+The introduction of product metadata and region label storage does not change entity naming,
+but new internal fields follow the same conventions:
+
+- snake_case for metadata keys
+- descriptive names for metadata attributes
+- region_label added as a normalised metadata field
+
+Future versions may introduce new metadata‑based sensors following the same naming rules.
+
+---
+
 # Summary
 
 These naming conventions ensure:

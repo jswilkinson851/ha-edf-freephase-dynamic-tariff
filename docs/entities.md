@@ -251,9 +251,31 @@ Shows the **current phase colour** (`green`, `amber`, `red`).
 
 ---
 
+## Metadata Sensors (New in v0.5.0)
+
+The coordinator now exposes cleaned tariff metadata retrieved from the EDF product endpoint.
+
+This metadata is available in diagnostics and may be used by future sensors.
+
+---
+
+# EDF FreePhase Dynamic — Entities Documentation (v0.5.0)
+
+This version introduces tariff metadata exposure and expanded diagnostics.
+All existing entity IDs remain unchanged.
+
+New coordinator fields now available to sensors and diagnostics:
+
+- tariff_metadata
+- tariff_region_label
+- product_url
+- api_url
+
+---
+
 # Notes
 
 - All price sensors use **p/kWh**.  
 - Negative prices represent “free” slots; there is no separate `free` phase.  
 - Phase windows are derived from consecutive slots with the same phase.  
-- Entities update at slot boundaries and when new data is fetched.  
+- Entities update at slot boundaries and when new data is fetched.

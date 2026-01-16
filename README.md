@@ -1,4 +1,4 @@
-# EDF FreePhase Dynamic Tariff — Home Assistant Integration
+# ⚡ EDF FreePhase Dynamic Tariff — Home Assistant Integration
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/)
 ![GitHub release](https://img.shields.io/github/v/release/jswilkinson851/ha-edf-freephase-dynamic-tariff)
@@ -12,7 +12,7 @@ The integration retrieves tariff information directly from the Kraken API and ex
 
 ---
 
-## Features
+## ✨ Features
 
 - **Dynamic tariff code detection**  
   Tariff codes are fetched directly from the Kraken API, ensuring the region list stays accurate even if EDF updates their product codes.
@@ -25,8 +25,8 @@ The integration retrieves tariff information directly from the Kraken API and ex
   Add more than one region as separate devices, each with its own coordinator and sensors.
 
 - **Configurable scan interval**  
-  Entered in minutes, stored internally in seconds.
-  API refreshes now occur on precise wall‑clock boundaries based on your configured scan interval **(new in v0.3.7)**.
+  Entered in minutes, stored internally in seconds.  
+  API refreshes occur on precise wall‑clock boundaries based on your configured scan interval.  
   Examples:  
   - 30 minutes → 12:00, 12:30, 13:00, 13:30  
   - 5 minutes → 12:00, 12:05, 12:10, 12:15  
@@ -50,14 +50,15 @@ The integration retrieves tariff information directly from the Kraken API and ex
 
 ---
 
-## Installation (HACS)
+## 🛠️ Installation (HACS)
 
 ### Option 1 — Add via HACS Custom Repository (recommended)
+
 [![Add to HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=jswilkinson851&repository=ha-edf-freephase-dynamic-tariff)
 
 1. Go to **HACS → Integrations → Custom Repositories**  
 2. Add:  
-   `https://github.com/jswilkinson851/ha-edf-freephase-dynamic-tariff`
+   https://github.com/jswilkinson851/ha-edf-freephase-dynamic-tariff  
 3. Select category: **Integration**  
 4. Install  
 5. Restart Home Assistant  
@@ -71,40 +72,45 @@ The integration retrieves tariff information directly from the Kraken API and ex
 
 ---
 
-## Region Codes
+## 🗺️ Region Codes
 
 Tariff codes are retrieved from:
 
-  - https://api.edfgb-kraken.energy/v1/products/EDF_FREEPHASE_DYNAMIC_12M_HH/
+- https://api.edfgb-kraken.energy/v1/products/EDF_FREEPHASE_DYNAMIC_12M_HH/
 
 Each tariff code ends with a letter (A–P, excluding I and O) corresponding to a UK DNO region.
 
 For a clear explanation of these region letters:
 
-  - https://energy-stats.uk/dno-region-codes-explained/#UK_DNO_Region_Codes_A%E2%80%93P_List_and_Map
+- https://energy-stats.uk/dno-region-codes-explained/#UK_DNO_Region_Codes_A%E2%80%93P_List_and_Map
 
 If the API is unavailable, the integration falls back to a complete static list of regions.
 
 ---
 
-## Configuration Options
+## ⚙️ Configuration Options
 
 - **Region Code**  
-  Select your region from the dynamically generated list.
+  Select your region from the dynamically generated list.  
+  The selected region label is now stored internally and shown in diagnostics.
 
 - **Scan Interval (minutes)**  
   How often to refresh tariff data.  
-  Default: 30 minutes.
+  API refreshes occur on aligned wall‑clock boundaries with a small jitter.
 
-- **Import Sensor (optional)**
-  The electricity import sensor used by your system to determine your real usage.
-  N.B. This field is being added ahead of further updates to be made to make it so you can compare your real usage against historic EDF slots.
+- **Import Sensor (optional)**  
+  Your electricity import sensor.  
+  This will be used in future releases to compare real usage against historic EDF slots.
+
+- **Product URL (internal)**  
+  The integration now validates the EDF product metadata endpoint before setup.  
+  This field is for internal use only and should not be modified.
 
 ---
 
-## Available Sensors
+## 📡 Available Sensors
 
-Below is the list of **short, user‑friendly entity names** (Option B), matching your dashboard usage.
+Below is the list of **short, user‑friendly entity names**, matching your dashboard usage.
 
 ### Pricing Sensors
 - `sensor.current_price`
@@ -133,35 +139,32 @@ Below is the list of **short, user‑friendly entity names** (Option B), matchin
 - `sensor.coordinator_status`
 
 ### Debug Sensors
-
-- `sensor.edf_freephase_dynamic_next_refresh_time` *(added in v0.3.7)*
+- `sensor.edf_freephase_dynamic_next_refresh_time` (added in v0.3.7)
 
 ---
 
-## Example Dashboards (ApexCharts & Lovelace)
+## 📊 Example Dashboards (ApexCharts & Lovelace)
 
 ### Daily Summary Card
-
-```yaml
-type: entities
-title: Daily Tariff Summary
-entities:
-  - entity: sensor.today_s_rates_summary
-    name: Today’s Rates
-  - entity: sensor.tomorrow_s_rates_summary
-    name: Tomorrow’s Rates
-  - type: divider
-  - entity: sensor.current_price
-    name: Current Price
-  - entity: sensor.edf_freephase_dynamic_next_slot_price
-    name: Next Slot Price
-  - entity: sensor.edf_freephase_dynamic_current_slot_colour
-    name: Current Slot Colour
 ```
-
+type: entities  
+title: Daily Tariff Summary  
+entities:  
+  - entity: sensor.today_s_rates_summary  
+    name: Today’s Rates  
+  - entity: sensor.tomorrow_s_rates_summary  
+    name: Tomorrow’s Rates  
+  - type: divider  
+  - entity: sensor.current_price  
+    name: Current Price  
+  - entity: sensor.edf_freephase_dynamic_next_slot_price  
+    name: Next Slot Price  
+  - entity: sensor.edf_freephase_dynamic_current_slot_colour  
+    name: Current Slot Colour  
+```
 ---
 
-## Integration Health & Diagnostics
+## 🩺 Integration Health & Diagnostics
 
 This integration includes several metadata sensors that help you understand the health of the EDF FreePhase Dynamic Tariff API and the coordinator.
 
@@ -169,33 +172,35 @@ This integration includes several metadata sensors that help you understand the 
 
 | Sensor | Description |
 |--------|-------------|
-| `sensor.coordinator_status` | Shows `ok`, `degraded`, or `error` depending on API success and fallback behaviour. |
+| `sensor.coordinator_status` | Shows ok, degraded, or error depending on API success and fallback behaviour. |
 | `sensor.last_successful_update` | Timestamp of the last time fresh data was successfully fetched. |
 | `sensor.data_age` | Number of seconds since the last successful update. |
 | `sensor.last_updated` | When the coordinator last ran (even if the API failed). |
 | `sensor.api_latency` | API response time in milliseconds. |
 
-These sensors make it easy to build a “Health Panel” in Lovelace:
-
-```yaml
-type: entities
-title: EDF FreePhase Dynamic – Health Panel
-entities:
-  - entity: sensor.coordinator_status
-  - entity: sensor.last_successful_update
-  - entity: sensor.data_age
-  - entity: sensor.last_updated
-  - entity: sensor.api_latency
-```
-
-This helps you quickly diagnose API outages, stale data, or connectivity issues.
+These sensors make it easy to build a “Health Panel” in Lovelace.
 
 ---
 
-## Troubleshooting
+## 🧪 Downloadable Diagnostics Enhancements (v0.5.0)
 
-- If the region list only shows a few entries, the API may be temporarily unavailable.
-  - The integration will fall back to a complete static list of regions A–P.
+Diagnostics (download) now include:
+
+- tariff metadata (cleaned and normalised)  
+- region label  
+- product_url and api_url  
+- current slot  
+- current and next block summaries  
+- expanded scheduler internals  
+
+These additions make troubleshooting and verification significantly easier.
+
+---
+
+## 🛟 Troubleshooting
+
+- If the region list only shows a few entries, the API may be temporarily unavailable.  
+  The integration will fall back to a complete static list of regions A–P.
 
 - If you previously added the integration before updating, removing and re‑adding it ensures the new dynamic region list is used.
 
@@ -205,14 +210,16 @@ This helps you quickly diagnose API outages, stale data, or connectivity issues.
 
 ---
 
-## License
+## 📄 License
 
 MIT License.  
 Feel free to fork, improve, and contribute.
 
-
 ---
 
-## Disclaimer
+## ⚠️ Disclaimer
 
-This project is an **independent, community‑developed integration** and is **not affiliated with, endorsed by, or supported by EDF Energy** or the Octopus/EDF Kraken platform. All trademarks, logos, and brand names used in this repository remain the property of their respective owners and are used **solely for identification purposes**. This integration interacts with publicly accessible endpoints of the Kraken API but is **not an official EDF product**. 
+This project is an **independent, community‑developed integration** and is **not affiliated with, endorsed by, or supported by EDF Energy** or the Octopus/EDF Kraken platform.  
+All trademarks, logos, and brand names remain the property of their respective owners.  
+This integration interacts with publicly accessible endpoints of the Kraken API but is **not an official EDF product**.
+Use at your own risk. The author accepts no responsibility for any issues arising from its use.

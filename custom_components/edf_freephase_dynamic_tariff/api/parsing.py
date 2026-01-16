@@ -121,3 +121,25 @@ def build_forecasts(unified: list[dict], now: datetime) -> dict:
         "tomorrow_24_hours": [s for s in unified if s["_start_dt_obj"].date() == tomorrow],
         "yesterday_24_hours": [s for s in unified if s["_start_dt_obj"].date() == yesterday],
     }
+
+def build_normalised_forecasts(unified: list[dict], forecasts: dict) -> dict:
+    """
+    Convert all forecast datasets into normalised slot structures.
+
+    Returns:
+        {
+            "all_slots_sorted": [...],
+            "next_24_hours": [...],
+            "today_24_hours": [...],
+            "tomorrow_24_hours": [...],
+            "yesterday_24_hours": [...],
+        }
+    """
+
+    return {
+        "all_slots_sorted": [normalise_slot(s) for s in strip_internal(unified)],
+        "next_24_hours": [normalise_slot(s) for s in strip_internal(forecasts["next_24_hours"])],
+        "today_24_hours": [normalise_slot(s) for s in strip_internal(forecasts["today_24_hours"])],
+        "tomorrow_24_hours": [normalise_slot(s) for s in strip_internal(forecasts["tomorrow_24_hours"])],
+        "yesterday_24_hours": [normalise_slot(s) for s in strip_internal(forecasts["yesterday_24_hours"])],
+    }
