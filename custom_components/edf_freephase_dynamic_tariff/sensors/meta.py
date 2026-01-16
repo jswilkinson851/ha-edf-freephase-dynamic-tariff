@@ -1,10 +1,12 @@
 """
-Metadata sensors such as last-updated time and API latency.
+Metadata sensors such as last-updated time, API latency, coordinator status,
+next refresh time, and full tariff metadata.
 """
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.entity import EntityCategory
@@ -12,6 +14,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import parse_datetime, as_local
 
 from .helpers import edf_device_info
+
+_LOGGER = logging.getLogger(__name__)
 
 def _format_timestamp(ts: str | None):
     """Format an ISO timestamp into 'HH:MM on DD/MM/YYYY'."""
@@ -42,12 +46,13 @@ class EDFFreePhaseDynamicLastUpdatedSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
-        ts = self.coordinator.data.get("last_updated")
-        return _format_timestamp(ts)
+        data = self.coordinator.data or {}
+        return _format_timestamp(data.get("last_updated"))
 
     @property
     def extra_state_attributes(self):
-        ts = self.coordinator.data.get("last_updated")
+        data = self.coordinator.data or {}
+        ts = data.get("last_updated")
         if not ts:
             return {}
 
@@ -87,11 +92,13 @@ class EDFFreePhaseDynamicAPILatencySensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
-        return self.coordinator.data.get("api_latency_ms")
+        data = self.coordinator.data or {}
+        return data.get("api_latency_ms")
 
     @property
     def extra_state_attributes(self):
-        latency = self.coordinator.data.get("api_latency_ms")
+        data = self.coordinator.data or {}
+        latency = data.get("api_latency_ms")
         if latency is None:
             return {}
 
@@ -105,11 +112,14 @@ class EDFFreePhaseDynamicAPILatencySensor(CoordinatorEntity, SensorEntity):
     def device_info(self):
         return edf_device_info()
 
+
 # ---------------------------------------------------------------------------
 # Coordinator Status Sensor
 # ---------------------------------------------------------------------------
 
 class EDFFreePhaseDynamicCoordinatorStatusSensor(CoordinatorEntity, SensorEntity):
+    """Sensor showing coordinator health."""
+
     def __init__(self, coordinator):
         super().__init__(coordinator)
         self._attr_name = "Coordinator Status"
@@ -119,21 +129,24 @@ class EDFFreePhaseDynamicCoordinatorStatusSensor(CoordinatorEntity, SensorEntity
 
     @property
     def native_value(self):
-        return self.coordinator.data.get("coordinator_status")
+        data = self.coordinator.data or {}
+        return data.get("coordinator_status")
 
     @property
     def extra_state_attributes(self):
+        data = self.coordinator.data or {}
         return {
-            "last_updated": self.coordinator.data.get("last_updated"),
-            "api_latency_ms": self.coordinator.data.get("api_latency_ms"),
+            "last_updated": data.get("last_updated"),
+            "api_latency_ms": data.get("api_latency_ms"),
         }
 
     @property
     def device_info(self):
         return edf_device_info()
 
+
 # ---------------------------------------------------------------------------
-# Next Refresh Sensor <-- Added in v.0.3.7
+# Next Refresh Sensor
 # ---------------------------------------------------------------------------
 
 class EDFFreePhaseDynamicNextRefreshSensor(CoordinatorEntity, SensorEntity):
@@ -168,8 +181,58 @@ class EDFFreePhaseDynamicNextRefreshSensor(CoordinatorEntity, SensorEntity):
             ),
             "seconds_until_refresh": self.coordinator._next_refresh_delay,
             "jitter_seconds": self.coordinator._next_refresh_jitter,
-            "scan_interval_minutes": self.coordinator._scan_interval.total_seconds() / 60,
+            # Using coordinator._scan_interval because update_interval is disabled for aligned scheduling
+            "scan_interval_minutes": (
+                self.coordinator._scan_interval.total_seconds() / 60
+                if getattr(self.coordinator, "_scan_interval", None)
+                else None
+            )
         }
+
+    @property
+    def device_info(self):
+        return edf_device_info()
+
+
+# ---------------------------------------------------------------------------
+# Tariff Metadata Sensor
+# ---------------------------------------------------------------------------
+
+class EDFFreePhaseDynamicTariffMetadataSensor(CoordinatorEntity, SensorEntity):
+    """Diagnostic sensor exposing full tariff metadata."""
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_name = "Tariff Metadata"
+        self._attr_unique_id = "edf_freephase_dynamic_tariff_metadata"
+        self._attr_icon = "mdi:information-outline"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def native_value(self):
+        """Human-readable summary."""
+        data = self.coordinator.data or {}
+        meta = data.get("tariff_metadata") or {}
+        
+        # TEMP DEBUG: Inspect what the sensor is actually receiving
+        _LOGGER.warning("META SENSOR DEBUG: %s", meta)
+
+        display = meta.get("display_name") or meta.get("full_name") or meta.get("product_name")
+        region = meta.get("region_label")
+
+        if display and region:
+            return f"{display} — {region}"
+        if display:
+            return display
+        return "Tariff Metadata"
+
+    @property
+    def extra_state_attributes(self):
+        """Expose full product metadata."""
+        data = self.coordinator.data or {}
+        meta = data.get("tariff_metadata") or {}
+
+        return {k: v for k, v in meta.items() if v is not None}
 
     @property
     def device_info(self):

@@ -8,10 +8,10 @@ parsing module.
 """
 
 from __future__ import annotations
+import logging
 
 import aiohttp
 import async_timeout
-import logging
 
 # Using a local session because the EDF API is lightweight and short‑lived.
 # If future API calls become more frequent, consider async_get_clientsession(hass).
@@ -19,49 +19,72 @@ import logging
 _LOGGER = logging.getLogger(__name__)
 
 
-async def fetch_all_pages(api_url: str, max_pages: int = 3) -> list[dict]:
+async def fetch_all_pages(api_url: str, max_pages: int = 3):
     """
-    Fetch all paginated EDF API results from the given URL.
-
-    Parameters:
-        api_url: The initial EDF API endpoint for tariff unit rates.
-        max_pages: Maximum number of pages to follow via the "next" link.
+    Fetch EDF API data from either:
+      - a paginated endpoint (unit rates)
+      - a single-object endpoint (product metadata)
+      - a list endpoint (rare but supported)
 
     Returns:
-        A flat list of raw result dictionaries returned by the EDF API.
-
-    Notes:
-        - Each page is expected to contain a "results" list.
-        - Pagination stops early if a page is malformed or missing data.
-        - Errors are logged but not raised; callers should validate output.
+        dict | list
     """
-    
-    results = []
-    url = api_url
-    page_count = 0
 
     async with aiohttp.ClientSession() as session:
         async with async_timeout.timeout(10):
-            while url and page_count < max_pages:
-                page_count += 1
-                
-                _LOGGER.debug("Fetching EDF API page %s: %s", page_count, url)
-                
-                resp = await session.get(url)
-                resp.raise_for_status()
+            resp = await session.get(api_url)
+            resp.raise_for_status()
 
-                try:
-                    data = await resp.json()
-                except Exception:
-                    _LOGGER.error("EDF API returned non‑JSON on page %s", page_count)
-                    break
+            try:
+                data = await resp.json()
+            except Exception:
+                _LOGGER.error("EDF API returned non‑JSON for URL: %s", api_url)
+                return {}
 
-                page_results = data.get("results")
-                if not isinstance(page_results, list):
-                    _LOGGER.error("EDF API page %s missing/invalid results", page_count)
-                    break
+            # ------------------------------------------
+            # CASE 1: Product metadata (flat dict)
+            # ------------------------------------------
+            if isinstance(data, dict) and "results" not in data:
+                _LOGGER.debug("EDF API returned single-object metadata")
+                return data
 
-                results.extend(page_results)
-                url = data.get("next")
+            # ------------------------------------------
+            # CASE 2: Paginated endpoint (unit rates)
+            # ------------------------------------------
+            if isinstance(data, dict) and isinstance(data.get("results"), list):
+                results = []
+                page = data
+                page_count = 1
 
-    return results
+                while page and page_count <= max_pages:
+                    page_results = page.get("results")
+                    if not isinstance(page_results, list):
+                        _LOGGER.error("EDF API page %s missing/invalid results", page_count)
+                        break
+
+                    results.extend(page_results)
+
+                    next_url = page.get("next")
+                    if not next_url:
+                        break
+
+                    _LOGGER.debug("Fetching EDF API page %s: %s", page_count + 1, next_url)
+                    resp = await session.get(next_url)
+                    resp.raise_for_status()
+                    page = await resp.json()
+                    page_count += 1
+
+                return results
+
+            # ------------------------------------------
+            # CASE 3: Unexpected but valid list response
+            # ------------------------------------------
+            if isinstance(data, list):
+                _LOGGER.debug("EDF API returned a raw list")
+                return data
+
+            # ------------------------------------------
+            # CASE 4: Unknown structure
+            # ------------------------------------------
+            _LOGGER.error("EDF API returned unexpected structure: %s", type(data))
+            return {}

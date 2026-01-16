@@ -1,10 +1,15 @@
+import logging
 from datetime import timedelta
-from homeassistant.core import HomeAssistant
+
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import EDFCoordinator
+from .helpers import build_edf_urls
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -14,32 +19,44 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up EDF FreePhase Dynamic Tariff from a config entry."""
+
     hass.data.setdefault(DOMAIN, {})
 
-    # Build API URL
-    tariff_code = entry.data["tariff_code"]
-    api_url = (
-        f"https://api.edfgb-kraken.energy/v1/products/EDF_FREEPHASE_DYNAMIC_12M_HH/"
-        f"electricity-tariffs/{tariff_code}/standard-unit-rates/"
-    )
+    # Build URLs using helper
+    urls = build_edf_urls(entry.data["tariff_code"])
+    product_url = urls["product_url"]
+    api_url = urls["api_url"]
+
+    # Optional debug (commented out)
+    # _LOGGER.warning("EDF DEBUG INIT: product_url=%s api_url=%s", product_url, api_url)
 
     # Build scan interval
     scan_interval = timedelta(minutes=entry.data["scan_interval"])
 
     # Create coordinator
-    coordinator = EDFCoordinator(hass, api_url, scan_interval)
+    coordinator = EDFCoordinator(hass, product_url, api_url, scan_interval)
+
+    # Attach config entry so coordinator can access region label
+    coordinator.config_entry = entry
+
+    # Perform first refresh (non-blocking)
     await coordinator.async_config_entry_first_refresh()
 
-    # Store coordinator for sensors + diagnostics
+    # Store coordinator + URLs for sensors/diagnostics
     hass.data[DOMAIN][entry.entry_id] = {
-        "coordinator": coordinator
+        "coordinator": coordinator,
+        "tariff_code": entry.data["tariff_code"],
+        "product_url": product_url,
+        "api_url": api_url,
+        "tariff_region_label": entry.data.get("tariff_region_label"),
     }
 
-    # Listen for config entry updates (e.g., scan interval changes)
+    # Listen for config entry updates
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     # Forward to sensor platform
     await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
+
     return True
 
 

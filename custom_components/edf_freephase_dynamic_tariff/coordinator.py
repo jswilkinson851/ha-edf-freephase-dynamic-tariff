@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timezone
 from time import monotonic
 
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator  # pylint: disable=import-error
 
 from .api.client import fetch_all_pages
 from .api.parsing import build_unified_dataset, build_forecasts, strip_internal
@@ -15,6 +15,7 @@ from .sensors.helpers import (
     group_phase_blocks,
     format_phase_block,
 )
+from .helpers import extract_tariff_metadata
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,9 +23,13 @@ _LOGGER = logging.getLogger(__name__)
 class EDFCoordinator(DataUpdateCoordinator):
     """Coordinator for EDF FreePhase Dynamic Tariff."""
 
-    def __init__(self, hass, api_url, scan_interval):
+    def __init__(self, hass, product_url, api_url, scan_interval):
         self.hass = hass
+        self.product_url = product_url
         self.api_url = api_url
+
+        # Will be set by __init__.py after instantiation
+        self.config_entry = None
 
         # Scan interval (used by diagnostics + scheduler)
         self._scan_interval = scan_interval
@@ -51,29 +56,52 @@ class EDFCoordinator(DataUpdateCoordinator):
         now = datetime.now(timezone.utc)
         now_iso = now.isoformat()
 
+        # --------------------------------------
+        # Fetch product metadata (separate endpoint)
+        # --------------------------------------
         try:
-            # --------------------------------------
-            # Fetch raw pages from EDF API
-            # --------------------------------------
+            product_raw = await fetch_all_pages(self.product_url, max_pages=1)
+
+            # Debug (commented out)
+            # _LOGGER.warning("PRODUCT RAW: %s", product_raw)
+
+            if isinstance(product_raw, dict):
+                product_meta = product_raw
+            elif isinstance(product_raw, list) and product_raw:
+                product_meta = product_raw[0]
+            else:
+                product_meta = {}
+
+            # Debug (commented out)
+            # _LOGGER.warning("EDF DEBUG: PRODUCT_META = %s", product_meta)
+
+            # Region label from config entry (safe)
+            region_label = None
+            if self.config_entry:
+                region_label = self.config_entry.data.get("tariff_region_label")
+
+            tariff_metadata = extract_tariff_metadata(product_meta, region_label)
+
+            # Debug (commented out)
+            # _LOGGER.warning("EDF DEBUG: TARIFF_METADATA = %s", tariff_metadata)
+
+        except Exception as err:
+            _LOGGER.warning("Failed to fetch or parse product metadata: %s", err)
+            tariff_metadata = {}
+
+        # --------------------------------------
+        # Fetch unit rates + build unified dataset
+        # --------------------------------------
+        try:
             raw_items = await fetch_all_pages(self.api_url, max_pages=3)
 
             if not raw_items:
                 raise ValueError("EDF API returned no results")
 
-            # --------------------------------------
-            # Build unified internal dataset
-            # (includes _start_dt_obj / _end_dt_obj as datetimes)
-            # --------------------------------------
             unified = build_unified_dataset(raw_items)
-
-            # --------------------------------------
-            # Build forecast views (today/tomorrow/yesterday/next24)
-            # --------------------------------------
             forecasts = build_forecasts(unified, now)
 
-            # --------------------------------------
-            # Determine current slot using internal datetime fields
-            # --------------------------------------
+            # Determine current slot
             current_raw = next(
                 (
                     slot
@@ -84,11 +112,9 @@ class EDFCoordinator(DataUpdateCoordinator):
             )
 
             if current_raw:
-                # Strip internal fields and normalise just this slot
                 current_slot = normalise_slot(strip_internal([current_raw])[0])
                 current_price = current_slot["value"]
             else:
-                # Fallback: if now is outside all slot ranges, use the first slot’s phase
                 first = unified[0]
                 current_price = first["value"]
                 current_slot = normalise_slot(
@@ -103,9 +129,7 @@ class EDFCoordinator(DataUpdateCoordinator):
                     }
                 )
 
-            # --------------------------------------
-            # Next price using internal datetime fields
-            # --------------------------------------
+            # Next price
             next_price = next(
                 (
                     slot["value"]
@@ -115,9 +139,7 @@ class EDFCoordinator(DataUpdateCoordinator):
                 None,
             )
 
-            # --------------------------------------
-            # Strip internal fields + normalise full set
-            # --------------------------------------
+            # Normalised full sets
             all_slots_sorted = [
                 normalise_slot(slot) for slot in strip_internal(unified)
             ]
@@ -139,12 +161,10 @@ class EDFCoordinator(DataUpdateCoordinator):
                 for slot in strip_internal(forecasts["yesterday_24_hours"])
             ]
 
-            # --------------------------------------
-            # Block summaries (current + next)
-            # --------------------------------------
+            # Block summaries
             current_block = find_current_block(all_slots_sorted, current_slot)
-
             blocks = group_phase_blocks(all_slots_sorted)
+
             next_block = None
             if current_block and blocks:
                 try:
@@ -163,9 +183,7 @@ class EDFCoordinator(DataUpdateCoordinator):
 
             api_latency_ms = int((monotonic() - start_time) * 1000)
 
-            # --------------------------------------
             # Final coordinator data
-            # --------------------------------------
             return {
                 "current_price": current_price,
                 "next_price": next_price,
@@ -180,6 +198,7 @@ class EDFCoordinator(DataUpdateCoordinator):
                 "api_latency_ms": api_latency_ms,
                 "last_updated": now_iso,
                 "coordinator_status": "ok",
+                "tariff_metadata": tariff_metadata,
             }
 
         except Exception as err:
@@ -198,10 +217,12 @@ class EDFCoordinator(DataUpdateCoordinator):
                 "api_latency_ms": None,
                 "last_updated": None,
                 "coordinator_status": "error",
+                "tariff_metadata": tariff_metadata or {},
+                "scan_interval_seconds": int(self._scan_interval.total_seconds()),
             }
 
     # -------------------------------------------------------------------------
-    # Aligned scheduling (delegated to AlignedScheduler)
+    # Aligned scheduling
     # -------------------------------------------------------------------------
 
     def _sync_scheduler_state(self) -> None:
@@ -219,22 +240,18 @@ class EDFCoordinator(DataUpdateCoordinator):
         """Perform the first refresh asynchronously, then start aligned scheduling."""
         _LOGGER.debug("Performing first refresh for EDF coordinator (non-blocking)")
 
-        # Schedule next refresh FIRST so boundary is based on startup time
         await self.scheduler.schedule(self._handle_refresh)
         self._sync_scheduler_state()
 
-        # Kick off the first refresh without blocking HA startup
         self.hass.async_create_task(super().async_config_entry_first_refresh())
 
     async def _handle_refresh(self, _now=None) -> None:
         """Perform a refresh and then schedule the next one."""
         _LOGGER.debug("Running aligned EDF coordinator refresh")
 
-        # Schedule next refresh FIRST so boundary is independent of refresh duration
         await self.scheduler.schedule(self._handle_refresh)
         self._sync_scheduler_state()
 
-        # Now perform the actual refresh
         await self.async_refresh()
         self.async_update_listeners()
 

@@ -15,6 +15,7 @@ from .helpers import (
     group_phase_blocks,
 )
 
+
 # ---------------------------------------------------------------------------
 # Current Slot Colour
 # ---------------------------------------------------------------------------
@@ -30,19 +31,18 @@ class EDFFreePhaseDynamicCurrentSlotColourSensor(CoordinatorEntity, SensorEntity
 
     @property
     def native_value(self):
-        current = self.coordinator.data.get("current_slot")
-        return current["phase"] if current else None
+        data = self.coordinator.data or {}
+        current = data.get("current_slot")
+        return current.get("phase") if current else None
 
     @property
     def extra_state_attributes(self):
-        current = self.coordinator.data.get("current_slot")
-        all_slots = self.coordinator.data.get("all_slots_sorted", [])
+        data = self.coordinator.data or {}
+        current = data.get("current_slot")
+        all_slots = data.get("all_slots_sorted", [])
 
         block = find_current_block(all_slots, current)
-        if not block:
-            return {}
-
-        return format_phase_block(block)
+        return format_phase_block(block) if block else {}
 
     @property
     def device_info(self):
@@ -65,22 +65,21 @@ class EDFFreePhaseDynamicCurrentBlockSummarySensor(CoordinatorEntity, SensorEnti
 
     @property
     def native_value(self):
-        current = self.coordinator.data.get("current_slot")
-        all_slots = self.coordinator.data.get("all_slots_sorted", [])
+        data = self.coordinator.data or {}
+        current = data.get("current_slot")
+        all_slots = data.get("all_slots_sorted", [])
 
         block = find_current_block(all_slots, current)
-        return block[0]["value"] if block else None
+        return block[0].get("value") if block else None
 
     @property
     def extra_state_attributes(self):
-        current = self.coordinator.data.get("current_slot")
-        all_slots = self.coordinator.data.get("all_slots_sorted", [])
+        data = self.coordinator.data or {}
+        current = data.get("current_slot")
+        all_slots = data.get("all_slots_sorted", [])
 
         block = find_current_block(all_slots, current)
-        if not block:
-            return {}
-
-        return format_phase_block(block)
+        return format_phase_block(block) if block else {}
 
     @property
     def device_info(self):
@@ -102,21 +101,19 @@ class EDFFreePhaseDynamicNextBlockSummarySensor(CoordinatorEntity, SensorEntity)
         self._attr_icon = "mdi:timeline-clock-outline"
 
     def _find_next_block(self):
-        all_slots = self.coordinator.data.get("all_slots_sorted", [])
-        current = self.coordinator.data.get("current_slot")
+        data = self.coordinator.data or {}
+        all_slots = data.get("all_slots_sorted", [])
+        current = data.get("current_slot")
 
         if not current or not all_slots:
             return None
 
-        # Find current block
         current_block = find_current_block(all_slots, current)
         if not current_block:
             return None
 
-        # Group all blocks
         blocks = group_phase_blocks(all_slots)
 
-        # Find next block after current block
         try:
             idx = blocks.index(current_block)
             return blocks[idx + 1] if idx + 1 < len(blocks) else None
@@ -126,7 +123,7 @@ class EDFFreePhaseDynamicNextBlockSummarySensor(CoordinatorEntity, SensorEntity)
     @property
     def native_value(self):
         block = self._find_next_block()
-        return block[0]["value"] if block else None
+        return block[0].get("value") if block else None
 
     @property
     def extra_state_attributes(self):
@@ -136,6 +133,7 @@ class EDFFreePhaseDynamicNextBlockSummarySensor(CoordinatorEntity, SensorEntity)
     @property
     def device_info(self):
         return edf_device_info()
+
 
 # ---------------------------------------------------------------------------
 # Next {Colour} Slot — parameterised class
@@ -154,18 +152,17 @@ class EDFFreePhaseDynamicNextPhaseSlotSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
-        slots = self.coordinator.data.get("next_24_hours", [])
+        data = self.coordinator.data or {}
+        slots = data.get("next_24_hours", [])
         block = find_next_phase_block(slots, self._phase)
-        return block[0]["value"] if block else None
+        return block[0].get("value") if block else None
 
     @property
     def extra_state_attributes(self):
-        slots = self.coordinator.data.get("next_24_hours", [])
+        data = self.coordinator.data or {}
+        slots = data.get("next_24_hours", [])
         block = find_next_phase_block(slots, self._phase)
-        if not block:
-            return {}
-
-        return format_phase_block(block)
+        return format_phase_block(block) if block else {}
 
     @property
     def device_info(self):
@@ -173,7 +170,7 @@ class EDFFreePhaseDynamicNextPhaseSlotSensor(CoordinatorEntity, SensorEntity):
 
 
 # ---------------------------------------------------------------------------
-# Concrete Next {Colour} Slot sensors (names + IDs preserved)
+# Concrete Next {Colour} Slot sensors
 # ---------------------------------------------------------------------------
 
 def create_next_phase_sensors(coordinator):
@@ -217,16 +214,15 @@ class EDFFreePhaseDynamicIsGreenSlotBinarySensor(CoordinatorEntity, SensorEntity
 
     @property
     def native_value(self):
-        current = self.coordinator.data.get("current_slot")
-        return current["phase"] == "green" if current else None
+        data = self.coordinator.data or {}
+        current = data.get("current_slot")
+        return current.get("phase") == "green" if current else None
 
     @property
     def extra_state_attributes(self):
-        slot = self.coordinator.data.get("current_slot")
-        if not slot:
-            return {}
-
-        return format_phase_block([slot])
+        data = self.coordinator.data or {}
+        slot = data.get("current_slot")
+        return format_phase_block([slot]) if slot else {}
 
     @property
     def device_info(self):

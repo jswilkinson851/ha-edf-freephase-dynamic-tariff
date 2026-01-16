@@ -204,6 +204,21 @@ The integration guarantees:
 
 ---
 
+# EDF FreePhase Dynamic — Event Documentation (v0.5.0)
+
+Events remain unchanged in behaviour, but now include access to richer coordinator data.
+
+The following additional fields are now available to developers via diagnostics:
+
+- tariff_metadata
+- tariff_region_label
+- product_url
+- api_url
+
+Event payloads themselves are unchanged in this release.
+
+---
+
 # Notes
 
 - All price values use **p/kWh**.  
