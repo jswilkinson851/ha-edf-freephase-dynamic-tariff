@@ -1,0 +1,232 @@
+ # EDF FreePhase Dynamic — Full Tariff & Diagnostics Dashboard
+#
+# This dashboard provides a complete, at‑a‑glance view of the EDF FreePhase Dynamic
+# tariff pipeline, including:
+#
+# - Coordinator health and diagnostic metadata
+# - Current and next tariff slot information
+# - Phase windows and block summaries
+# - Cheapest and most expensive slots in the next 24 hours
+# - Daily summaries (yesterday, today, tomorrow)
+# - Cost and consumption breakdowns (by phase and by slot)
+# - Live scheduler timing (next refresh, jitter, delays)
+# - Debug logging controls and advanced diagnostic attributes
+#
+# It is designed as a comprehensive “control centre” for the integration,
+# ideal for tablets, desktops, or dedicated energy dashboards.
+ 
+ views: 
+  - type: sections
+    path: edf-freephase-dynamic-dash
+    title: EDF FreePhase Dynamic Dash
+    icon: mdi:truck-snowflake
+    cards: []
+    sections:
+      - type: grid
+        cards:
+          - type: custom:mod-card
+            card:
+              type: custom:layout-card
+              layout_type: custom:vertical-layout
+              cards:
+                - type: custom:expander-card
+                  title: 🧭 Coordinator & System
+                  default_open: true
+                  cards:
+                    - type: entities
+                      entities:
+                        - type: attribute
+                          entity: sensor.diagnostic_sensor
+                          attribute: integration_version
+                          name: Integration Version
+                        - entity: sensor.coordinator_status
+                        - entity: sensor.diagnostic_sensor
+                          name: Diagnostic Status
+                        - entity: sensor.tariff_metadata
+                        - entity: sensor.last_updated
+                        - entity: sensor.next_refresh_time
+                        - entity: sensor.api_latency
+                - type: custom:expander-card
+                  title: 📍 Current State
+                  default_open: true
+                  cards:
+                    - type: entities
+                      entities:
+                        - entity: sensor.current_price
+                        - entity: sensor.current_block_summary
+                        - entity: sensor.edf_freephase_dynamic_current_slot_colour
+                        - entity: binary_sensor.is_green_slot
+                - type: custom:expander-card
+                  title: ⏭️ Next State
+                  default_open: true
+                  cards:
+                    - type: entities
+                      entities:
+                        - entity: sensor.edf_freephase_dynamic_next_slot_price
+                        - entity: sensor.next_block_summary
+                        - entity: sensor.edf_freephase_dynamic_next_green_slot
+                        - entity: sensor.edf_freephase_dynamic_next_amber_slot
+                        - entity: sensor.edf_freephase_dynamic_next_red_slot
+                - type: custom:expander-card
+                  title: 📊 Price Extremes (Next 24 Hours)
+                  default_open: true
+                  cards:
+                    - type: entities
+                      entities:
+                        - entity: >-
+                            sensor.edf_freephase_dynamic_cheapest_slot_next_24_hours
+                        - entity: >-
+                            sensor.edf_freephase_dynamic_most_expensive_slot_next_24_hours
+                - type: custom:expander-card
+                  title: 📅 Daily Summaries
+                  default_open: true
+                  cards:
+                    - type: entities
+                      entities:
+                        - entity: sensor.yesterday_phases_summary
+                        - entity: sensor.today_s_phases_summary
+                        - entity: sensor.tomorrow_s_phases_summary
+                - type: custom:expander-card
+                  title: 💷 Daily Costs
+                  default_open: true
+                  cards:
+                    - type: entities
+                      entities:
+                        - entity: >-
+                            sensor.edf_freephase_dynamic_tariff_today_consumption_phase
+                          name: Today – Consumption (by Phase)
+                        - entity: sensor.edf_freephase_dynamic_tariff_today_cost_phase
+                          name: Today – Cost (by Phase)
+                        - entity: sensor.edf_freephase_dynamic_tariff_today_cost_slots
+                          name: Today – Cost (by Slots)
+                        - entity: >-
+                            sensor.edf_freephase_dynamic_tariff_yesterday_consumption_phase
+                          name: Yesterday – Consumption (by Phase)
+                        - entity: >-
+                            sensor.edf_freephase_dynamic_tariff_yesterday_cost_phase
+                          name: Yesterday – Cost (by Phase)
+                        - entity: >-
+                            sensor.edf_freephase_dynamic_tariff_yesterday_cost_slots
+                          name: Yesterday – Cost (by Slots)
+      - type: grid
+        cards:
+          - type: vertical-stack
+            cards:
+              - type: horizontal-stack
+                cards:
+                  - type: entity
+                    entity: sensor.coordinator_status
+                    name: Tariff Pipeline
+                  - type: entity
+                    entity: sensor.cost_coordinator_status
+                    name: Cost Pipeline
+                  - type: entity
+                    entity: sensor.diagnostic_sensor
+                    attribute: integration_version
+                    name: Version
+              - type: entities
+                entities:
+                  - entity: switch.edf_debug_logging
+                    name: Debug Logging
+              - type: entities
+                title: Live Status
+                entities:
+                  - type: custom:multiple-entity-row
+                    entity: sensor.diagnostic_sensor
+                    name: API Latency (ms)
+                    attribute: api_latency_ms
+                  - type: custom:multiple-entity-row
+                    entity: sensor.diagnostic_sensor
+                    name: Last Updated
+                    attribute: last_updated
+                  - type: custom:multiple-entity-row
+                    entity: sensor.diagnostic_sensor
+                    name: Next Refresh
+                    attribute: next_refresh_datetime
+                  - type: custom:multiple-entity-row
+                    entity: sensor.diagnostic_sensor
+                    name: Refresh Delay (s)
+                    attribute: next_refresh_delay
+                  - type: custom:multiple-entity-row
+                    entity: sensor.diagnostic_sensor
+                    name: Refresh Jitter (s)
+                    attribute: next_refresh_jitter
+              - type: custom:mushroom-entity-card
+                entity: sensor.diagnostic_sensor
+                name: Current Tariff Slot
+                icon: mdi:clock-outline
+                layout: vertical
+                tap_action:
+                  action: more-info
+                card_mod:
+                  style: |
+                    ha-card {
+                      padding: 12px;
+                    }
+                secondary_info: none
+                multiline_secondary: true
+              - type: entities
+                title: Current Tariff Slot
+                entities:
+                  - type: custom:template-entity-row
+                    name: Start
+                    state: >-
+                      {{ state_attr('sensor.diagnostic_sensor',
+                      'current_slot')['start'] }}
+                    icon: mdi:clock-start
+                  - type: custom:template-entity-row
+                    name: End
+                    state: >-
+                      {{ state_attr('sensor.diagnostic_sensor',
+                      'current_slot')['end'] }}
+                    icon: mdi:clock-end
+                  - type: custom:template-entity-row
+                    name: Price (p/kWh)
+                    state: >-
+                      {{ state_attr('sensor.diagnostic_sensor',
+                      'current_slot')['value'] }}
+                    icon: mdi:currency-gbp
+                  - type: custom:template-entity-row
+                    name: Phase
+                    state: >-
+                      {{ state_attr('sensor.diagnostic_sensor',
+                      'current_slot')['phase'] }}
+                    icon: mdi:flash
+                  - type: attribute
+                    entity: sensor.diagnostic_sensor
+                    attribute: current_phase_summary
+                    name: Current Phase Summary
+              - type: custom:expander-card
+                title: Advanced Diagnostics
+                padding: 12
+                cards:
+                  - type: entities
+                    entities:
+                      - entity: sensor.diagnostic_sensor
+                      - entity: sensor.coordinator_status
+                      - entity: sensor.cost_coordinator_status
+                      - type: attribute
+                        entity: sensor.diagnostic_sensor
+                        attribute: api_latency_ms
+                        name: API Latency (ms)
+                      - type: attribute
+                        entity: sensor.diagnostic_sensor
+                        attribute: next_refresh_datetime
+                        name: Next Refresh
+                      - type: attribute
+                        entity: sensor.diagnostic_sensor
+                        attribute: next_refresh_delay
+                        name: Refresh Delay (s)
+                      - type: attribute
+                        entity: sensor.diagnostic_sensor
+                        attribute: next_refresh_jitter
+                        name: Refresh Jitter (s)
+                      - type: attribute
+                        entity: sensor.diagnostic_sensor
+                        attribute: current_slot
+                        name: Current Slot
+                      - type: attribute
+                        entity: sensor.diagnostic_sensor
+                        attribute: current_phase_summary
+                        name: Current Phase Summary
+    max_columns: 4
