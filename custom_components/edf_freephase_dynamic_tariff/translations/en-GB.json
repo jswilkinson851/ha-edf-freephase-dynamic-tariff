@@ -7,12 +7,22 @@
         "data": {
           "tariff_code": "Region",
           "scan_interval": "Scan Interval (minutes)",
-          "import_sensor": "Import Sensor (optional)"
+          "import_sensor": "Import Sensor (optional)",
+          "debug_logging": "Enable debug logging"
+        }
+      },
+      "confirm_import_sensor": {
+        "title": "Confirm import sensor",
+        "description": "The selected grid import sensor ({entity_id}) does not appear to be valid for cumulative kWh readings:\n{reasons}\n\nAre you sure you want to continue with this sensor?",
+        "data": {
+          "confirm_import_sensor": "Continue anyway"
         }
       }
     },
     "error": {
-      "cannot_connect": "Unable to connect to the EDF API. Please try again."
+      "cannot_connect": "Unable to connect to the EDF API. Please try again.",
+      "product_url_unreachable": "Unable to reach EDF product metadata endpoint.",
+      "invalid_import_sensor": "This sensor does not provide usable cumulative kWh data."
     }
   },
   "options": {
@@ -23,7 +33,15 @@
         "data": {
           "tariff_code": "Region",
           "scan_interval": "Scan Interval (minutes)",
-          "import_sensor": "Import Sensor (optional)"
+          "import_sensor": "Import Sensor (optional)",
+          "debug_logging": "Enable debug logging"
+        }
+      },
+      "confirm_import_sensor": {
+        "title": "Confirm import sensor",
+        "description": "The selected grid import sensor ({entity_id}) does not appear to be valid for cumulative kWh readings:\n{reasons}\n\nAre you sure you want to continue with this sensor?",
+        "data": {
+          "confirm_import_sensor": "Continue anyway"
         }
       }
     }

@@ -1,19 +1,30 @@
-import aiohttp
-import async_timeout
-import voluptuous as vol
+"""
+Config flow for EDF FreePhase Dynamic Tariff.
 
-from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.selector import selector
+This file implements:
+- initial user step
+- a medium-strict import sensor validation step that warns the user
+  but allows them to continue if they confirm
+- options flow is implemented separately (OptionsFlowHandler)
+"""
+
+from __future__ import annotations
+
+import aiohttp  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
+import async_timeout  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
+import voluptuous as vol  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
+
+from homeassistant import config_entries  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
+from homeassistant.core import HomeAssistant  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
+from homeassistant.helpers.selector import selector  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
 
 from .const import DOMAIN
-from .helpers import get_product_base_url
-
+from .helpers import get_product_base_url, validate_import_sensor  # pylint: disable=no-name-in-module
 
 # Canonical product metadata endpoint
 PRODUCT_URL = get_product_base_url()
 
-# Fallback region → tariff_code mapping
+# Fallback region → tariff_code mapping (same as v0.5.0)
 FALLBACK_REGIONS = {
     "Region A – Eastern England": "EDF_FREEPHASE_DYNAMIC_12M_HH-A",
     "Region B – East Midlands": "EDF_FREEPHASE_DYNAMIC_12M_HH-B",
@@ -32,10 +43,6 @@ FALLBACK_REGIONS = {
 }
 
 
-# ---------------------------------------------------------------------------
-# API helpers
-# ---------------------------------------------------------------------------
-
 async def validate_product_url(hass: HomeAssistant) -> bool:
     """Validate that PRODUCT_URL is reachable and returns JSON."""
     try:
@@ -45,7 +52,7 @@ async def validate_product_url(hass: HomeAssistant) -> bool:
                 if resp.status != 200:
                     return False
                 await resp.json()
-        return True
+                return True
     except Exception:
         return False
 
@@ -57,101 +64,130 @@ async def fetch_regions(hass: HomeAssistant):
             async with async_timeout.timeout(10):
                 resp = await session.get(PRODUCT_URL)
                 data = await resp.json()
-
-        tariffs_section = data.get("single_register_electricity_tariffs", {})
-        if not tariffs_section:
-            raise ValueError("No tariffs in API response")
-
-        regions: dict[str, str] = {}
-
-        for item in tariffs_section.values():
-            ddm = item.get("direct_debit_monthly")
-            if ddm and "code" in ddm:
-                code = ddm["code"]
-                region_letter = code.split("-")[-1]
-
-                for label, fallback_code in FALLBACK_REGIONS.items():
-                    if fallback_code.endswith(region_letter):
-                        regions[label] = code
-                        break
-
-        if not regions:
-            raise ValueError("API returned no usable region codes")
-
-        return regions
-
-    except Exception:
+                tariffs_section = data.get("single_register_electricity_tariffs", {})
+                if not tariffs_section:
+                    raise ValueError("No tariffs in API response")
+                regions: dict[str, str] = {}
+                for item in tariffs_section.values():
+                    ddm = item.get("direct_debit_monthly")
+                    if ddm and "code" in ddm:
+                        code = ddm["code"]
+                        region_letter = code.split("-")[-1]
+                        for label, fallback_code in FALLBACK_REGIONS.items():
+                            if fallback_code.endswith(region_letter):
+                                regions[label] = code
+                                break
+                if not regions:
+                    raise ValueError("API returned no usable region codes")
+                return regions
+    except Exception:  # pylint: disable=broad-except
         # Fallback if API fails
         return FALLBACK_REGIONS.copy()
 
 
-# ---------------------------------------------------------------------------
-# Config Flow
-# ---------------------------------------------------------------------------
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[misc]
+    """Handle a config flow for EDF FreePhase Dynamic Tariff."""
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(self, user_input=None):
+        """Handle the initial step where the user selects region, scan interval and optional import sensor."""  # pylint: disable=line-too-long
         errors: dict[str, str] = {}
-
-        if user_input is not None:
-            ok = await validate_product_url(self.hass)
-            if not ok:
-                errors["base"] = "product_url_unreachable"
-            else:
-                selected_label = user_input["tariff_code"]
-                tariff_code = self._regions[selected_label]
-
-                return self.async_create_entry(
-                    title=f"EDF FreePhase Dynamic Tariff ({selected_label})",
-                    data={
-                        "tariff_code": tariff_code,
-                        "tariff_region_label": selected_label,
-                        "scan_interval": user_input["scan_interval"],
-                        "import_sensor": user_input.get("import_sensor"),
-                        "product_url": PRODUCT_URL,
-                    },
-                )
 
         # Fetch region list for the form
         self._regions = await fetch_regions(self.hass)
         region_labels = sorted(self._regions.keys())
 
+        if user_input is not None:
+            # If an import sensor was provided, validate it (soft validation)
+            import_sensor = user_input.get("import_sensor")
+            if import_sensor:
+                ok, reasons = await validate_import_sensor(self.hass, import_sensor)
+                if not ok:
+                    # Redirect to confirmation step with reasons so the user can choose to continue
+                    return await self.async_step_confirm_import_sensor({"user_input": user_input, "reasons": reasons})  # pylint: disable=line-too-long
+
+            # If validation passed or no import sensor provided, create the entry
+            selected_label = user_input["tariff_code"]
+            tariff_code = self._regions[selected_label]
+            return self.async_create_entry(
+                title=f"EDF FreePhase Dynamic Tariff ({selected_label})",
+                data={
+                    "tariff_code": tariff_code,
+                    "tariff_region_label": selected_label,
+                    "scan_interval": user_input["scan_interval"],
+                    "import_sensor": user_input.get("import_sensor"),
+                    "product_url": PRODUCT_URL,
+                },
+            )
+
         data_schema = vol.Schema(
             {
-                vol.Required("tariff_code"): selector(
-                    {"select": {"options": region_labels}}
-                ),
-                vol.Required("scan_interval", default=30): selector(
-                    {"number": {"min": 1, "max": 120, "step": 1}}
-                ),
-                vol.Optional("import_sensor"): selector(
-                    {"entity": {"domain": "sensor"}}
-                ),
+                vol.Required("tariff_code"): selector({"select": {"options": region_labels}}),
+                vol.Required("scan_interval", default=30): selector({"number": {"min": 1, "max": 120, "step": 1}}),  # pylint: disable=line-too-long
+                vol.Optional("import_sensor"): selector({"entity": {"domain": "sensor"}}),
+            }
+        )
+
+        return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
+
+    async def async_step_confirm_import_sensor(self, data):
+        """
+        Confirmation step shown when the selected import sensor fails validation.
+
+        The user can either continue anyway or go back and choose another sensor.
+        """
+        user_input = data.get("user_input", {})
+        reasons = data.get("reasons", [])
+        import_sensor = user_input.get("import_sensor")
+
+        # If the user confirmed, create the entry regardless of validation warnings
+        if user_input and user_input.get("confirm_import_sensor"):
+            selected_label = user_input["tariff_code"]
+            tariff_code = self._regions[selected_label]
+            return self.async_create_entry(
+                title=f"EDF FreePhase Dynamic Tariff ({selected_label})",
+                data={
+                    "tariff_code": tariff_code,
+                    "tariff_region_label": selected_label,
+                    "scan_interval": user_input["scan_interval"],
+                    "import_sensor": import_sensor,
+                    "product_url": PRODUCT_URL,
+                },
+            )
+
+        # Build a human readable reasons string for the form description
+        reason_text = "\n".join(f"• {r}" for r in reasons) if reasons else "Unknown issue."
+
+        data_schema = vol.Schema(
+            {
+                vol.Required("confirm_import_sensor", default=False): bool,
             }
         )
 
         return self.async_show_form(
-            step_id="user",
+            step_id="confirm_import_sensor",
             data_schema=data_schema,
-            errors=errors,
+            description_placeholders={"entity_id": import_sensor or "", "reasons": reason_text},
         )
 
     @staticmethod
     def async_get_options_flow(config_entry):
+        """Get the options flow handler for this integration."""
         return OptionsFlowHandler(config_entry)
 
 
 # ---------------------------------------------------------------------------
-# Options Flow
+# Options flow is implemented in OptionsFlowHandler below
 # ---------------------------------------------------------------------------
-
 class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Options flow for EDF FreePhase Dynamic Tariff."""
+
     def __init__(self, config_entry):
         self._config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
+        """Show the options form and validate import sensor if provided."""
         errors: dict[str, str] = {}
 
         regions = await fetch_regions(self.hass)
@@ -159,7 +195,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         current_tariff_code = self._config_entry.data.get("tariff_code")
         current_region_label = None
-
         for label, code in regions.items():
             if code == current_tariff_code:
                 current_region_label = label
@@ -168,53 +203,93 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         current_scan = self._config_entry.data.get("scan_interval", 30)
         current_import_sensor = self._config_entry.data.get("import_sensor")
         stored_region_label = self._config_entry.data.get("tariff_region_label")
-
         if stored_region_label:
             current_region_label = stored_region_label
         elif current_region_label is None:
             current_region_label = region_labels[0]
 
         if user_input is not None:
-            ok = await validate_product_url(self.hass)
-            if not ok:
-                errors["base"] = "product_url_unreachable"
-            else:
-                selected_label = user_input["tariff_code"]
-                tariff_code = regions[selected_label]
+            import_sensor = user_input.get("import_sensor")
+            if import_sensor:
+                ok, reasons = await validate_import_sensor(self.hass, import_sensor)
+                if not ok:
+                    # Redirect to confirmation step in options flow
+                    return await self.async_step_confirm_import_sensor({"user_input": user_input, "reasons": reasons})  # pylint: disable=line-too-long
 
-                new_data = {
-                    **self._config_entry.data,
-                    "tariff_code": tariff_code,
-                    "tariff_region_label": selected_label,
-                    "scan_interval": user_input["scan_interval"],
-                    "import_sensor": user_input.get("import_sensor"),
-                    "product_url": PRODUCT_URL,
-                }
+            # Apply changes
+            selected_label = user_input["tariff_code"]
+            tariff_code = regions[selected_label]
+            new_data = {
+                **self._config_entry.data,
+                "tariff_code": tariff_code,
+                "tariff_region_label": selected_label,
+                "scan_interval": user_input["scan_interval"],
+                "import_sensor": user_input.get("import_sensor"),
+                "product_url": PRODUCT_URL,
+            }
+            self.hass.config_entries.async_update_entry(self._config_entry, data=new_data)
 
-                self.hass.config_entries.async_update_entry(
-                    self._config_entry,
-                    data=new_data,
-                )
-                return self.async_create_entry(title="", data={})
+            # This ensures: `entry.data` holds the core config & `entry.options` holds the debug flag
+            # if you do NOT put `debug_logging` into `new_data`
+            return self.async_create_entry(
+                title="",
+                data={"debug_logging": user_input.get("debug_logging", False)},
+            )
 
+        # Build the options form
         data_schema = vol.Schema(
             {
-                vol.Required(
-                    "tariff_code",
-                    default=current_region_label,
-                ): selector({"select": {"options": region_labels}}),
+                vol.Required("tariff_code", default=current_region_label): selector(
+                    {"select": {"options": region_labels}}
+                ),
                 vol.Required("scan_interval", default=current_scan): selector(
                     {"number": {"min": 1, "max": 120, "step": 1}}
                 ),
+                vol.Optional("import_sensor", default=current_import_sensor): selector(
+                    {"entity": {"domain": "sensor"}}
+                ),
                 vol.Optional(
-                    "import_sensor",
-                    default=current_import_sensor,
-                ): selector({"entity": {"domain": "sensor"}}),
+                    "debug_logging",
+                    default=self._config_entry.options.get("debug_logging", False),
+                ): selector({"boolean": {}}),
             }
         )
 
+        return self.async_show_form(step_id="init", data_schema=data_schema, errors=errors)
+
+    async def async_step_confirm_import_sensor(self, data):
+        """Confirmation step for options flow when import sensor validation fails."""
+        user_input = data.get("user_input", {})
+        reasons = data.get("reasons", [])
+        import_sensor = user_input.get("import_sensor")
+
+        if user_input and user_input.get("confirm_import_sensor"):
+            # Apply changes even though validation warned
+            regions = await fetch_regions(self.hass)
+            selected_label = user_input["tariff_code"]
+            tariff_code = regions[selected_label]
+            new_data = {
+                **self._config_entry.data,
+                "tariff_code": tariff_code,
+                "tariff_region_label": selected_label,
+                "scan_interval": user_input["scan_interval"],
+                "import_sensor": import_sensor,
+                "product_url": PRODUCT_URL,
+            }
+            self.hass.config_entries.async_update_entry(self._config_entry, data=new_data)
+
+            # Ensures the debug flag is preserved even when the user confirms a failing sensor
+            return self.async_create_entry(
+                title="",
+                data={"debug_logging": user_input.get("debug_logging", False)},
+            )
+
+        reason_text = "\n".join(f"• {r}" for r in reasons) if reasons else "Unknown issue."
+
+        data_schema = vol.Schema({vol.Required("confirm_import_sensor", default=False): bool})
+
         return self.async_show_form(
-            step_id="init",
+            step_id="confirm_import_sensor",
             data_schema=data_schema,
-            errors=errors,
+            description_placeholders={"entity_id": import_sensor or "", "reasons": reason_text},
         )

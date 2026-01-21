@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 import dateutil.parser
 
 from .classification import classify_slot
-from ..sensors.helpers import normalise_slot
+from ..helpers import normalise_slot
 
 
 def build_unified_dataset(raw_items: list[dict]) -> list[dict]:
@@ -32,7 +32,7 @@ def build_unified_dataset(raw_items: list[dict]) -> list[dict]:
 
     Notes:
         - The returned list is sorted chronologically by start time.
-        
+
         - Internal datetime objects (_start_dt_obj, _end_dt_obj) are included
           to support efficient sorting and comparisons before being stripped
           out for sensor exposure.
@@ -121,6 +121,7 @@ def build_forecasts(unified: list[dict], now: datetime) -> dict:
         "tomorrow_24_hours": [s for s in unified if s["_start_dt_obj"].date() == tomorrow],
         "yesterday_24_hours": [s for s in unified if s["_start_dt_obj"].date() == yesterday],
     }
+
 
 def build_normalised_forecasts(unified: list[dict], forecasts: dict) -> dict:
     """
