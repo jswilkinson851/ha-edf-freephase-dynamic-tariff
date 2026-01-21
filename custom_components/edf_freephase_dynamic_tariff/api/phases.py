@@ -7,7 +7,7 @@ phase windows, keeping the coordinator focused on orchestration.
 
 from __future__ import annotations
 
-from ..sensors.helpers import (
+from ..helpers import (
     find_current_block,
     group_phase_blocks,
     format_phase_block,

@@ -5,9 +5,19 @@
         "data": {
           "tariff_code": "",
           "scan_interval": "",
-          "import_sensor": ""
+          "import_sensor": "",
+          "debug_logging": ""
+        }
+      },
+      "confirm_import_sensor": {
+        "data": {
+          "confirm_import_sensor": ""
         }
       }
+    },
+    "error": {
+      "product_url_unreachable": "",
+      "invalid_import_sensor": ""
     }
   },
   "options": {
@@ -16,7 +26,13 @@
         "data": {
           "tariff_code": "",
           "scan_interval": "",
-          "import_sensor": ""
+          "import_sensor": "",
+          "debug_logging": ""
+        }
+      },
+      "confirm_import_sensor": {
+        "data": {
+          "confirm_import_sensor": ""
         }
       }
     }
