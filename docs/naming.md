@@ -1,171 +1,122 @@
-# EDF FreePhase Dynamic — Naming Conventions
+# EDF FreePhase Dynamic Tariff — Naming Conventions (v0.6.0)
 
-> **Planned:** _To be implemented in a later version_
+This document describes the naming rules used across the integration.
 
-## Overview
-
-This document defines the naming conventions used throughout the EDF FreePhase Dynamic integration.  
-Consistent naming ensures:
-
-- predictable entity IDs  
-- clear and readable dashboards  
-- intuitive automation references  
-- maintainable code and documentation  
-
-These conventions follow Home Assistant’s official guidelines and the patterns used by high‑quality core integrations.
+The goal is to keep entity names:
+- predictable  
+- readable  
+- consistent  
+- easy to use in dashboards and automations  
 
 ---
 
-# General Principles
+# 🔹 Integration Prefix
 
-1. **All entity IDs use the `edf_fpd_` prefix**  
-   This keeps the namespace clean and avoids collisions with other integrations.
+Current prefix used in entity IDs:
+- `edf_freephase_dynamic_`
 
-2. **Names are descriptive, not abbreviated**  
-   Abbreviations are only used where they are unambiguous (`fpd`, `kWh`, etc.).
+Example:
+- `sensor.edf_freephase_dynamic_cost_today`
 
-3. **Snake_case for entity IDs**  
-   Example:  
-   `sensor.edf_fpd_current_price`
-
-4. **Human‑readable names for UI display**  
-   Example:  
-   `EDF FPD Current Price`
-
-5. **Timestamps always use ISO 8601**  
-   Example:  
-   `2026-01-12T23:00:00+00:00`
-
-6. **Units always follow EDF’s published format**  
-   Typically `p/kWh`.
+Friendly names use:
+- “EDF FreePhase Dynamic …”
 
 ---
 
-# Entity Naming
+# 🔹 Naming Rules
 
-## Sensors
+### 1. **snake_case for entity IDs**
+Example:
+- `sensor.edf_freephase_dynamic_next_green_slot`
 
-### Current Slot Sensors
+### 2. **Human‑readable friendly names**
+Example:
+- “Next Green Slot”
 
-| Entity ID                      | Friendly Name               | Description                                 |
-|--------------------------------|------------------------------|---------------------------------------------|
-| `sensor.edf_fpd_current_price`   | EDF FPD Current Price        | Current slot price                          |
-| `sensor.edf_fpd_current_phase`   | EDF FPD Current Phase        | Current phase classification                |
-| `sensor.edf_fpd_slot_index`      | EDF FPD Slot Index           | Current slot index (0–47)                   |
+### 3. **Lowercase phase names**
+- green  
+- amber  
+- red  
 
-### Forecast Summary Sensors
+### 4. **ISO 8601 timestamps**
+Used for all start/end times.
 
-| Entity ID                             | Friendly Name                     | Description                                   |
-|---------------------------------------|-----------------------------------|-----------------------------------------------|
-| `sensor.edf_fpd_cheapest_slot`          | EDF FPD Cheapest Slot             | Start time of cheapest slot                   |
-| `sensor.edf_fpd_most_expensive_slot`    | EDF FPD Most Expensive Slot       | Start time of most expensive slot             |
-| `sensor.edf_fpd_free_slots`             | EDF FPD Free Slots                | Number of negative‑price slots                |
-| `sensor.edf_fpd_forecast_window`        | EDF FPD Forecast Window           | Start/end of the 48‑slot forecast             |
-
-### Phase Window Sensors
-
-| Entity ID                      | Friendly Name               | Description                                 |
-|--------------------------------|------------------------------|---------------------------------------------|
-| `sensor.edf_fpd_next_phase`      | EDF FPD Next Phase          | Next upcoming phase                         |
+### 5. **Units**
+- p/kWh for prices  
+- GBP (£) for costs  
+- milliseconds for latency  
 
 ---
 
-# Event Naming
+# 🔹 Naming by Category
 
-Two events are exposed by the integration:
+## **Pricing Sensors**
+Format:
+`sensor.edf_freephase_dynamic_<description>`
 
-| Event Name                     | Description                                   |
-|--------------------------------|-----------------------------------------------|
-| `edf_fpd_phase_changed`          | Fires when the current phase changes          |
-| `edf_fpd_new_forecast_available` | Fires when a new 48‑slot forecast is fetched  |
-
-### Event Naming Rules
-
-1. **Prefix all events with `edf_fpd_`**  
-   Ensures uniqueness and clarity.
-
-2. **Use past tense for state‑change events**  
-   Example: `phase_changed`
-
-3. **Use descriptive names for data‑availability events**  
-   Example: `new_forecast_available`
-
-4. **Avoid abbreviations inside event names**  
-   Except the integration prefix.
+Examples:
+- `current_price`
+- `next_slot_price`
+- `cheapest_slot_next_24_hours`
 
 ---
 
-# Attribute Naming
+## **Cost Sensors**
+Format:
+`sensor.edf_freephase_dynamic_cost_<scope>`
 
-Attributes follow these conventions:
-
-- **snake_case** for attribute keys  
-- **ISO 8601** for timestamps  
-- **HH:MM:SS** for durations  
-- **lowercase strings** for phases (`green`, `amber`, `red`, `free`)  
-- **float** for prices  
-- **integer** for slot indices  
-
-### Examples
-
-| Attribute          | Example Value                         |
-|--------------------|----------------------------------------|
-| `slot_start`         | 2026-01-11T16:00:00+00:00              |
-| `slot_duration`      | 00:30:00                               |
-| `phase_duration`     | 03:00:00                               |
-| `price`              | 33.55                                  |
-| `unit`               | p/kWh                                  |
-| `slot_index`         | 32                                     |
+Examples:
+- `cost_today`
+- `cost_yesterday`
+- `cost_per_slot`
 
 ---
 
-# File Naming
+## **Binary Sensors**
+Format:
+`binary_sensor.edf_freephase_dynamic_<condition>`
 
-All integration files follow Home Assistant’s standard structure:
-
-| File Name          | Purpose                                 |
-|--------------------|-------------------------------------------|
-| `__init__.py`      | Integration setup                        |
-| `coordinator.py`   | Data update coordinator                  |
-| `sensor.py`        | Sensor entity definitions                |
-| `manifest.json`    | Integration metadata                     |
-| `const.py`         | Constants (prefixes, defaults, phases)   |
-| `events.py`        | Event dispatching logic (optional)       |
-| `docs/*.md`        | Documentation                            |
+Example:
+- `is_green_slot`
 
 ---
 
-# Prefix Reference
+## **Switches**
+Format:
+`switch.edf_freephase_dynamic_<feature>`
 
-The integration uses the following prefixes consistently:
-
-- **Integration prefix:** `edf_fpd_`
-- **Sensor domain:** `sensor.edf_fpd_*`
-- **Event prefix:** `edf_fpd_*`
-- **Attribute prefix:** none (attributes use descriptive names)
+Example:
+- `debug_logging`
 
 ---
 
-# Naming Conventions (Updated for v0.5.0)
+## **Debug Sensors**
+Format:
+`sensor.edf_freephase_dynamic_<debug_field>`
 
-The introduction of product metadata and region label storage does not change entity naming,
-but new internal fields follow the same conventions:
+Examples:
+- `debug_logging_enabled`
+- `ec_debug_buffer`
+- `cc_debug_buffer`
 
-- snake_case for metadata keys
-- descriptive names for metadata attributes
-- region_label added as a normalised metadata field
+---
 
-Future versions may introduce new metadata‑based sensors following the same naming rules.
+## **Metadata Fields**
+Used in diagnostics:
+- tariff_metadata  
+- tariff_region_label  
+- product_url  
+- api_url  
 
 ---
 
 # Summary
 
-These naming conventions ensure:
+These updated naming rules ensure:
+- clarity  
+- consistency  
+- predictable entity IDs  
+- easy dashboard building  
+- alignment with Home Assistant best practices  
 
-- clarity for users  
-- consistency across entities and events  
-- predictable automation references  
-- maintainable code and documentation  
-
-They also align with Home Assistant’s best practices and the conventions used by other dynamic‑tariff integrations.
+They now fully reflect the expanded architecture introduced in **v0.6.0**.
