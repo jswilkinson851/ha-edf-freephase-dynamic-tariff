@@ -6,6 +6,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## 🚀 [v0.6.0] — 2026-01-21
+
+### Major Feature Expansion & Architecture Upgrade
+
+This release introduces a full cost‑calculation engine, aligned scheduling, expanded diagnostics, and a new debug logging system. It also adds binary sensors, a debug switch, and a significantly improved configuration flow.
+
+### ✨ New Features
+- **CostCoordinator** for accurate yesterday/today cost summaries.
+- **AlignedScheduler** for predictable, jitter‑aware refresh timing.
+- **Debug Logging Switch** in Options Flow.
+- **Binary Sensors** (e.g., “Is Green Slot”).
+- **Switch Platform** for debug logging control.
+- **Expanded Diagnostic Sensor** with:
+  - EDFCoordinator/Cost Coordinator debug buffers and timestamps
+  - Heartbeat state + subsystem flags
+  - Scheduler internals (next refresh, delay, jitter)
+  - Slot summaries and phase windows
+  - Tariff metadata and API latency
+
+### 🔧 Improvements
+- Overhauled **EDFCoordinator** with strict heartbeat model.
+- Cleaner metadata extraction with HTML stripping and region label injection.
+- Improved region → tariff mapping logic.
+- Import sensor validation with confirmation step.
+- Device registration for clean entity grouping.
+- Expanded sensor modules and reorganised file structure.
+
+### 🛠️ Fixes & Stability
+- More resilient API handling with fallback datasets.
+- Better stale‑data detection.
+- Safer startup behaviour and clearer internal state exposure.
+
+### 📦 Notes
+- No breaking changes to entity IDs.
+- Existing users migrate automatically.
+- Debug logging is now controlled via the Options Flow.
+
+---
+
 ## 🚀 [v0.5.0] — 2026-01-16
 
 ## Metadata Expansion, URL Unification & Coordinator Refactor

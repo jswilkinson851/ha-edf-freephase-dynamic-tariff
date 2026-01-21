@@ -1,281 +1,234 @@
-# EDF FreePhase Dynamic — Entities Documentation (v0.4.0)
+# EDF FreePhase Dynamic Tariff — Entities Documentation (v0.6.0)
 
-This document describes all entities exposed by the **EDF FreePhase Dynamic Tariff** integration as of v0.4.0.
+This document describes all entities created by the **EDF FreePhase Dynamic Tariff** integration as of **v0.6.0**.
 
-A future release (v0.5.x) will introduce a simplified naming scheme.
+The integration now includes:
+- A main data coordinator (EDFCoordinator)
+- A cost engine (CostCoordinator)
+- A binary sensor platform
+- A debug logging switch
+- Expanded diagnostics and metadata
 
----
-
-# Overview
-
-The integration exposes sensors that provide:
-
-- the current tariff slot and phase  
-- next slot information for each phase  
-- block summaries (current and next)  
-- cheapest and most expensive slots  
-- yesterday/tomorrow phase summaries  
-- forecast window information  
-- internal/debug sensors  
-
-All price‑based sensors use **p/kWh** as the native unit.  
-All timestamps are ISO 8601.
+All prices use **p/kWh** unless stated otherwise.  
+All cost values use **GBP (£)**.  
+All timestamps use **ISO 8601**.
 
 ---
 
-# Sensor Entities
+# 📘 Overview of Entity Types
 
-Below is the authoritative list of all sensors created by the integration.
+The integration exposes:
+
+- **Pricing sensors** (current price, next slot, cheapest/most expensive)
+- **Cost sensors** (today, yesterday, per‑slot, per‑phase)
+- **Slot & block sensors** (current block, next block, next green/amber/red)
+- **Binary sensors** (is the current slot green?)
+- **Debug sensors** (debug enabled, debug buffers)
+- **Health & metadata sensors** (API latency, coordinator status, last updated)
+- **Scheduler timing sensors** (next refresh time)
 
 ---
 
-# Detailed Sensors
+# 🔹 Pricing Sensors
 
-These sensors expose structured attributes and are typically used in dashboards and automations.
-
----
-
-## Current Price  
+## **Current Price**
 **Entity ID:** `sensor.current_price`  
-**Unit:** `p/kWh`
+Shows the price of the current half‑hour slot.
 
-Shows the **current half‑hour slot price**.
-
-### Attributes
-
-| Attribute | Description |
-|----------|-------------|
-| start | Slot start time |
-| end | Slot end time |
-| duration_minutes | Duration of the slot |
-| price_pen_per_kwh | Price formatted in p/kWh |
-| price_pou_per_kwh | Price formatted in £/kWh |
-| icon | Phase icon |
-
-### Example State  
-33.55
-
----
-
-## Current Block Summary  
-**Entity ID:** `sensor.current_block_summary`  
-**Unit:** `p/kWh`
-
-Shows the **average price of the current phase block** (all consecutive slots of the same phase).
-
-### Attributes  
-- phase  
+**Attributes include:**
 - start  
 - end  
 - duration_minutes  
-- price fields  
+- price_p_per_kwh  
+- price_gbp_per_kwh  
+- phase  
 - icon  
 
 ---
 
-## Next Block Summary  
-**Entity ID:** `sensor.next_block_summary`  
-**Unit:** `p/kWh`
-
-Shows the **average price of the next phase block** (of a different colour).
-
-### Attributes  
-Same as above.
-
----
-
-## Next Slot Price  
+## **Next Slot Price**
 **Entity ID:** `sensor.edf_freephase_dynamic_next_slot_price`  
-**Unit:** `p/kWh`
-
-Shows the **price of the next half‑hour slot**, regardless of phase.
-
-### Attributes  
-- start  
-- end  
-- duration_minutes  
-- price fields  
-- icon  
+Shows the price of the next half‑hour slot.
 
 ---
 
-## Next Green Slot  
-**Entity ID:** `sensor.edf_freephase_dynamic_next_green_slot`  
-**Unit:** `p/kWh`
-
-Shows the **price of the next green slot**.
-
-### Attributes  
-Full block details via `format_phase_block`.
-
----
-
-## Next Amber Slot  
-**Entity ID:** `sensor.edf_freephase_dynamic_next_amber_slot`  
-**Unit:** `p/kWh`
-
-Shows the **price of the next amber slot**.
-
----
-
-## Next Red Slot  
-**Entity ID:** `sensor.edf_freephase_dynamic_next_red_slot`  
-**Unit:** `p/kWh`
-
-Shows the **price of the next red slot**.
-
----
-
-## Cheapest Slot (Next 24 Hours)  
+## **Cheapest Slot (Next 24 Hours)**
 **Entity ID:** `sensor.edf_freephase_dynamic_cheapest_slot_next_24_hours`  
-**Unit:** `p/kWh`
-
-Shows the **price of the cheapest slot** in the next 24 hours.
-
-### Attributes  
-- start  
-- end  
-- duration_minutes  
-- price fields  
-- icon  
+Shows the cheapest slot in the next 24 hours.
 
 ---
 
-## Most Expensive Slot (Next 24 Hours)  
+## **Most Expensive Slot (Next 24 Hours)**
 **Entity ID:** `sensor.edf_freephase_dynamic_most_expensive_slot_next_24_hours`  
-**Unit:** `p/kWh`
-
-Shows the **price of the most expensive slot** in the next 24 hours.
+Shows the most expensive slot in the next 24 hours.
 
 ---
 
-## Yesterday Phases Summary  
-**Entity ID:** `sensor.yesterday_phases_summary`
+# 🔹 Cost Sensors (NEW in v0.6.0)
 
-Shows the **number of phase windows** yesterday.
+These sensors use your **electricity import sensor** to calculate real‑world costs.
 
-### Attributes  
-`phase_1`, `phase_2`, … each containing:
-
-- phase  
-- start  
-- end  
-- duration_minutes  
-- price fields  
-- icon  
+## **Cost Today**
+**Entity ID:** `sensor.edf_freephase_dynamic_cost_today`  
+Total cost from midnight to now.
 
 ---
 
-## Today’s Rates Summary  
-**Entity ID:** `sensor.today_s_rates_summary`
-
-Shows the **number of phase windows** today.
-
-### Attributes  
-Same structure as yesterday’s summary.
+## **Cost Yesterday**
+**Entity ID:** `sensor.edf_freephase_dynamic_cost_yesterday`  
+Total cost for the previous day.
 
 ---
 
-## Tomorrow’s Rates Summary  
-**Entity ID:** `sensor.tomorrow_s_rates_summary`
-
-Shows the **number of phase windows** tomorrow.
-
-### Attributes  
-Same structure as yesterday’s summary.
+## **Cost Per Slot** (optional)
+**Entity ID:** `sensor.edf_freephase_dynamic_cost_per_slot`  
+Breakdown of cost per half‑hour slot.
 
 ---
 
-# Forecast & API Sensors
-
-These sensors provide metadata about the EDF API and forecast window.
-
----
-
-## 24‑Hour Forecast  
-**Entity ID:** `sensor.24_hour_forecast`
-
-Contains the **full 48‑slot forecast** as attributes.
-
-### Attributes  
-- forecast: list of slot dictionaries  
+## **Cost Per Phase** (optional)
+**Entity ID:** `sensor.edf_freephase_dynamic_cost_per_phase`  
+Cost grouped by phase (green/amber/red).
 
 ---
 
-## Next Refresh Time  
-**Entity ID:** `sensor.next_refresh_time`
+# 🔹 Slot & Block Sensors
 
-Shows when the integration will next refresh data from EDF.
-
----
-
-## Last Updated  
-**Entity ID:** `sensor.last_updated`
-
-Shows the timestamp of the last successful data update.
+## **Current Block Summary**
+**Entity ID:** `sensor.current_block_summary`  
+Shows the merged block of consecutive slots with the same phase.
 
 ---
 
-## API Latency  
+## **Next Block Summary**
+**Entity ID:** `sensor.next_block_summary`  
+Shows the next upcoming block of a different phase.
+
+---
+
+## **Next Green Slot**
+**Entity ID:** `sensor.edf_freephase_dynamic_next_green_slot`  
+
+## **Next Amber Slot**
+**Entity ID:** `sensor.edf_freephase_dynamic_next_amber_slot`  
+
+## **Next Red Slot**
+**Entity ID:** `sensor.edf_freephase_dynamic_next_red_slot`  
+
+Each shows the next slot of that colour.
+
+---
+
+# 🔹 Daily Summary Sensors
+
+## **Today’s Rates Summary**
+**Entity ID:** `sensor.today_s_rates_summary`  
+Shows today’s merged phase windows.
+
+---
+
+## **Tomorrow’s Rates Summary**
+**Entity ID:** `sensor.tomorrow_s_rates_summary`  
+Shows tomorrow’s merged phase windows.
+
+---
+
+## **Yesterday’s Phases Summary**
+**Entity ID:** `sensor.yesterday_phases_summary`  
+Shows yesterday’s merged phase windows.
+
+---
+
+# 🔹 Binary Sensors (NEW)
+
+## **Is Current Slot Green?**
+**Entity ID:**  
+`binary_sensor.edf_freephase_dynamic_is_green_slot`
+
+True when the current slot is green.
+
+---
+
+# 🔹 Debug Sensors (NEW)
+
+## **Debug Logging Enabled**
+**Entity ID:**  
+`sensor.edf_freephase_dynamic_debug_logging_enabled`
+
+Reflects the state of the debug logging switch.
+
+---
+
+## **EDFCoordinator Debug Buffer**
+**Entity ID:**  
+`sensor.edf_freephase_dynamic_ec_debug_buffer`
+
+Shows the last 10 debug messages from the main coordinator.
+
+---
+
+## **CostCoordinator Debug Buffer**
+**Entity ID:**  
+`sensor.edf_freephase_dynamic_cc_debug_buffer`
+
+Shows the last 10 debug messages from the cost engine.
+
+---
+
+# 🔹 Scheduler & Timing Sensors
+
+## **Next Refresh Time**
+**Entity ID:**  
+`sensor.edf_freephase_dynamic_next_refresh_time`
+
+Shows when the next aligned refresh will occur.
+
+---
+
+# 🔹 Health & Metadata Sensors
+
+## **Coordinator Status**
+**Entity ID:** `sensor.coordinator_status`  
+Shows the overall health state:
+- healthy  
+- partial  
+- stale  
+- api_error  
+- parsing_error  
+- scheduler_error  
+- etc.
+
+---
+
+## **API Latency**
 **Entity ID:** `sensor.api_latency`  
-**Unit:** milliseconds
-
-Shows the **round‑trip latency** of the EDF API request.
+Round‑trip time to the EDF API.
 
 ---
 
-# Internal / Debug Sensors
-
-These sensors are primarily for troubleshooting.
-
----
-
-## Coordinator Status  
-**Entity ID:** `sensor.coordinator_status`
-
-Shows the internal state of the update coordinator.
+## **Last Updated**
+**Entity ID:** `sensor.last_updated`  
+When the coordinator last ran.
 
 ---
 
-## Is Now a Green Slot  
-**Entity ID:** `sensor.edf_freephase_dynamic_is_now_a_green_slot`
-
-Boolean‑style sensor indicating whether the **current slot is green**.
-
----
-
-## Current Slot Colour  
-**Entity ID:** `sensor.edf_freephase_dynamic_current_slot_colour`
-
-Shows the **current phase colour** (`green`, `amber`, `red`).
+## **Last Successful Update**
+**Entity ID:** `sensor.last_successful_update`  
+When fresh data was last retrieved.
 
 ---
 
-## Metadata Sensors (New in v0.5.0)
-
-The coordinator now exposes cleaned tariff metadata retrieved from the EDF product endpoint.
-
-This metadata is available in diagnostics and may be used by future sensors.
+## **Data Age**
+**Entity ID:** `sensor.data_age`  
+Seconds since the last successful update.
 
 ---
 
-# EDF FreePhase Dynamic — Entities Documentation (v0.5.0)
-
-This version introduces tariff metadata exposure and expanded diagnostics.
-All existing entity IDs remain unchanged.
-
-New coordinator fields now available to sensors and diagnostics:
-
-- tariff_metadata
-- tariff_region_label
-- product_url
-- api_url
+## **Tariff Metadata**
+Available in diagnostics:
+- tariff_metadata  
+- tariff_region_label  
+- product_url  
+- api_url  
 
 ---
-
-# Notes
-
-- All price sensors use **p/kWh**.  
-- Negative prices represent “free” slots; there is no separate `free` phase.  
-- Phase windows are derived from consecutive slots with the same phase.  
-- Entities update at slot boundaries and when new data is fetched.
