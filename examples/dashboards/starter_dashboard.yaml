@@ -1,0 +1,76 @@
+# EDF FreePhase Dynamic — Starter Dashboard
+#
+# A lightweight, beginner‑friendly dashboard showing the most important
+# tariff information at a glance:
+#
+# - Current slot price and phase
+# - Next slot price
+# - Cheapest slot
+# - Price extremes
+# - Today & tomorrow summaries
+# - Daily cost (by phase)
+#
+# Ideal for mobile devices, wall tablets, or anyone who wants a simple,
+# clean overview without the full diagnostic detail.
+
+views:
+  - title: EDF FPD Starter
+    path: edf-fpd-starter
+    icon: mdi:flash
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          # --- Current Slot ---
+          - type: custom:mushroom-entity-card
+            entity: sensor.current_price
+            name: Current Price (p/kWh)
+            icon: mdi:currency-gbp
+            layout: vertical
+
+          - type: custom:mushroom-entity-card
+            entity: sensor.edf_freephase_dynamic_current_slot_colour
+            name: Current Phase
+            icon: mdi:flash
+            layout: vertical
+
+          # --- Next Slot ---
+          - type: custom:mushroom-entity-card
+            entity: sensor.edf_freephase_dynamic_next_slot_price
+            name: Next Slot Price
+            icon: mdi:arrow-right-bold
+            layout: vertical
+
+          # --- Cheapest Slot ---
+          - type: custom:mushroom-entity-card
+            entity: sensor.edf_freephase_dynamic_cheapest_slot_next_24_hours
+            name: Cheapest Slot
+            icon: mdi:flash
+            layout: vertical
+
+          # --- Price Extremes ---
+          - type: entities
+            title: Price Extremes (Next 24 Hours)
+            entities:
+              - entity: sensor.edf_freephase_dynamic_cheapest_slot_next_24_hours
+                name: Cheapest Slot
+              - entity: sensor.edf_freephase_dynamic_most_expensive_slot_next_24_hours
+                name: Most Expensive Slot
+
+          # --- Daily Summaries ---
+          - type: entities
+            title: Daily Summaries
+            entities:
+              - entity: sensor.today_s_phases_summary
+                name: Today’s Summary
+              - entity: sensor.tomorrow_s_phases_summary
+                name: Tomorrow’s Summary
+
+          # --- Daily Cost (Updated) ---
+          - type: entities
+            title: Daily Cost
+            entities:
+              - entity: sensor.edf_freephase_dynamic_tariff_today_cost_phase
+                name: Cost Today (£)
+              - entity: sensor.edf_freephase_dynamic_tariff_yesterday_cost_phase
+                name: Cost Yesterday (£)
