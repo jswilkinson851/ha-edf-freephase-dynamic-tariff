@@ -160,6 +160,8 @@ entities:
     name: Current Slot Colour
 ```
 
+Other example dashboards and automations are available from: https://github.com/jswilkinson851/ha-edf-freephase-dynamic-tariff/tree/main/examples
+
 ---
 
 # 🩺 Diagnostics
