@@ -83,10 +83,16 @@ from __future__ import annotations
 import logging
 from datetime import timedelta
 
-from homeassistant.config_entries import ConfigEntry  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
+from homeassistant.config_entries import (  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
+    ConfigEntry,
+)
 from homeassistant.core import HomeAssistant  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
-from homeassistant.helpers.typing import ConfigType  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
-from homeassistant.helpers import device_registry as dr  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
+from homeassistant.helpers import (  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
+    device_registry as dr,
+)
+from homeassistant.helpers.typing import (  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
+    ConfigType,
+)
 
 from .const import DOMAIN
 from .coordinator import EDFCoordinator
@@ -121,12 +127,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     urls = build_edf_urls(entry.data["tariff_code"])
     product_url = urls["product_url"]
     api_url = urls["api_url"]
+    standing_charges_url = urls["standing_charges_url"]
 
     # Build scan interval
     scan_interval = timedelta(minutes=entry.data["scan_interval"])
 
     # Create EDF coordinator and attach config entry
-    coordinator = EDFCoordinator(hass, product_url, api_url, scan_interval)
+    coordinator = EDFCoordinator(
+        hass=hass,
+        product_url=product_url,
+        api_url=api_url,
+        standing_charges_url=standing_charges_url,
+        scan_interval=scan_interval,
+    )
     coordinator.config_entry = entry
     startup_logger.info("EDF INT. EC | Coordinator created, preparing first refresh")
     coordinator.entry = entry
@@ -159,6 +172,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "tariff_code": entry.data["tariff_code"],
         "product_url": product_url,
         "api_url": api_url,
+        "standing_charges_url": standing_charges_url,
         "tariff_region_label": entry.data.get("tariff_region_label"),
         "version": manifest_version,
     }

@@ -6,7 +6,7 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/jswilkinson851/ha-edf-freephase-dynamic-tariff)
 ![installation_badge](https://img.shields.io/badge/dynamic/json?color=41BDF5&logo=home-assistant&label=integration%20usage&suffix=%20installs&cacheSeconds=15600&url=https://analytics.home-assistant.io/custom_integrations.json&query=$.edf_freephase_dynamic_tariff.total)
 
-This integration brings **live electricity prices**, **half‑hourly rate data**, **standing charges**, and **cost tracking** for the **EDF FreePhase Dynamic** tariff directly into Home Assistant.
+This integration brings **live electricity prices**, **half‑hourly rate data**, and **cost tracking** for the **EDF FreePhase Dynamic** tariff directly into Home Assistant.
 
 It’s built for UK users on the FreePhase Dynamic tariff and gives you everything you need to automate, plan, and understand your energy usage — all using the same Kraken API that EDF themselves rely on.
 
@@ -21,30 +21,21 @@ If EDF’s API is down, it falls back to a complete built‑in list.
 ## 🔹 Smarter Refresh Timing (Aligned Scheduler)
 Updates happen exactly on the minute or half‑hour (depending on your settings), with a tiny bit of random delay to avoid everyone hitting the API at once.
 
-## 🔹 Cost Tracking (Improved in v0.6.1)
-If you provide your electricity import sensor, the integration can calculate:
+## 🔹 Cost Tracking (NEW in v0.6.0)
+If you provide your electricity import sensor, the integration can now calculate:
 - Today’s cost  
 - Yesterday’s cost  
 - Cost per slot  
-- Cost per phase (Green/Amber/Red)  
-- **Standing‑charge cost contribution (NEW)**  
-- **Total cost including standing charge (NEW)**  
+- Cost per phase (Green/Amber/Red)
 
-This uses your real meter readings, so the numbers are accurate and reflect your actual billable usage.
+This uses your real meter readings, so the numbers are accurate.
 
-## 🔹 Standing Charges (NEW in v0.6.1)
-The integration now fetches and exposes:
-- Standing charge (inc VAT)  
-- Standing charge (exc VAT)  
-- Validity dates  
-- Raw EDF API data  
+**N.B.** Currently, standing charges are not included, but this will be added in a future release.
 
-A dedicated sensor — **`sensor.standing_charge`** — provides this information cleanly, with GBP/day included as an attribute.
-
-## 🔹 Debug Logging Switch
+## 🔹 Debug Logging Switch (NEW)
 Turn detailed logging on or off from the Options Flow — no YAML, no restarts.
 
-## 🔹 Better Diagnostics
+## 🔹 Better Diagnostics (NEW)
 A single diagnostic sensor now shows:
 - API health  
 - Scheduler timing  
@@ -53,11 +44,10 @@ A single diagnostic sensor now shows:
 - Tariff metadata  
 - Debug logs  
 - Cost engine status  
-- **Standing‑charge heartbeat flags (NEW)**  
 
 Perfect for troubleshooting or building a “health panel”.
 
-## 🔹 Binary Sensor
+## 🔹 Binary Sensor (NEW)
 - **Is it a Green slot right now?**  
   Now you have a simple yes/no sensor for that.
 
@@ -107,7 +97,6 @@ If you provide your electricity import meter, the integration can calculate:
 - Today’s cost  
 - Yesterday’s cost  
 - Slot‑level cost  
-- **Standing‑charge cost contribution (NEW)**  
 
 ### **Debug Logging**
 A simple toggle in the Options Flow.  
@@ -123,16 +112,11 @@ Useful if you’re troubleshooting or want to see what the coordinator is doing.
 - `Cheapest slot in next 24 hours`  
 - `Most expensive slot in next 24 hours`  
 
-## 🔹 Standing Charge Sensors (NEW)
-- `Standing Charge` (p/day, inc VAT)  
-  - Attributes: exc VAT, GBP/day, validity dates, raw EDF data  
-
-## 🔹 Cost Sensors
+## 🔹 Cost Sensors (NEW)
 - `Cost today`  
 - `Cost yesterday`  
 - `Cost per slot`  
 - `Cost per phase`  
-- **Total cost including standing charge (NEW)**  
 
 ## 🔹 Slot & Block Sensors
 - `Current slot colour`  
@@ -146,7 +130,7 @@ Useful if you’re troubleshooting or want to see what the coordinator is doing.
 ## 🔹 Debug Sensors
 - `Next refresh time`  
 - `Debug logging enabled`  
-- `Debug buffers`  
+- `Debug buffers` (helpful for troubleshooting)
 
 ## 🔹 Health & Metadata Sensors
 - `API latency`  
@@ -154,12 +138,10 @@ Useful if you’re troubleshooting or want to see what the coordinator is doing.
 - `Last successful update`  
 - `Data age`  
 - `Coordinator status`  
-- **Standing‑charge heartbeat flags (NEW)**  
 
 ---
 
 # 📊 Example Dashboard Card
-
 
 ```
 type: entities
@@ -176,8 +158,6 @@ entities:
     name: Next Slot Price
   - entity: sensor.edf_freephase_dynamic_current_slot_colour
     name: Current Slot Colour
-  - entity: sensor.standing_charge
-    name: Standing Charge
 ```
 
 ---
@@ -194,7 +174,6 @@ The downloadable diagnostics include:
 - `Heartbeat flags`  
 - `Debug logs`  
 - `Cost engine status`  
-- **`Standing‑charge` values and raw API data (NEW in v0.6.1)**  
 
 This makes it much easier to understand what’s happening behind the scenes.
 
