@@ -6,47 +6,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## 🚀 [v0.6.1] — 2026-01-23
-
-## Standing Charges Integration & Cost Pipeline Enhancements
-### Added
-- **Full standing‑charge support** across the integration:
-  - New `async_fetch_standing_charges()` method added to `EDFCoordinator`, with robust error handling, EDF‑format parsing, and heartbeat‑aware failure reporting.
-  - Standing‑charge values (`inc_vat`, `exc_vat`, `valid_from`, `valid_to`, `raw`) now fetched on every coordinator refresh.
-  - New heartbeat flags: `standing_charge_error` and `standing_charge_missing`.
-
-- **Standing‑charge fields added to the unified coordinator dataset**, making them available to all downstream consumers (sensors, diagnostics, cost coordinator).
-
-- **CostCoordinator integration**:
-  - Standing‑charge values now injected into each period summary (`yesterday`, `today`).
-  - New per‑period fields:
-    - `standing_charge_inc_vat`
-    - `standing_charge_exc_vat`
-    - `standing_charge_valid_from`
-    - `standing_charge_valid_to`
-    - `standing_charge_cost_gbp` (derived)
-    - `total_cost_including_standing_gbp`
-  - Top‑level cost‑coordinator dataset now exposes standing‑charge values for UI and diagnostics.
-
-- **Cost summary sensors updated**:
-  - All cost/consumption/slot summary sensors now expose standing‑charge information via their `extra_state_attributes`.
-  - Attributes include inc/ex VAT, validity dates, GBP/day contribution, and total cost including standing charge.
-
-- **New dedicated sensor**: `sensor.standing_charge`
-  - Displays standing charge (inc VAT) in `p/day`.
-  - Attributes include exc VAT, validity dates, raw EDF JSON, and derived GBP/day value.
-  - Automatically linked to the integration’s device and updated via `EDFCoordinator`.
-
-### Improved
-- Attribute structures for cost summary sensors refined to include standing‑charge context without breaking existing dashboards or automations.
-- Internal consistency improved across coordinators and sensors by standardising standing‑charge field names and dataset structure.
-
-### Notes
-- No breaking changes to existing entity IDs, names, or device structure.
-- Standing‑charge values now fully integrated into the cost pipeline, enabling accurate daily cost reporting and future tariff‑change awareness.
-
----
-
 ## 🚀 [v0.6.0] — 2026-01-21
 
 ### Major Feature Expansion & Architecture Upgrade

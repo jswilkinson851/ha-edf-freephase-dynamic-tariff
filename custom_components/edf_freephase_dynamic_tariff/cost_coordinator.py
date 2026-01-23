@@ -124,13 +124,9 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from homeassistant.components.recorder import (  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
-    history as recorder_history,
-)
 from homeassistant.core import HomeAssistant  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
-from homeassistant.helpers.update_coordinator import (  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
+from homeassistant.components.recorder import history as recorder_history  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
 from homeassistant.util import dt as dt_util  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
 
 from .const import DOMAIN
@@ -140,10 +136,6 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class SlotCost:
-    """
-    Docstring for SlotCost
-    """
-
     start: datetime
     end: datetime
     kwh: float
@@ -235,14 +227,6 @@ class CostCoordinator(DataUpdateCoordinator):
         yesterday_slots = edf_data.get("yesterday_24_hours") or []
         today_slots = edf_data.get("today_24_hours") or []
 
-        # --------------------------------------------------------------
-        # NEW: Standing charges from EDFCoordinator
-        # --------------------------------------------------------------
-        standing_inc = edf_data.get("standing_charge_inc_vat")
-        standing_exc = edf_data.get("standing_charge_exc_vat")
-        standing_from = edf_data.get("standing_charge_valid_from")
-        standing_to = edf_data.get("standing_charge_valid_to")
-
         self.debug("yesterday_slots=%s today_slots=%s", len(yesterday_slots), len(today_slots))
 
         if not yesterday_slots and not today_slots:
@@ -260,7 +244,7 @@ class CostCoordinator(DataUpdateCoordinator):
                     slots=yesterday_slots,
                     label="yesterday",
                 )
-            except Exception as err:  # pylint: disable=broad-exception-caught
+            except Exception as err:
                 _LOGGER.exception("EDF INT. CC: ERROR computing yesterday: %s", err)
                 yesterday_summary = None
                 flags["error"] = True
@@ -275,7 +259,7 @@ class CostCoordinator(DataUpdateCoordinator):
                     label="today",
                     end_override=now,
                 )
-            except Exception as err:  # pylint: disable=broad-exception-caught
+            except Exception as err:
                 _LOGGER.exception("EDF INT. CC: ERROR computing today: %s", err)
                 today_summary = None
                 flags["error"] = True
@@ -300,11 +284,6 @@ class CostCoordinator(DataUpdateCoordinator):
             "yesterday": yesterday_summary,
             "today": today_summary,
             "import_sensor": self._import_sensor,
-            # Standing charge values (top‑level)
-            "standing_charge_inc_vat": standing_inc,
-            "standing_charge_exc_vat": standing_exc,
-            "standing_charge_valid_from": standing_from,
-            "standing_charge_valid_to": standing_to,
             **flags,
             "coordinator_status": coordinator_status,
             "last_updated": dt_util.utcnow().isoformat(),
@@ -421,22 +400,6 @@ class CostCoordinator(DataUpdateCoordinator):
 
         self.debug("EXIT _compute_period_cost label=%s", label)
 
-        # --------------------------------------------------------------
-        # Standing charge cost contribution
-        # --------------------------------------------------------------
-        standing_inc = self._edf_coordinator.data.get("standing_charge_inc_vat")
-        standing_exc = self._edf_coordinator.data.get("standing_charge_exc_vat")
-        standing_from = self._edf_coordinator.data.get("standing_charge_valid_from")
-        standing_to = self._edf_coordinator.data.get("standing_charge_valid_to")
-
-        standing_cost_gbp = None
-        total_cost_including_standing = None
-
-        if standing_inc is not None:
-            # p/day → £/day
-            standing_cost_gbp = standing_inc / 100.0
-            total_cost_including_standing = round(total_cost + standing_cost_gbp, 4)
-
         return {
             "period_start": period_start.isoformat(),
             "period_end": period_end.isoformat(),
@@ -450,12 +413,6 @@ class CostCoordinator(DataUpdateCoordinator):
                 for phase, vals in per_phase.items()
             },
             "per_slot": per_slot,
-            "standing_charge_inc_vat": standing_inc,
-            "standing_charge_exc_vat": standing_exc,
-            "standing_charge_valid_from": standing_from,
-            "standing_charge_valid_to": standing_to,
-            "standing_charge_cost_gbp": standing_cost_gbp,
-            "total_cost_including_standing_gbp": total_cost_including_standing,
         }
 
     @staticmethod

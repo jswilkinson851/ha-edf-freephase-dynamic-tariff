@@ -64,55 +64,6 @@ Shows the most expensive slot in the next 24 hours.
 
 ---
 
----
-
-# 🔹 Standing Charge Sensor (NEW in v0.6.1)
-
-## **Standing Charge**
-**Entity ID:** `sensor.standing_charge`  
-Shows the daily standing charge for your region (inc VAT), in **p/day**.
-
-**Attributes include:**
-- inc_vat_p_per_day  
-- exc_vat_p_per_day  
-- gbp_per_day  
-- valid_from  
-- valid_to  
-- raw (full EDF API response)  
-- region  
-- status (ok / missing / error)  
-
----
-
-# 🔹 Cost Sensors (Updated in v0.6.1)
-
-The following additional fields are now included in cost summaries:
-
-### **New per‑period attributes:**
-- `standing_charge_inc_vat`
-- `standing_charge_exc_vat`
-- `standing_charge_valid_from`
-- `standing_charge_valid_to`
-- `standing_charge_cost_gbp`
-- `total_cost_including_standing_gbp`
-
-These appear in:
-- `sensor.edf_freephase_dynamic_cost_today`  
-- `sensor.edf_freephase_dynamic_cost_yesterday`  
-- `sensor.edf_freephase_dynamic_cost_per_slot`  
-- `sensor.edf_freephase_dynamic_cost_per_phase`  
-
----
-
-# 🔹 Health & Metadata Sensors (Updated)
-
-## **Coordinator Status**
-Now includes standing‑charge heartbeat flags:
-- `standing_charge_error`
-- `standing_charge_missing`
-
----
-
 # 🔹 Cost Sensors (NEW in v0.6.0)
 
 These sensors use your **electricity import sensor** to calculate real‑world costs.

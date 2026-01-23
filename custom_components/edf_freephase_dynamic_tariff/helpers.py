@@ -84,7 +84,6 @@ def build_edf_urls(tariff_code: str) -> dict[str, str]:
         {
             "product_url": <canonical metadata URL>,
             "api_url": <unit‑rate endpoint for the given tariff code>,
-            "standing_charges_url": <standing‑charges endpoint for the given tariff code>,
         }
     """
 
@@ -93,7 +92,6 @@ def build_edf_urls(tariff_code: str) -> dict[str, str]:
     return {
         "product_url": base,
         "api_url": f"{base}electricity-tariffs/{code}/standard-unit-rates/",
-        "standing_charges_url": f"{base}electricity-tariffs/{code}/standing-charges/",
     }
 
 
@@ -342,7 +340,6 @@ def format_phase_block(block: list[dict]) -> dict:
         - phase
         - start / end (human‑readable)
         - duration_minutes
-        - start_dt / end_dt (ISO format for dashboards & automations)
         - price fields (raw + formatted)
         - icon
 
@@ -363,8 +360,6 @@ def format_phase_block(block: list[dict]) -> dict:
         "phase": phase,
         "start": start_fmt,
         "end": end_fmt,
-        "start_dt": block[0].get("start_dt"),
-        "end_dt": block[-1].get("end_dt"),
         "duration_minutes": duration,
         **format_price_fields(price),
         "icon": icon_for_phase(phase),

@@ -124,18 +124,6 @@ class PhaseCostMixin:
                 "kwh": s.get("total_kwh"),
                 "cost": s.get("total_cost"),
             },
-
-            # --------------------------------------------------------------
-            # Standing charge fields
-            # --------------------------------------------------------------
-            "standing_charge": {
-                "inc_vat_p_per_day": s.get("standing_charge_inc_vat"),
-                "exc_vat_p_per_day": s.get("standing_charge_exc_vat"),
-                "valid_from": s.get("standing_charge_valid_from"),
-                "valid_to": s.get("standing_charge_valid_to"),
-                "cost_today_gbp": s.get("standing_charge_cost_gbp"),
-                "total_cost_including_standing_gbp": s.get("total_cost_including_standing_gbp"),
-            },
         }
 
 
@@ -167,18 +155,6 @@ class PhaseConsumptionMixin:
             "total_summary": {
                 "kwh": s.get("total_kwh"),
                 "cost": s.get("total_cost"),
-            },
-
-            # --------------------------------------------------------------
-            # Standing charge fields
-            # --------------------------------------------------------------
-            "standing_charge": {
-                "inc_vat_p_per_day": s.get("standing_charge_inc_vat"),
-                "exc_vat_p_per_day": s.get("standing_charge_exc_vat"),
-                "valid_from": s.get("standing_charge_valid_from"),
-                "valid_to": s.get("standing_charge_valid_to"),
-                "cost_today_gbp": s.get("standing_charge_cost_gbp"),
-                "total_cost_including_standing_gbp": s.get("total_cost_including_standing_gbp"),
             },
         }
 
@@ -217,18 +193,6 @@ class SlotCostMixin:
             "price_summary": {
                 "value": avg_price,
                 "unit": "p/kWh",
-            },
-
-            # --------------------------------------------------------------
-            # Standing charge fields
-            # --------------------------------------------------------------
-            "standing_charge": {
-                "inc_vat_p_per_day": s.get("standing_charge_inc_vat"),
-                "exc_vat_p_per_day": s.get("standing_charge_exc_vat"),
-                "valid_from": s.get("standing_charge_valid_from"),
-                "valid_to": s.get("standing_charge_valid_to"),
-                "cost_today_gbp": s.get("standing_charge_cost_gbp"),
-                "total_cost_including_standing_gbp": s.get("total_cost_including_standing_gbp"),
             },
         }
 

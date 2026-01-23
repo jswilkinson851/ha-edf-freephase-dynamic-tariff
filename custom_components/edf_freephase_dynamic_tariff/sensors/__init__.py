@@ -7,17 +7,6 @@ factory functions used by sensor.py to instantiate entities.
 
 from __future__ import annotations
 
-# ---------------------------------------------------------------------------
-# Cost + consumption summary sensors <-- Added in v0.6.0
-# ---------------------------------------------------------------------------
-from .cost_summary import (  # pylint: disable=no-name-in-module disable=wrong-import-position # noqa: E402
-    EDFFreePhaseDynamicTodayConsumptionPhaseSensor,
-    EDFFreePhaseDynamicTodayCostPhaseSensor,
-    EDFFreePhaseDynamicTodayCostSlotsSensor,
-    EDFFreePhaseDynamicYesterdayConsumptionPhaseSensor,
-    EDFFreePhaseDynamicYesterdayCostPhaseSensor,
-    EDFFreePhaseDynamicYesterdayCostSlotsSensor,
-)
 
 # ---------------------------------------------------------------------------
 # Forecast sensors
@@ -32,13 +21,13 @@ from .forecast import (  # pylint: disable=no-name-in-module disable=wrong-impor
 # Metadata sensors
 # ---------------------------------------------------------------------------
 from .meta import (  # pylint: disable=no-name-in-module disable=wrong-import-position # noqa: E402
+    EDFFreePhaseDynamicLastUpdatedSensor,
     EDFFreePhaseDynamicAPILatencySensor,
     EDFFreePhaseDynamicCoordinatorStatusSensor,
-    EDFFreePhaseDynamicCostCoordinatorStatusSensor,  # Added in v0.6.0
-    EDFFreePhaseDynamicLastUpdatedSensor,
     EDFFreePhaseDynamicNextRefreshSensor,
-    EDFFreePhaseDynamicTariffDiagnosticSensor,  # Added in v0.6.0
     EDFFreePhaseDynamicTariffMetadataSensor,  # Added in v0.4.3
+    EDFFreePhaseDynamicTariffDiagnosticSensor,  # Added in v0.6.0
+    EDFFreePhaseDynamicCostCoordinatorStatusSensor,  # Added in v0.6.0
 )
 
 # ---------------------------------------------------------------------------
@@ -62,12 +51,23 @@ from .rates import (  # pylint: disable=no-name-in-module disable=wrong-import-p
 # Slot sensors
 # ---------------------------------------------------------------------------
 from .slots import (  # pylint: disable=no-name-in-module disable=wrong-import-position # noqa: E402
-    EDFFreePhaseDynamicCurrentBlockSummarySensor,
     EDFFreePhaseDynamicCurrentSlotColourSensor,
+    EDFFreePhaseDynamicCurrentBlockSummarySensor,
     EDFFreePhaseDynamicNextBlockSummarySensor,
     create_next_phase_sensors,
 )
-from .standing_charge import EDFFreePhaseDynamicStandingChargeSensor
+
+# ---------------------------------------------------------------------------
+# Cost + consumption summary sensors <-- Added in v0.6.0
+# ---------------------------------------------------------------------------
+from .cost_summary import (  # pylint: disable=no-name-in-module disable=wrong-import-position # noqa: E402
+    EDFFreePhaseDynamicYesterdayCostPhaseSensor,
+    EDFFreePhaseDynamicTodayCostPhaseSensor,
+    EDFFreePhaseDynamicYesterdayConsumptionPhaseSensor,
+    EDFFreePhaseDynamicTodayConsumptionPhaseSensor,
+    EDFFreePhaseDynamicYesterdayCostSlotsSensor,
+    EDFFreePhaseDynamicTodayCostSlotsSensor,
+)
 
 # ---------------------------------------------------------------------------
 # Exported sensor registry
@@ -106,8 +106,6 @@ ALL_SENSORS = [
     EDFFreePhaseDynamicTodayConsumptionPhaseSensor,
     EDFFreePhaseDynamicYesterdayCostSlotsSensor,
     EDFFreePhaseDynamicTodayCostSlotsSensor,
-    # Standing charges sensor <-- Added in v0.6.1
-    EDFFreePhaseDynamicStandingChargeSensor,
 ]
 
 # ---------------------------------------------------------------------------
