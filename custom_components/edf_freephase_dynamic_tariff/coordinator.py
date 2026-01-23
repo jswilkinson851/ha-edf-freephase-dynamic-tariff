@@ -87,19 +87,23 @@ import logging
 from datetime import datetime, timezone
 from time import monotonic
 
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
-from homeassistant.config_entries import ConfigEntry  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
+from homeassistant.config_entries import (  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
+    ConfigEntry,
+)
+from homeassistant.helpers.update_coordinator import (  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
+    DataUpdateCoordinator,
+)
 
 from .api.client import fetch_all_pages
-from .api.parsing import build_unified_dataset, build_forecasts, strip_internal
+from .api.parsing import build_forecasts, build_unified_dataset, strip_internal
 from .api.scheduler import AlignedScheduler
 from .const import DOMAIN
 from .helpers import (
-    normalise_slot,
-    find_current_block,
-    group_phase_blocks,
-    format_phase_block,
     extract_tariff_metadata,
+    find_current_block,
+    format_phase_block,
+    group_phase_blocks,
+    normalise_slot,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,17 +127,34 @@ HEARTBEAT_PRIORITY = [
 class EDFCoordinator(DataUpdateCoordinator):
     """Coordinator for EDF FreePhase Dynamic Tariff."""
 
-    def __init__(self, hass, product_url: str, api_url: str, scan_interval):
+    def __init__(
+        self,
+        hass,
+        product_url: str,
+        api_url: str,
+        standing_charges_url: str,
+        scan_interval,
+    ):
+        """Initialise the EDF FreePhase coordinator.
+
+        Parameters:
+        - hass: Home Assistant instance
+        - product_url: product metadata endpoint (region‑agnostic)
+        - api_url: unit‑rate endpoint for the selected region
+        - standing_charges_url: standing‑charges endpoint for the selected region
+        - scan_interval: refresh interval used by the aligned scheduler
+        """
         self.hass = hass
         self.product_url = product_url
         self.api_url = api_url
+        self.standing_charges_url = standing_charges_url
+        self._scan_interval = scan_interval
 
         # Rolling debug buffer
         self.debug_buffer = []
         self.debug_times = []
 
         self.config_entry: ConfigEntry | None = None
-        self._scan_interval = scan_interval
 
         self.scheduler = AlignedScheduler(hass, scan_interval)
 
@@ -167,9 +188,105 @@ class EDFCoordinator(DataUpdateCoordinator):
             name="EDF FreePhase Dynamic Tariff Integration",
             update_interval=None,
         )
+        # ------------------------------------------------------------------
+
+    # Standing charges fetcher (self‑contained, not yet wired into refresh)
+    # ------------------------------------------------------------------
+    async def async_fetch_standing_charges(self) -> dict:
+        """
+        Fetch standing charges for the selected region.
+
+        Returns a dict:
+            {
+                "value_inc_vat": float | None,
+                "value_exc_vat": float | None,
+                "valid_from": str | None,
+                "valid_to": str | None,
+                "raw": <full JSON or None>,
+                "error": str | None,
+            }
+
+        This method is intentionally self‑contained and does not modify
+        coordinator state. Integration into the main refresh loop happens
+        in the next step.
+        """
+        url = self.standing_charges_url
+
+        try:
+            from aiohttp import ClientSession  # pyright: ignore[reportMissingImports] # pylint: disable=import-error disable=import-outside-toplevel # noqa: I001
+            import async_timeout  # pyright: ignore[reportMissingImports] # pylint: disable=import-error  disable=import-outside-toplevel # noqa: I001
+
+            async with ClientSession() as session:
+                async with async_timeout.timeout(15):
+                    resp = await session.get(url)
+
+                    if resp.status != 200:
+                        return {
+                            "value_inc_vat": None,
+                            "value_exc_vat": None,
+                            "valid_from": None,
+                            "valid_to": None,
+                            "raw": None,
+                            "error": f"HTTP {resp.status}",
+                        }
+
+                    data = await resp.json()
+
+        except Exception as err:  # pylint: disable=broad-except
+            return {
+                "value_inc_vat": None,
+                "value_exc_vat": None,
+                "valid_from": None,
+                "valid_to": None,
+                "raw": None,
+                "error": str(err),
+            }
+
+        # Expected EDF format:
+        # {
+        #   "count": 1,
+        #   "results": [
+        #       {
+        #           "value_inc_vat": 48.6444,
+        #           "value_exc_vat": 46.328,
+        #           "valid_from": "...",
+        #           "valid_to": null
+        #       }
+        #   ]
+        # }
+
+        try:
+            results = data.get("results") or []
+            first = results[0] if results else {}
+
+            return {
+                "value_inc_vat": first.get("value_inc_vat"),
+                "value_exc_vat": first.get("value_exc_vat"),
+                "valid_from": first.get("valid_from"),
+                "valid_to": first.get("valid_to"),
+                "raw": data,
+                "error": None,
+            }
+
+        except Exception as err:  # pylint: disable=broad-except
+            return {
+                "value_inc_vat": None,
+                "value_exc_vat": None,
+                "valid_from": None,
+                "valid_to": None,
+                "raw": data,
+                "error": f"parse_error: {err}",
+            }
 
     @property
     def debug_enabled(self) -> bool:
+        """
+        Docstring for debug_enabled
+
+        :param self: Description
+        :return: Description
+        :rtype: bool
+        """
         return self._debug
 
     async def _async_update_data(self):
@@ -215,6 +332,8 @@ class EDFCoordinator(DataUpdateCoordinator):
             "import_sensor_unavailable": False,
             "stale": False,
             "partial": False,
+            "standing_charge_error": False,
+            "standing_charge_missing": False,
         }
 
         # 1. Product metadata
@@ -237,16 +356,35 @@ class EDFCoordinator(DataUpdateCoordinator):
             tariff_metadata = extract_tariff_metadata(product_meta, region_label)
             self.debug("Extracted tariff metadata: keys=%s", list(tariff_metadata.keys()))
 
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-exception-caught
             _LOGGER.warning("EDF INT. EC: Failed to fetch or parse product metadata: %s", err)
             flags["metadata_error"] = True
             tariff_metadata = {}
+
+        # --------------------------------------------------------------
+        # NEW: Standing charges fetch
+        # --------------------------------------------------------------
+        self.debug("Fetching standing charges from %s", self.standing_charges_url)
+        standing = await self.async_fetch_standing_charges()
+
+        if standing["error"]:
+            flags["standing_charge_error"] = True
+            flags["standing_charge_missing"] = True
+            self.debug("Standing charge fetch failed: %s", standing["error"])
+        else:
+            flags["standing_charge_error"] = False
+            flags["standing_charge_missing"] = standing["value_inc_vat"] is None
+            self.debug(
+                "Standing charges fetched: inc_vat=%s exc_vat=%s",
+                standing.get("value_inc_vat"),
+                standing.get("value_exc_vat"),
+            )
 
         # 2. Unit rates + unified dataset
         try:
             self.debug("Fetching unit rates from %s", self.api_url)
             raw_items = await fetch_all_pages(self.api_url, max_pages=3)
-            self.debug("Fetched %d raw unit-rate items", len(raw_items) if isinstance(raw_items, list) else -1)
+            self.debug("Fetched %d raw unit-rate items", len(raw_items) if isinstance(raw_items, list) else -1)  # pylint: disable=line-too-long
 
             if not isinstance(raw_items, list):
                 flags["unexpected_format"] = True
@@ -307,10 +445,10 @@ class EDFCoordinator(DataUpdateCoordinator):
             all_slots_sorted = [normalise_slot(slot) for slot in strip_internal(unified)]
             self.debug("Normalised all slots: %d", len(all_slots_sorted))
 
-            next_24_hours = [normalise_slot(slot) for slot in strip_internal(forecasts["next_24_hours"])]
-            today_24_hours = [normalise_slot(slot) for slot in strip_internal(forecasts["today_24_hours"])]
-            tomorrow_24_hours = [normalise_slot(slot) for slot in strip_internal(forecasts["tomorrow_24_hours"])]
-            yesterday_24_hours = [normalise_slot(slot) for slot in strip_internal(forecasts["yesterday_24_hours"])]
+            next_24_hours = [normalise_slot(slot) for slot in strip_internal(forecasts["next_24_hours"])]  # pylint: disable=line-too-long
+            today_24_hours = [normalise_slot(slot) for slot in strip_internal(forecasts["today_24_hours"])]  # pylint: disable=line-too-long
+            tomorrow_24_hours = [normalise_slot(slot) for slot in strip_internal(forecasts["tomorrow_24_hours"])]  # pylint: disable=line-too-long
+            yesterday_24_hours = [normalise_slot(slot) for slot in strip_internal(forecasts["yesterday_24_hours"])]  # pylint: disable=line-too-long
 
             current_block = find_current_block(all_slots_sorted, current_slot)
             blocks = group_phase_blocks(all_slots_sorted)
@@ -337,7 +475,7 @@ class EDFCoordinator(DataUpdateCoordinator):
                     if (now - last_dt).total_seconds() > self._scan_interval.total_seconds() * 2:
                         flags["stale"] = True
                         self.debug("Data marked stale")
-                except Exception:
+                except Exception:  # pylint: disable=broad-exception-caught
                     flags["parsing_error"] = True
 
             if flags["metadata_error"]:
@@ -368,10 +506,17 @@ class EDFCoordinator(DataUpdateCoordinator):
                 "coordinator_status": primary_state,
                 "tariff_metadata": tariff_metadata,
                 "debug_counter": self.debug_counter,
+
+                # Standing Charges fields.
+                "standing_charge_inc_vat": standing.get("value_inc_vat"),
+                "standing_charge_exc_vat": standing.get("value_exc_vat"),
+                "standing_charge_valid_from": standing.get("valid_from"),
+                "standing_charge_valid_to": standing.get("valid_to"),
+                "standing_charge_raw": standing.get("raw"),
                 **flags,
             }
 
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-exception-caught
             _LOGGER.error("EDF INT. EC: API request failed: %s", err)
             flags["api_error"] = True
 
@@ -402,12 +547,23 @@ class EDFCoordinator(DataUpdateCoordinator):
         self._next_refresh_jitter = getattr(self.scheduler, "next_refresh_jitter", None)
 
     async def async_config_entry_first_refresh(self) -> None:
+        """
+        Docstring for async_config_entry_first_refresh
+
+        :param self: Description
+        """
         self.debug("Performing immediate first refresh for EDF coordinator")
         await self.async_refresh()
         await self.scheduler.schedule(self._handle_refresh)
         self._sync_scheduler_state()
 
     async def _handle_refresh(self, _now=None) -> None:
+        """
+        Docstring for _handle_refresh
+
+        :param self: Description
+        :param _now: Description
+        """
         self.debug("Running aligned EDF coordinator refresh")
         await self.scheduler.schedule(self._handle_refresh)
         self._sync_scheduler_state()
@@ -415,4 +571,9 @@ class EDFCoordinator(DataUpdateCoordinator):
         self.async_update_listeners()
 
     async def async_shutdown(self) -> None:
+        """
+        Docstring for async_shutdown
+
+        :param self: Description
+        """
         await self.scheduler.shutdown()

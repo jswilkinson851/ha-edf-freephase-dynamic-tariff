@@ -1,4 +1,4 @@
-# EDF FreePhase Dynamic Tariff — Naming Conventions (v0.6.0)
+# EDF FreePhase Dynamic Tariff — Naming Conventions (v0.6.1)
 
 This document describes the naming rules used across the integration.
 
@@ -58,6 +58,19 @@ Examples:
 - `current_price`
 - `next_slot_price`
 - `cheapest_slot_next_24_hours`
+
+---
+
+## **Standing Charge Sensors (NEW in v0.6.1)**
+
+Format:
+`sensor.standing_charge`
+
+Notes:
+- This is the only sensor in the integration that intentionally **does not** use the `edf_freephase_dynamic_` prefix.
+- This exception is allowed because the standing charge is a universal tariff attribute, not a slot‑based or coordinator‑derived value.
+- Friendly name: “Standing Charge”
+- Unit: p/day
 
 ---
 
