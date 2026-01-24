@@ -118,8 +118,6 @@ HEARTBEAT_PRIORITY = [
     "import_sensor_missing",
     "import_sensor_unavailable",
     "metadata_error",
-    "standing_charge_error",
-    "standing_charge_missing",
     "stale",
     "partial",
     "healthy",
