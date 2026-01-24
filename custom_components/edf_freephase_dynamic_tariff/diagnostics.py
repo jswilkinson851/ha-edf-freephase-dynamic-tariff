@@ -81,6 +81,19 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
         version = "unknown"
 
     # ----------------------------------------------------------------------
+    # Standing charge diagnostics (NEW)
+    # ----------------------------------------------------------------------
+    standing_charge = {
+        "inc_vat_p_per_day": coord_data.get("standing_charge_inc_vat"),
+        "exc_vat_p_per_day": coord_data.get("standing_charge_exc_vat"),
+        "valid_from": coord_data.get("standing_charge_valid_from"),
+        "valid_to": coord_data.get("standing_charge_valid_to"),
+        "raw": coord_data.get("standing_charge_raw"),
+        "error": coord_data.get("standing_charge_error"),
+        "missing": coord_data.get("standing_charge_missing"),
+    }
+
+    # ----------------------------------------------------------------------
     # Final diagnostics structure
     # ----------------------------------------------------------------------
     return {
@@ -119,4 +132,14 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
         "classification_thresholds": thresholds,
         # Tariff metadata
         "tariff_metadata": coord_data.get("tariff_metadata"),
+        # Standing Charge diagnostics
+        "standing_charge": {
+            "inc_vat_p_per_day": coord_data.get("standing_charge_inc_vat"),
+            "exc_vat_p_per_day": coord_data.get("standing_charge_exc_vat"),
+            "valid_from": coord_data.get("standing_charge_valid_from"),
+            "valid_to": coord_data.get("standing_charge_valid_to"),
+            "raw": coord_data.get("standing_charge_raw"),
+            "error": coord_data.get("standing_charge_error"),
+            "missing": coord_data.get("standing_charge_missing"),
+        },
     }

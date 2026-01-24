@@ -669,15 +669,6 @@ class EDFFreePhaseDynamicTariffDiagnosticSensor(CoordinatorEntity, SensorEntity)
             "current_slot": data.get("current_slot"),
             "current_phase_summary": data.get("current_block_summary"),
             "next_phase_summary": data.get("next_block_summary"),
-            # Standing charge
-            "standing_charge_inc_vat_p_per_day": data.get("standing_charge_inc_vat"),
-            "standing_charge_exc_vat_p_per_day": data.get("standing_charge_exc_vat"),
-            "standing_charge_valid_from": data.get("standing_charge_valid_from"),
-            "standing_charge_valid_to": data.get("standing_charge_valid_to"),
-            "standing_charge_raw": data.get("standing_charge_raw"),
-            "standing_charge_error": data.get("standing_charge_error"),
-            "standing_charge_missing": data.get("standing_charge_missing"),
-
         }
 
     @property
