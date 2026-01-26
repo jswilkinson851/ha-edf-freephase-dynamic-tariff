@@ -1,16 +1,46 @@
 """
-Product metadata fetcher for EDF FreePhase Dynamic Tariff.
+Product‑metadata retrieval for the EDF FreePhase Dynamic Tariff integration.
 
-This module retrieves the full product definition from the EDF Kraken API,
-including descriptive fields, flags, availability windows, and contract term.
+This module provides the logic for fetching and lightly sanitising the full
+product definition from EDF’s Kraken API. The product metadata endpoint
+contains descriptive fields, tariff flags, availability windows, and contract
+details that are used throughout the integration to enrich diagnostics, device
+information, and UI presentation.
+
+Responsibilities of this module include:
+
+1. HTTP retrieval
+   The function `fetch_product_metadata()` performs a single request to the
+   product metadata endpoint, handling:
+       • network timeouts
+       • non‑200 responses
+       • JSON decoding errors
+       • defensive logging for malformed or unexpected payloads
+
+2. Data validation
+   The function ensures that the returned structure contains at least one
+   meaningful field. If the API returns an empty or unusable object, the
+   function logs the issue and returns `None` so the caller can degrade
+   gracefully.
+
+3. Description sanitisation
+   EDF’s product descriptions may contain HTML markup. This module performs
+   minimal cleanup—unescaping entities and converting list items into readable
+   bullet points—while leaving the rest of the content intact.
+
+No interpretation or transformation of tariff logic occurs here; the module’s
+sole purpose is to retrieve and lightly clean the product metadata so that
+other layers (metadata builder, diagnostics, sensors) can rely on a consistent
+structure.
 """
 
 from __future__ import annotations
 
-import aiohttp
-import async_timeout
 import html
 import logging
+
+import aiohttp  # type: ignore
+import async_timeout  # type: ignore
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,16 +1,42 @@
 """
-Phase summary utilities for EDF FreePhase Dynamic Tariff integration.
+Phase‑window computation utilities for the EDF FreePhase Dynamic Tariff integration.
 
-This module encapsulates logic for determining the current and next
-phase windows, keeping the coordinator focused on orchestration.
+This module provides the logic for deriving human‑readable phase‑window
+summaries (Green/Amber/Red blocks) from the normalised slot dataset produced by
+the parsing layer. By isolating this logic here, the coordinator remains focused
+on orchestration and state management, while all phase‑window reasoning stays
+centralised and easy to maintain.
+
+A “phase window” represents a contiguous block of half‑hour slots that share the
+same phase classification. These blocks are used throughout the integration to
+summarise tariff behaviour, drive UI elements, and trigger event‑based
+automations.
+
+The module’s primary responsibility is:
+
+    • compute_phase_summaries(all_slots, current_slot)
+        Determines:
+          - the phase window currently active at the given time
+          - the next upcoming phase window, if any
+
+        It does this by:
+          - locating the current block via `find_current_block()`
+          - grouping all slots into contiguous phase blocks using
+            `group_phase_blocks()`
+          - formatting the resulting blocks into compact, serialisable summaries
+            via `format_phase_block()`
+
+The returned summaries are used by the coordinator, sensors, event entities, and
+diagnostics to present a consistent, high‑level view of the tariff’s current and
+upcoming behaviour.
 """
 
 from __future__ import annotations
 
 from ..helpers import (
     find_current_block,
-    group_phase_blocks,
     format_phase_block,
+    group_phase_blocks,
 )
 
 

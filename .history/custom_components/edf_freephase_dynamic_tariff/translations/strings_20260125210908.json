@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "tariff_code": "",
+          "scan_interval": "",
+          "import_sensor": "",
+          "debug_logging": ""
+        }
+      },
+      "confirm_import_sensor": {
+        "data": {
+          "confirm_import_sensor": ""
+        }
+      }
+    },
+    "error": {
+      "product_url_unreachable": "",
+      "invalid_import_sensor": ""
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "tariff_code": "",
+          "scan_interval": "",
+          "import_sensor": "",
+          "debug_logging": ""
+        }
+      },
+      "confirm_import_sensor": {
+        "data": {
+          "confirm_import_sensor": ""
+        }
+      }
+    }
+  }
+}

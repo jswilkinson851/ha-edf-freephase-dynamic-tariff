@@ -6,6 +6,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## 🚀 [v0.7.0] - 2026-01-26
+
+### ✨ Added
+- Full **event platform** (`event` domain) with structured tariff slot & phase transition events.
+- New **Tariff Slot & Phase Events** entity emitting:
+  - `edf_fpd_slot_changed`
+  - `edf_fpd_phase_changed`
+  - `edf_fpd_phase_started`
+  - `edf_fpd_phase_ended`
+  - `edf_fpd_phase_block_changed`
+  - `edf_fpd_next_phase_changed`
+  - `edf_fpd_next_green_phase_changed`
+  - `edf_fpd_next_amber_phase_changed`
+  - `edf_fpd_next_red_phase_changed`
+- Comprehensive **event diagnostics**:
+  - `last_event_type`
+  - `last_event_timestamp`
+  - `event_counts`
+  - `event_history` (chronological, structured, retained in‑memory)
+- New **debug event bus stream** (`edf_fpd_debug`) for structured debugging.
+- Dashboard‑friendly metadata exposed via entity attributes.
+
+### 🛠 Improved
+- Coordinators now forward the new `event` platform during setup.
+- Event entity attaches cleanly to the integration’s device registry entry.
+- Diagnostics system expanded to support event tracking alongside existing EC/CC logs.
+- Internal helpers extended to support block/phase formatting for event payloads.
+
+### 🧹 Changed
+- Integration version bumped to **0.7.0** to reflect the introduction of a new platform and major feature expansion.
+- Minor internal refactors for consistency across coordinators, diagnostics, and event emission.
+
+### 🐛 Fixed
+- Ensured event entity initialises previous‑state tracking correctly to avoid false positives on startup.
+- Improved robustness of event payload formatting for dashboard rendering.
+
+### 📌 Notes
+- v0.6.2 contained only the addition of **standing charge diagnostics**; all other changes since v0.6.1 are included in this release.
+
+---
+
+## 🚀 [v0.6.2] - 2026-01-24
+
+## Added standing_charges data to diagnostics
+
+Added `standing_charges` data to diagnostics, which was originally planned for v0.6.1.
+
+---
+
 ## 🚀 [v0.6.1] — 2026-01-23
 
 ## Standing Charges Integration & Cost Pipeline Enhancements

@@ -281,3 +281,128 @@ Available in diagnostics:
 - api_url  
 
 ---
+
+# 📦 Entities
+
+This integration exposes a set of entities that provide live tariff data, cost information, standing charges, slot/phase summaries, health diagnostics, and now (as of **v0.7.0**) a full **event entity** for reacting to tariff transitions in real time.
+
+Below is a complete list of all entities grouped by platform.
+
+---
+
+## ⚡ Sensor Entities
+
+### `sensor.current_price`
+Current half‑hourly unit rate (p/kWh).
+
+### `sensor.next_slot_price`
+Unit rate for the next half‑hourly slot.
+
+### `sensor.cheapest_slot_next_24h`
+Cheapest slot in the next 24 hours.
+
+### `sensor.most_expensive_slot_next_24h`
+Most expensive slot in the next 24 hours.
+
+### `sensor.standing_charge`
+Standing charge (p/day, inc VAT).  
+Attributes include:
+- exc VAT  
+- GBP/day  
+- validity dates  
+- raw EDF API data  
+
+### Cost Sensors
+- `sensor.cost_today`
+- `sensor.cost_yesterday`
+- `sensor.cost_per_slot`
+- `sensor.cost_per_phase`
+- `sensor.total_cost_including_standing`
+
+These sensors use your import meter to calculate accurate real‑world costs.
+
+### Slot & Block Sensors
+- `sensor.current_slot_colour`
+- `sensor.current_block_summary`
+- `sensor.next_block_summary`
+- `sensor.next_green_slot`
+- `sensor.next_amber_slot`
+- `sensor.next_red_slot`
+
+---
+
+## 🔋 Binary Sensors
+
+### `binary_sensor.is_green_slot`
+Indicates whether the current slot is classified as **green**.
+
+---
+
+## 🛠 Debug & Health Sensors
+
+### `sensor.next_refresh_time`
+Shows the next scheduled refresh time, jitter, and interval.
+
+### `sensor.debug_logging_enabled`
+Reflects the state of the debug logging switch.
+
+### `sensor.diagnostic_sensor`
+A comprehensive diagnostic entity exposing:
+- API latency  
+- heartbeat flags  
+- scheduler timing  
+- slot/phase summaries  
+- tariff metadata  
+- debug logs  
+- standing‑charge diagnostics  
+- **event diagnostics (NEW in v0.7.0)**:
+  - `last_event_type`
+  - `last_event_timestamp`
+  - `event_counts`
+  - `event_history`
+
+---
+
+## 🧙‍♂️ Event Entities (NEW in v0.7.0)
+
+### `event.tariff_slot_phase_events`
+
+A dedicated event entity that emits structured events whenever the tariff changes in a meaningful way.
+
+This entity emits:
+
+- `edf_fpd_slot_changed`
+- `edf_fpd_phase_changed`
+- `edf_fpd_phase_started`
+- `edf_fpd_phase_ended`
+- `edf_fpd_phase_block_changed`
+- `edf_fpd_next_phase_changed`
+- `edf_fpd_next_green_phase_changed`
+- `edf_fpd_next_amber_phase_changed`
+- `edf_fpd_next_red_phase_changed`
+
+#### Attributes
+- `last_event_type`  
+- `last_event_timestamp`  
+- `event_counts` (per‑type counters)  
+- `event_history` (chronological, structured, in‑memory)
+
+#### Notes
+- Event history is retained in memory only (not persisted).  
+- The entity attaches to the same device as all other integration entities.  
+- Events are emitted immediately when the coordinator detects a transition.
+
+---
+
+## 🧹 Switches
+
+### `switch.debug_logging`
+Enables or disables structured debug logging without restarting Home Assistant.
+
+---
+
+## 📌 Summary
+
+This integration provides a complete set of tariff, cost, diagnostic, and event‑driven entities designed for dashboards, automations, and advanced energy management workflows.
+
+---

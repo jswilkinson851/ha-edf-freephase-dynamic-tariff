@@ -1,0 +1,187 @@
+ # EDF FreePhase Dynamic — Full Tariff & Diagnostics Dashboard
+
+type: vertical-stack
+cards:
+  - type: custom:mushroom-title-card
+    title: 🧙‍♂️🧭 Debug Panel 🔮🧙‍♂️
+    alignment: center
+
+  - type: custom:expander-card
+    title: ⚡ EC Debug Logs
+    padding: 8
+    cards:
+      - type: markdown
+        card_mod:
+          style:
+            ha-markdown$: |
+              pre, code {
+                white-space: pre-wrap !important;
+                word-break: break-word !important;
+              }
+        content: >
+          {% set times = state_attr('sensor.diagnostic_sensor',
+          'ec_debug_times') or []
+
+          %}
+
+
+          {% set logs = state_attr('sensor.diagnostic_sensor',
+          'ec_debug_buffer') or []
+
+          %}
+
+
+
+          {% if times and logs %}
+
+
+          {% for i in range(times | length) %}
+
+
+          **{{ times[i] }}**  
+
+          <span style="color:#aaa;">
+            ⌚ {{ times[i] | as_timestamp | timestamp_custom("%H:%M:%S on %d %b %Y") }}
+          </span>
+
+
+          🧙‍♂️🧭✨ *EC Log Entry*
+
+
+
+          ```text
+
+
+          {{ logs[i] }}
+
+
+          ```
+
+
+
+          ---
+
+
+          {% endfor %}
+
+
+          {% else %}
+
+
+          <i>No EC debug logs available.</i>
+
+
+          {% endif %}
+  - type: custom:expander-card
+    title: 🔌 CC Debug Logs
+    padding: 8
+    cards:
+      - type: markdown
+        card_mod:
+          style:
+            ha-markdown$: |
+              pre, code {
+                white-space: pre-wrap !important;
+                word-break: break-word !important;
+              }
+        content: >
+
+          {% set times = state_attr('sensor.diagnostic_sensor',
+          'cc_debug_times') or []
+
+          %}
+
+
+          {% set logs = state_attr('sensor.diagnostic_sensor',
+          'cc_debug_buffer') or []
+
+          %}
+
+
+
+          {% if times and logs %}
+
+
+          {% for i in range(times | length) %}
+
+
+          **{{ times[i] }}**  
+
+
+          <span style="color:#aaa;">
+            ⌚ {{ times[i] | as_timestamp | timestamp_custom("%H:%M:%S on %d %b %Y") }}
+          </span>
+
+
+          🧙‍♀️💷🔮 *CC Log Entry*
+
+
+
+          ```text
+
+
+          {{ logs[i] }}
+
+
+          ```
+
+
+
+          ---
+
+
+          {% endfor %}
+
+
+          {% else %}
+
+
+          <i>No CC debug logs available.</i>
+
+
+          {% endif %}
+  - type: custom:expander-card
+    title: ⏱️ EDF Event Timeline
+    padding: 8
+    cards:
+      - type: markdown
+        card_mod:
+          style:
+            ha-markdown$: |
+              pre, code {
+                white-space: pre-wrap !important;
+                word-break: break-word !important;
+              }
+        content: |
+          {% set diag = states['event.tariff_slot_phase_events'].attributes %}
+          {% if diag %}
+
+          ## ⏱️ Last Event
+          **Type:** {{ diag["last_event_type"] or "—" }}  
+          **Timestamp:** {{ diag["last_event_timestamp"] or "—" }}
+
+          ---
+
+          ## 🕒 Recent Events
+          {% set history = diag["event_history"] %}
+          {% if history %}
+            {% for item in history | reverse %}
+            **{{ item["timestamp"] }}**  
+            <span style="color:#aaa;">
+              {{ item["timestamp"] | as_timestamp | timestamp_custom("%H:%M:%S on %d %b %Y") }}
+            </span>
+            🧙‍♀️🪄⏱️ *{{ item["event_type"] }}*
+
+            ```yaml
+            {{ item["payload"] }}
+            ```
+
+            ---
+            {% endfor %}
+          {% else %}
+          No event history yet.
+          {% endif %}
+
+          {% else %}
+          No event diagnostics available.
+          {% endif %}

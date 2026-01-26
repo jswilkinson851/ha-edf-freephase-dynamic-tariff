@@ -47,9 +47,10 @@ from functools import lru_cache
 from typing import Tuple, Optional
 from datetime import datetime, timezone
 
-from homeassistant.util.dt import parse_datetime, as_local  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
-
-from homeassistant.helpers.device_registry import DeviceInfo  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
+# pylint: disable=import-error
+from homeassistant.util.dt import parse_datetime, as_local  # pyright: ignore[reportMissingImports]
+from homeassistant.helpers.device_registry import DeviceInfo  # pyright: ignore[reportMissingImports]
+# pylint: enable=import-error
 
 from .const import DOMAIN
 
