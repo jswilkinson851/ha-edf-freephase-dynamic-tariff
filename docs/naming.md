@@ -10,126 +10,67 @@ The goal is to keep entity names:
 
 ---
 
-# 🔹 Integration Prefix
+# 🏷 Naming Conventions
 
-Current prefix used in entity IDs:
-- `edf_freephase_dynamic_`
-
-Example:
-- `sensor.edf_freephase_dynamic_cost_today`
-
-Friendly names use:
-- “EDF FreePhase Dynamic …”
+This integration follows strict naming conventions to ensure consistency across sensors, diagnostics, events, and internal modules.
 
 ---
 
-# 🔹 Naming Rules
+# 📡 Event Naming (NEW in v0.7.0)
 
-### 1. **snake_case for entity IDs**
-Example:
-- `sensor.edf_freephase_dynamic_next_green_slot`
+All event types follow this pattern:
 
-### 2. **Human‑readable friendly names**
-Example:
-- “Next Green Slot”
+`edf_fpd_<description>`
 
-### 3. **Lowercase phase names**
-- green  
-- amber  
-- red  
 
-### 4. **ISO 8601 timestamps**
-Used for all start/end times.
+Where:
+- `edf_fpd` = integration prefix  
+- `<description>` = snake_case description of the transition  
 
-### 5. **Units**
-- p/kWh for prices  
-- GBP (£) for costs  
-- milliseconds for latency  
+### Event Types
 
----
-
-# 🔹 Naming by Category
-
-## **Pricing Sensors**
-Format:
-`sensor.edf_freephase_dynamic_<description>`
-
-Examples:
-- `current_price`
-- `next_slot_price`
-- `cheapest_slot_next_24_hours`
+- `edf_fpd_slot_changed`
+- `edf_fpd_phase_changed`
+- `edf_fpd_phase_started`
+- `edf_fpd_phase_ended`
+- `edf_fpd_phase_block_changed`
+- `edf_fpd_next_phase_changed`
+- `edf_fpd_next_green_phase_changed`
+- `edf_fpd_next_amber_phase_changed`
+- `edf_fpd_next_red_phase_changed`
+- `edf_fpd_debug` (debug event stream)
 
 ---
 
-## **Standing Charge Sensors (NEW in v0.6.1)**
+# 🧙‍♂️ Event Entity Naming
 
-Format:
-`sensor.standing_charge`
+Event entities follow:
 
-Notes:
-- This is the only sensor in the integration that intentionally **does not** use the `edf_freephase_dynamic_` prefix.
-- This exception is allowed because the standing charge is a universal tariff attribute, not a slot‑based or coordinator‑derived value.
-- Friendly name: “Standing Charge”
-- Unit: p/day
+`event.<integration>_<description>`
 
----
+For this integration:
 
-## **Cost Sensors**
-Format:
-`sensor.edf_freephase_dynamic_cost_<scope>`
+`event.tariff_slot_phase_events`
 
-Examples:
-- `cost_today`
-- `cost_yesterday`
-- `cost_per_slot`
+
+This entity emits all tariff‑related events.
 
 ---
 
-## **Binary Sensors**
-Format:
-`binary_sensor.edf_freephase_dynamic_<condition>`
+# 📦 Attribute Naming (NEW in v0.7.0)
 
-Example:
-- `is_green_slot`
+Event diagnostics attributes follow snake_case:
 
----
-
-## **Switches**
-Format:
-`switch.edf_freephase_dynamic_<feature>`
-
-Example:
-- `debug_logging`
+- `last_event_type`
+- `last_event_timestamp`
+- `event_counts`
+- `event_history`
 
 ---
 
-## **Debug Sensors**
-Format:
-`sensor.edf_freephase_dynamic_<debug_field>`
+# 📘 Summary
 
-Examples:
-- `debug_logging_enabled`
-- `ec_debug_buffer`
-- `cc_debug_buffer`
-
----
-
-## **Metadata Fields**
-Used in diagnostics:
-- tariff_metadata  
-- tariff_region_label  
-- product_url  
-- api_url  
-
----
-
-# Summary
-
-These updated naming rules ensure:
-- clarity  
-- consistency  
-- predictable entity IDs  
-- easy dashboard building  
-- alignment with Home Assistant best practices  
-
-They now fully reflect the expanded architecture introduced in **v0.6.0**.
+- All event types use the `edf_fpd_` prefix.  
+- All attributes use snake_case.  
+- The event entity uses a descriptive, human‑friendly name.  
+- Debug events follow the same naming pattern as functional events.  
