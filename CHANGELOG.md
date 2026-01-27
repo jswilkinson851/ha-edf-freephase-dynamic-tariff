@@ -6,6 +6,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## 🚀 [v0.7.1] — 2026.01.27
+
+## Entity Naming Overhaul & Seamless Migration
+
+### ✨ Highlights
+This release introduces a complete, future‑proof naming scheme for all entities in the integration.  
+All sensors, binary sensors, events, and the debug switch now follow a consistent, tariff‑aware pattern:
+
+- `<domain>.edf_fpd_<object_id>`
+
+Friendly names have also been updated to include the `EDF FPD` prefix, improving clarity and preparing the integration for future multi‑tariff support.
+
+A built‑in migration helper automatically updates existing entity IDs in the registry, ensuring:
+
+- no loss of history  
+- no broken dashboards  
+- no broken automations  
+- no user intervention required  
+
+Only the event entity may require manual dashboard updates if it was referenced directly.
+
+---
+
+### 🔧 Changes
+- Added **entity ID migration helper** to seamlessly rename legacy entity IDs to the new `edf_fpd_*` format.
+- Updated **friendly names** across all entities to include the `EDF FPD` prefix.
+- Standardised **entity_id generation** using the new `build_entity_id()` helper.
+- Updated the **debug logging switch** to use the new naming scheme.
+- Updated the **event entity** to follow the new naming pattern.
+- Improved internal consistency and future‑proofing for upcoming multi‑tariff support.
+
+---
+
+### 🛠️ Fixes & Improvements
+- Ensured all entities attach cleanly to the integration’s device entry.
+- Improved internal documentation and naming clarity.
+- Minor code clean‑ups and consistency improvements.
+
+---
+
+### ⚠️ Notes
+- This release is **not a breaking change**.  
+- All entity IDs are migrated automatically on startup.  
+- If you reference the **event entity** in dashboards, you may need to update that card manually.
+
+---
+
 ## 🚀 [v0.7.0] - 2026-01-26
 
 ### ✨ Added

@@ -13,19 +13,27 @@ These events allow you to build automations that react instantly to:
 
 # 📡 Event Entity
 
-### `event.tariff_slot_phase_events`
+### `event.edf_fpd_tariff_slot_phase_events`
 
-This entity emits all tariff‑related events.  
-It also exposes diagnostics attributes:
+This entity emits all tariff‑related events and exposes diagnostic attributes:
 
 - `last_event_type`
 - `last_event_timestamp`
 - `event_counts`
 - `event_history`
 
+Friendly name:
+
+- `EDF FPD Tariff Slot & Phase Events`
+
 ---
 
 # 🧙‍♂️ Event Types
+
+All event types follow the naming convention:
+
+- `edf_fpd_<description>`
+
 
 The following events may be emitted:
 
@@ -40,13 +48,14 @@ The following events may be emitted:
 | `edf_fpd_next_green_phase_changed` | The next green phase changed. |
 | `edf_fpd_next_amber_phase_changed` | The next amber phase changed. |
 | `edf_fpd_next_red_phase_changed` | The next red phase changed. |
+| `edf_fpd_debug` | Debug event stream (only when debug logging is enabled). |
 
 ---
 
 # 📦 Event Payload Structure
 
 Each event includes a structured JSON payload.  
-Example fields include:
+Example:
 
 ```json
 {
@@ -66,14 +75,14 @@ Example fields include:
 
 Payloads may include:
 
-- `phase`
-- `from` / `to` objects
+- phase
+- from / to objects
 - slot boundaries
-- block summaries
+- phase summaries
 - price information
 - timestamps
-
----
+- colour (green/amber/red)
+- duration and window metadata
 
 ## 🧪 Example Automations
 
@@ -102,15 +111,13 @@ action:
   - service: script.prepare_for_green_window
 ```
 
----
-
 ## 📊 Example Dashboard Card
 
 ```yaml
 type: markdown
 title: EDF Event Timeline
 content: |
-  {% set diag = states['event.tariff_slot_phase_events'].attributes %}
+  {% set diag = states['event.edf_fpd_tariff_slot_phase_events'].attributes %}
   {% if diag %}
   {% set history = diag["event_history"] %}
   {% for item in history | reverse %}
@@ -123,29 +130,26 @@ content: |
   {% endif %}
 ```
 
-
----
-
-# 🧠 Debug Event Stream
-
+## 🧠 Debug Event Stream
 If debug logging is enabled, the integration also emits:
 
-### `edf_fpd_debug`
+- `edf_fpd_debug`
 
 This includes:
-- event type  
-- payload  
-- entity ID  
+
+- event type
+- payload
+- entity ID
 
 Useful for advanced dashboards or development.
 
+## 📌 Notes
+Event history is stored in memory only.
+
+Events are emitted immediately when the coordinator detects a transition.
+
+All event types follow the naming conventions documented in naming.md.
+
+The event entity name was updated in v0.7.1 to match the new entity‑ID scheme.
+
 ---
-
-# 📌 Notes
-
-- Event history is stored in memory only.  
-- Events are emitted immediately when the coordinator detects a transition.  
-- All event types follow the naming conventions documented in `naming.md`.  
-
----
-

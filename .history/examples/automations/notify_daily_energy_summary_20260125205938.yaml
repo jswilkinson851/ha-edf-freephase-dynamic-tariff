@@ -1,0 +1,34 @@
+# Daily EDF FreePhase Dynamic Energy Summary
+#
+# Description:
+# Sends a daily notification summarising:
+# - Today’s electricity cost (from the EDF FreePhase Dynamic tariff)
+# - Solar generation (from GivTCP)
+# - Grid import (from the integration's consumption sensor, if set up)
+#
+# Requirements:
+# - sensor.edf_freephase_dynamic_cost_today
+# - sensor.<your_givtcp_pv_sensor>
+#   - I have placed {ge_serial_number} to indicate where to put this
+# - sensor.edf_freephase_dynamic_tariff_today_consumption_phase
+#
+# Notes:
+# - Replace the notify service with your own mobile app target - where I have put {device_name}
+# - Cost is already in GBP, so no conversion is needed.
+#
+# YAML:
+
+alias: Daily EDF FPD Energy Summary
+description: Combined cost, solar generation, and grid import summary at 20:00
+triggers:
+  - trigger: time
+    at: "20:00:00"
+actions:
+  - action: notify.mobile_{device_name}}
+    data:
+      title: 🔔 Daily Energy Summary
+      message: |
+        💷 Electricity cost so far: £{{ (states('sensor.edf_freephase_dynamic_tariff_today_cost_phase') | float) | round(2) }}
+        ☀️ Solar generation today: {{ states('sensor.givtcp_{ge_serial_number}_pv_energy_today_kwh') | float | round(2) }} kWh
+        🔌 Grid import today: {{ states('sensor.edf_freephase_dynamic_tariff_today_consumption_phase') | float | round(2) }} kWh
+mode: single

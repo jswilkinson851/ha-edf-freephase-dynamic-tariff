@@ -1,17 +1,19 @@
-# EDF FreePhase Dynamic Tariff — Entities Documentation (v0.6.0)
+# EDF FreePhase Dynamic Tariff — Entities Documentation (v0.7.1)
 
-This document describes all entities created by the **EDF FreePhase Dynamic Tariff** integration as of **v0.6.0**.
+This document describes all entities created by the **EDF FreePhase Dynamic Tariff** integration as of **v0.7.1**.
 
-The integration now includes:
+The integration includes:
 - A main data coordinator (EDFCoordinator)
 - A cost engine (CostCoordinator)
 - A binary sensor platform
 - A debug logging switch
+- A full event platform
 - Expanded diagnostics and metadata
+- A unified naming scheme for all entities
 
-All prices use **p/kWh** unless stated otherwise.  
-All cost values use **GBP (£)**.  
-All timestamps use **ISO 8601**.
+All prices use p/kWh unless stated otherwise.  
+All cost values use GBP (£).  
+All timestamps use ISO 8601.
 
 ---
 
@@ -19,20 +21,31 @@ All timestamps use **ISO 8601**.
 
 The integration exposes:
 
-- **Pricing sensors** (current price, next slot, cheapest/most expensive)
-- **Cost sensors** (today, yesterday, per‑slot, per‑phase)
-- **Slot & block sensors** (current block, next block, next green/amber/red)
-- **Binary sensors** (is the current slot green?)
-- **Debug sensors** (debug enabled, debug buffers)
-- **Health & metadata sensors** (API latency, coordinator status, last updated)
-- **Scheduler timing sensors** (next refresh time)
+- Pricing sensors  
+- Cost sensors  
+- Standing charge sensors  
+- Slot & phase sensors  
+- Binary sensors  
+- Debug sensors  
+- Health & metadata sensors  
+- Scheduler timing sensors  
+- Event entity (tariff transitions)
+
+All entity IDs now follow:
+
+- `<domain>.edf_fpd_<object_id>`
+
+All friendly names begin with:
+
+- `EDF FPD...`
+
 
 ---
 
 # 🔹 Pricing Sensors
 
 ## **Current Price**
-**Entity ID:** `sensor.current_price`  
+**Entity ID:** `sensor.edf_fpd_current_price`  
 Shows the price of the current half‑hour slot.
 
 **Attributes include:**
@@ -47,30 +60,28 @@ Shows the price of the current half‑hour slot.
 ---
 
 ## **Next Slot Price**
-**Entity ID:** `sensor.edf_freephase_dynamic_next_slot_price`  
+**Entity ID:** `sensor.edf_fpd_next_slot_price`  
 Shows the price of the next half‑hour slot.
 
 ---
 
 ## **Cheapest Slot (Next 24 Hours)**
-**Entity ID:** `sensor.edf_freephase_dynamic_cheapest_slot_next_24_hours`  
+**Entity ID:** `sensor.edf_fpd_cheapest_slot`  
 Shows the cheapest slot in the next 24 hours.
 
 ---
 
 ## **Most Expensive Slot (Next 24 Hours)**
-**Entity ID:** `sensor.edf_freephase_dynamic_most_expensive_slot_next_24_hours`  
+**Entity ID:** `sensor.edf_fpd_most_expensive_slot`  
 Shows the most expensive slot in the next 24 hours.
 
 ---
 
----
-
-# 🔹 Standing Charge Sensor (NEW in v0.6.1)
+# 🔹 Standing Charge Sensor
 
 ## **Standing Charge**
-**Entity ID:** `sensor.standing_charge`  
-Shows the daily standing charge for your region (inc VAT), in **p/day**.
+**Entity ID:** `sensor.edf_fpd_standing_charge`  
+Shows the daily standing charge for your region (inc VAT), in p/day.
 
 **Attributes include:**
 - inc_vat_p_per_day  
@@ -80,89 +91,72 @@ Shows the daily standing charge for your region (inc VAT), in **p/day**.
 - valid_to  
 - raw (full EDF API response)  
 - region  
-- status (ok / missing / error)  
+- status  
 
 ---
 
-# 🔹 Cost Sensors (Updated in v0.6.1)
+# 🔹 Cost Sensors
 
-The following additional fields are now included in cost summaries:
-
-### **New per‑period attributes:**
-- `standing_charge_inc_vat`
-- `standing_charge_exc_vat`
-- `standing_charge_valid_from`
-- `standing_charge_valid_to`
-- `standing_charge_cost_gbp`
-- `total_cost_including_standing_gbp`
-
-These appear in:
-- `sensor.edf_freephase_dynamic_cost_today`  
-- `sensor.edf_freephase_dynamic_cost_yesterday`  
-- `sensor.edf_freephase_dynamic_cost_per_slot`  
-- `sensor.edf_freephase_dynamic_cost_per_phase`  
-
----
-
-# 🔹 Health & Metadata Sensors (Updated)
-
-## **Coordinator Status**
-Now includes standing‑charge heartbeat flags:
-- `standing_charge_error`
-- `standing_charge_missing`
-
----
-
-# 🔹 Cost Sensors (NEW in v0.6.0)
-
-These sensors use your **electricity import sensor** to calculate real‑world costs.
+These sensors use your electricity import sensor to calculate real‑world costs.
 
 ## **Cost Today**
-**Entity ID:** `sensor.edf_freephase_dynamic_cost_today`  
+**Entity ID:** `sensor.edf_fpd_cost_today`  
 Total cost from midnight to now.
 
 ---
 
 ## **Cost Yesterday**
-**Entity ID:** `sensor.edf_freephase_dynamic_cost_yesterday`  
+**Entity ID:** `sensor.edf_fpd_cost_yesterday`  
 Total cost for the previous day.
 
 ---
 
-## **Cost Per Slot** (optional)
-**Entity ID:** `sensor.edf_freephase_dynamic_cost_per_slot`  
+## **Cost Per Slot**
+**Entity ID:** `sensor.edf_fpd_cost_per_slot`  
 Breakdown of cost per half‑hour slot.
 
 ---
 
-## **Cost Per Phase** (optional)
-**Entity ID:** `sensor.edf_freephase_dynamic_cost_per_phase`  
+## **Cost Per Phase**
+**Entity ID:** `sensor.edf_fpd_cost_per_phase`  
 Cost grouped by phase (green/amber/red).
 
 ---
 
-# 🔹 Slot & Block Sensors
+## **Total Cost Including Standing Charge**
+**Entity ID:** `sensor.edf_fpd_total_cost_including_standing_charge`  
+Full daily cost including standing charge.
 
-## **Current Block Summary**
-**Entity ID:** `sensor.current_block_summary`  
+---
+
+# 🔹 Slot & Phase Sensors
+
+## **Current Slot Colour**
+**Entity ID:** `sensor.edf_fpd_current_slot_colour`  
+Shows the colour (green/amber/red) of the current slot.
+
+---
+
+## **Current Phase Summary**
+**Entity ID:** `sensor.edf_fpd_current_phase_summary`  
 Shows the merged block of consecutive slots with the same phase.
 
 ---
 
-## **Next Block Summary**
-**Entity ID:** `sensor.next_block_summary`  
+## **Next Phase Summary**
+**Entity ID:** `sensor.edf_fpd_next_phase_summary`  
 Shows the next upcoming block of a different phase.
 
 ---
 
 ## **Next Green Slot**
-**Entity ID:** `sensor.edf_freephase_dynamic_next_green_slot`  
+**Entity ID:** `sensor.edf_fpd_next_green_slot`
 
 ## **Next Amber Slot**
-**Entity ID:** `sensor.edf_freephase_dynamic_next_amber_slot`  
+**Entity ID:** `sensor.edf_fpd_next_amber_slot`
 
 ## **Next Red Slot**
-**Entity ID:** `sensor.edf_freephase_dynamic_next_red_slot`  
+**Entity ID:** `sensor.edf_fpd_next_red_slot`
 
 Each shows the next slot of that colour.
 
@@ -170,56 +164,48 @@ Each shows the next slot of that colour.
 
 # 🔹 Daily Summary Sensors
 
-## **Today’s Rates Summary**
-**Entity ID:** `sensor.today_s_rates_summary`  
+## **Today’s Phases Summary**
+**Entity ID:** `sensor.edf_fpd_today_phases_summary`  
 Shows today’s merged phase windows.
 
 ---
 
-## **Tomorrow’s Rates Summary**
-**Entity ID:** `sensor.tomorrow_s_rates_summary`  
+## **Tomorrow’s Phases Summary**
+**Entity ID:** `sensor.edf_fpd_tomorrow_phases_summary`  
 Shows tomorrow’s merged phase windows.
 
 ---
 
 ## **Yesterday’s Phases Summary**
-**Entity ID:** `sensor.yesterday_phases_summary`  
+**Entity ID:** `sensor.edf_fpd_yesterday_phases_summary`  
 Shows yesterday’s merged phase windows.
 
 ---
 
-# 🔹 Binary Sensors (NEW)
+# 🔹 Binary Sensors
 
 ## **Is Current Slot Green?**
-**Entity ID:**  
-`binary_sensor.edf_freephase_dynamic_is_green_slot`
-
+**Entity ID:** `binary_sensor.edf_fpd_is_green_slot`  
 True when the current slot is green.
 
 ---
 
-# 🔹 Debug Sensors (NEW)
+# 🔹 Debug Sensors
 
 ## **Debug Logging Enabled**
-**Entity ID:**  
-`sensor.edf_freephase_dynamic_debug_logging_enabled`
-
+**Entity ID:** `sensor.edf_fpd_debug_logging_enabled`  
 Reflects the state of the debug logging switch.
 
 ---
 
 ## **EDFCoordinator Debug Buffer**
-**Entity ID:**  
-`sensor.edf_freephase_dynamic_ec_debug_buffer`
-
+**Entity ID:** `sensor.edf_fpd_ec_debug_buffer`  
 Shows the last 10 debug messages from the main coordinator.
 
 ---
 
 ## **CostCoordinator Debug Buffer**
-**Entity ID:**  
-`sensor.edf_freephase_dynamic_cc_debug_buffer`
-
+**Entity ID:** `sensor.edf_fpd_cc_debug_buffer`  
 Shows the last 10 debug messages from the cost engine.
 
 ---
@@ -227,9 +213,7 @@ Shows the last 10 debug messages from the cost engine.
 # 🔹 Scheduler & Timing Sensors
 
 ## **Next Refresh Time**
-**Entity ID:**  
-`sensor.edf_freephase_dynamic_next_refresh_time`
-
+**Entity ID:** `sensor.edf_fpd_next_refresh_time`  
 Shows when the next aligned refresh will occur.
 
 ---
@@ -237,7 +221,7 @@ Shows when the next aligned refresh will occur.
 # 🔹 Health & Metadata Sensors
 
 ## **Coordinator Status**
-**Entity ID:** `sensor.coordinator_status`  
+**Entity ID:** `sensor.edf_fpd_cost_coordinator_status`  
 Shows the overall health state:
 - healthy  
 - partial  
@@ -250,25 +234,25 @@ Shows the overall health state:
 ---
 
 ## **API Latency**
-**Entity ID:** `sensor.api_latency`  
+**Entity ID:** `sensor.edf_fpd_api_latency`  
 Round‑trip time to the EDF API.
 
 ---
 
 ## **Last Updated**
-**Entity ID:** `sensor.last_updated`  
+**Entity ID:** `sensor.edf_fpd_last_updated`  
 When the coordinator last ran.
 
 ---
 
 ## **Last Successful Update**
-**Entity ID:** `sensor.last_successful_update`  
+**Entity ID:** `sensor.edf_fpd_last_successful_update`  
 When fresh data was last retrieved.
 
 ---
 
 ## **Data Age**
-**Entity ID:** `sensor.data_age`  
+**Entity ID:** `sensor.edf_fpd_data_age`  
 Seconds since the last successful update.
 
 ---
@@ -282,127 +266,44 @@ Available in diagnostics:
 
 ---
 
-# 📦 Entities
+# 🔹 Event Entity (UPDATED in v0.7.1)
 
-This integration exposes a set of entities that provide live tariff data, cost information, standing charges, slot/phase summaries, health diagnostics, and now (as of **v0.7.0**) a full **event entity** for reacting to tariff transitions in real time.
+## **Tariff Slot & Phase Events**
+**Entity ID:** `event.edf_fpd_tariff_slot_phase_events`  
+Emits structured events whenever the tariff changes.
 
-Below is a complete list of all entities grouped by platform.
+### Event Types
+- edf_fpd_slot_changed  
+- edf_fpd_phase_changed  
+- edf_fpd_phase_started  
+- edf_fpd_phase_ended  
+- edf_fpd_phase_block_changed  
+- edf_fpd_next_phase_changed  
+- edf_fpd_next_green_phase_changed  
+- edf_fpd_next_amber_phase_changed  
+- edf_fpd_next_red_phase_changed  
+- edf_fpd_debug  
 
----
-
-## ⚡ Sensor Entities
-
-### `sensor.current_price`
-Current half‑hourly unit rate (p/kWh).
-
-### `sensor.next_slot_price`
-Unit rate for the next half‑hourly slot.
-
-### `sensor.cheapest_slot_next_24h`
-Cheapest slot in the next 24 hours.
-
-### `sensor.most_expensive_slot_next_24h`
-Most expensive slot in the next 24 hours.
-
-### `sensor.standing_charge`
-Standing charge (p/day, inc VAT).  
-Attributes include:
-- exc VAT  
-- GBP/day  
-- validity dates  
-- raw EDF API data  
-
-### Cost Sensors
-- `sensor.cost_today`
-- `sensor.cost_yesterday`
-- `sensor.cost_per_slot`
-- `sensor.cost_per_phase`
-- `sensor.total_cost_including_standing`
-
-These sensors use your import meter to calculate accurate real‑world costs.
-
-### Slot & Block Sensors
-- `sensor.current_slot_colour`
-- `sensor.current_block_summary`
-- `sensor.next_block_summary`
-- `sensor.next_green_slot`
-- `sensor.next_amber_slot`
-- `sensor.next_red_slot`
+### Attributes
+- last_event_type  
+- last_event_timestamp  
+- event_counts  
+- event_history  
 
 ---
 
-## 🔋 Binary Sensors
+# 🔹 Switches
 
-### `binary_sensor.is_green_slot`
-Indicates whether the current slot is classified as **green**.
-
----
-
-## 🛠 Debug & Health Sensors
-
-### `sensor.next_refresh_time`
-Shows the next scheduled refresh time, jitter, and interval.
-
-### `sensor.debug_logging_enabled`
-Reflects the state of the debug logging switch.
-
-### `sensor.diagnostic_sensor`
-A comprehensive diagnostic entity exposing:
-- API latency  
-- heartbeat flags  
-- scheduler timing  
-- slot/phase summaries  
-- tariff metadata  
-- debug logs  
-- standing‑charge diagnostics  
-- **event diagnostics (NEW in v0.7.0)**:
-  - `last_event_type`
-  - `last_event_timestamp`
-  - `event_counts`
-  - `event_history`
-
----
-
-## 🧙‍♂️ Event Entities (NEW in v0.7.0)
-
-### `event.tariff_slot_phase_events`
-
-A dedicated event entity that emits structured events whenever the tariff changes in a meaningful way.
-
-This entity emits:
-
-- `edf_fpd_slot_changed`
-- `edf_fpd_phase_changed`
-- `edf_fpd_phase_started`
-- `edf_fpd_phase_ended`
-- `edf_fpd_phase_block_changed`
-- `edf_fpd_next_phase_changed`
-- `edf_fpd_next_green_phase_changed`
-- `edf_fpd_next_amber_phase_changed`
-- `edf_fpd_next_red_phase_changed`
-
-#### Attributes
-- `last_event_type`  
-- `last_event_timestamp`  
-- `event_counts` (per‑type counters)  
-- `event_history` (chronological, structured, in‑memory)
-
-#### Notes
-- Event history is retained in memory only (not persisted).  
-- The entity attaches to the same device as all other integration entities.  
-- Events are emitted immediately when the coordinator detects a transition.
-
----
-
-## 🧹 Switches
-
-### `switch.debug_logging`
+## **Debug Logging**
+**Entity ID:** `switch.edf_fpd_debug_logging`  
 Enables or disables structured debug logging without restarting Home Assistant.
 
 ---
 
-## 📌 Summary
+# 📌 Summary
 
 This integration provides a complete set of tariff, cost, diagnostic, and event‑driven entities designed for dashboards, automations, and advanced energy management workflows.
+
+All entities now follow the unified naming scheme introduced in **v0.7.1**, ensuring long‑term stability and preparing the integration for future multi‑tariff support.
 
 ---
