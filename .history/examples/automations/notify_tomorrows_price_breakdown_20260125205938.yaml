@@ -1,0 +1,52 @@
+# Notify Tomorrow's EDF FPD Price Breakdown
+#
+# Description:
+# Sends a notification with a simple breakdown of tomorrow's tariff phases
+# (Green, Amber, Red) as soon as EDF publishes the next day's rates.
+#
+# Requirements:
+# - sensor.tomorrow_s_phases_summary
+# - sensor.tomorrow_s_rates_summary
+# - A notification service (replace notify.mobile_app_* with your own)
+#
+# Notes:
+# - This automation waits briefly for attributes to populate before sending.
+# - Emoji are used to make the notification more readable.
+#   - Emoji may vary by device; feel free to replace with text labels.
+# - Trigger: tomorrow_s_phases_summary updates first
+# - Wait: tomorrow_s_rates_summary attributes populate shortly after
+
+#
+# YAML:
+
+alias: Notify Tomorrow's EDF FPD Price Breakdown
+triggers:
+  - entity_id:
+      - sensor.tomorrow_s_phases_summary
+    from:
+      - unknown
+      - unavailable
+    trigger: state
+actions:
+  - wait_template: "{{ state_attr('sensor.tomorrow_s_rates_summary', 'phase_1') is not none }}"
+    timeout: "00:00:10"
+    continue_on_timeout: true
+  - action: notify.mobile_app_lly_nx1
+    data:
+      title: Tomorrow's EDF FPD Price Breakdown
+      message: >-
+        {% set attrs = states.sensor.tomorrow_s_phases_summary.attributes %} {%
+        if not attrs -%} Tomorrow's rates updated, but no price data is
+        available yet. {%- else -%}
+
+        {# Build a list of phase blocks using safe Jinja filters #} {% set
+        phases = attrs | dictsort | selectattr(0, 'match', '^phase_') |
+        map(attribute=1) | list -%}
+
+        {%- for block in phases -%} {% set emoji =
+          '🌱' if block.phase == 'green' else
+          '🌤️' if block.phase == 'amber' else
+          '🔥'
+        %} {{ emoji }} {{ block.phase | capitalize }}: {{
+        block.price_pen_per_kwh }}\n {%- endfor -%} {%- endif %}
+mode: single

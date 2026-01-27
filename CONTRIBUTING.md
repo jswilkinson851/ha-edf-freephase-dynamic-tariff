@@ -1,15 +1,15 @@
-# 🧪 Contributing Guide — Running Tests Locally
+# 🧪 Contributing Guide — Running Tests & Development Setup
 
-Thank you for contributing to the EDF FreePhase Dynamic Tariff integration.  
-This guide explains how to run the test suite locally so you can verify changes before opening a pull request.
+Thank you for contributing to the **EDF FreePhase Dynamic Tariff** integration!  
+This guide explains how to run tests, lint the code, and prepare changes before opening a pull request.
 
 ---
 
-## 1. Install dependencies
+# 1. 📦 Install Dependencies
 
-Make sure you have Python 3.12 installed.
+Make sure you have **Python 3.12** installed.
 
-Then install the development dependencies:
+Install development dependencies:
 
 ```bash
 pip install -r requirements.txt
@@ -23,76 +23,69 @@ python -m venv venv
 source venv/bin/activate
 ```
 
----
+On Windows (PowerShell):
 
-## 2. Run the full test suite
-
-This will:
-
-- run all tests in the tests/ directory
-
-- generate a coverage report in the terminal
-
-- produce an HTML coverage report in coverage_html/
-
----
-
-## 3. View the coverage report
-
-After running tests:
-
-```bash
-open coverage_html/index.html
-```
-or on Linux:
-```bash
-xdg-open coverage_html/index.html
-``` 
-
-This gives you a visual breakdown of which lines are covered.
-
----
-
-## 4. Run a single test file
-
-```bash
-pytest tests/test_coordinator.py
+```powershell
+python -m venv venv
+venv\Scripts\activate
 ```
 
-Or a single test:
+## 2. 🧹 Linting & Formatting
+This project uses Ruff for linting and formatting.
 
-```bash
-pytest tests/test_coordinator.py::test_coordinator_success
-```
-
----
-
-## 5. Linting (optional but recommended)
-
-If you use Ruff:
+Run lint checks:
 
 ```bash
 ruff check .
 ```
 
----
+Auto‑format the code:
 
-## 6. Before submitting a PR
+```bash
+ruff format .
+```
 
-Please ensure:
+## 3. 🏗️ Local Development Tips
 
-- All tests pass
+Using the Home Assistant Dev Container (optional)
+If you prefer a full HA dev environment:
 
-- Coverage is reasonable
+1. Install the Home Assistant VS Code Dev Container
+2. Open the repository inside the container
+3. ome Assistant will run with your integration mounted live
+4. You can test config flows, entity registration, diagnostics, and events interactively
 
-- No new warnings appear
+Testing the integration manually
+Before submitting a PR, please ensure:
 
 - The integration loads correctly in Home Assistant
+- Entities register under the correct device
+- No warnings or errors appear in the logs
+- Event entity emits events as expected
+- Naming conventions follow edf_fpd_<object_id>
+- New entities include meaningful unique_ids
 
----
+## 5. ✔️ Before Submitting a Pull Request
+Please check:
 
-If you have any questions or want help writing tests, feel free to open a discussion or ask in the Facebook group.
+- Tests pass
+- Coverage is reasonable
+- Ruff reports no issues
+- The integration loads cleanly in HA
+- Documentation is updated if needed
+- Example dashboards/automations are updated if entity IDs changed
+- If your PR introduces new entities, please update:
+  - README.md
+  - docs/entities.md
+  - docs/naming.md
+  - Example dashboards (if relevant)
 
----
+## 6. 💬 Questions & Support
+If you need help writing tests, understanding the architecture, or want guidance on a feature, feel free to:
 
-Thank you for helping improve the EDF FreePhase Dynamic Tariff integration! Your contributions are greatly appreciated. 🙏
+- Open a GitHub Discussion
+- Ask in the Facebook group
+- Or open a draft PR and request feedback
+
+Thank you for helping improve the EDF FreePhase Dynamic Tariff integration —
+your contributions make the project better for everyone. 🙏

@@ -1,0 +1,72 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "tariff_code": "",
+          "scan_interval": "",
+          "import_sensor": "",
+          "debug_logging": ""
+        }
+      },
+      "confirm_import_sensor": {
+        "data": {
+          "confirm_import_sensor": ""
+        }
+      }
+    },
+    "error": {
+      "product_url_unreachable": "",
+      "invalid_import_sensor": ""
+    }
+  },
+
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "tariff_code": "",
+          "scan_interval": "",
+          "import_sensor": "",
+          "debug_logging": ""
+        }
+      },
+      "confirm_import_sensor": {
+        "data": {
+          "confirm_import_sensor": ""
+        }
+      }
+    }
+  },
+
+  "entity": {
+    "event": {
+      "tariff_slot_phase_events": {
+        "name": "",
+        "state": {
+          "last_event_type": "",
+          "last_event_timestamp": "",
+          "event_counts": "",
+          "event_history": ""
+        }
+      }
+    }
+  },
+
+  "platform": {
+    "event": ""
+  },
+
+  "event_type": {
+    "edf_fpd_slot_changed": "",
+    "edf_fpd_phase_changed": "",
+    "edf_fpd_phase_started": "",
+    "edf_fpd_phase_ended": "",
+    "edf_fpd_phase_block_changed": "",
+    "edf_fpd_next_phase_changed": "",
+    "edf_fpd_next_green_phase_changed": "",
+    "edf_fpd_next_amber_phase_changed": "",
+    "edf_fpd_next_red_phase_changed": "",
+    "edf_fpd_debug": ""
+  }
+}

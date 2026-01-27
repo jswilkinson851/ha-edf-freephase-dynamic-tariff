@@ -1,0 +1,81 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "EDF FreePhase Dynamic Tariff Setup",
+        "description": "Select your region, scan interval, and optional import sensor.",
+        "data": {
+          "tariff_code": "Region",
+          "scan_interval": "Scan Interval (minutes)",
+          "import_sensor": "Import Sensor (optional)",
+          "debug_logging": "Enable debug logging"
+        }
+      },
+      "confirm_import_sensor": {
+        "title": "Confirm import sensor",
+        "description": "The selected grid import sensor ({entity_id}) does not appear to be valid for cumulative kWh readings:\n{reasons}\n\nAre you sure you want to continue with this sensor?",
+        "data": {
+          "confirm_import_sensor": "Continue anyway"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the EDF API. Please try again.",
+      "product_url_unreachable": "Unable to reach EDF product metadata endpoint.",
+      "invalid_import_sensor": "This sensor does not provide usable cumulative kWh data."
+    }
+  },
+
+  "options": {
+    "step": {
+      "init": {
+        "title": "EDF FreePhase Dynamic Tariff Options",
+        "description": "Update your region, scan interval, or import sensor.",
+        "data": {
+          "tariff_code": "Region",
+          "scan_interval": "Scan Interval (minutes)",
+          "import_sensor": "Import Sensor (optional)",
+          "debug_logging": "Enable debug logging"
+        }
+      },
+      "confirm_import_sensor": {
+        "title": "Confirm import sensor",
+        "description": "The selected grid import sensor ({entity_id}) does not appear to be valid for cumulative kWh readings:\n{reasons}\n\nAre you sure you want to continue with this sensor?",
+        "data": {
+          "confirm_import_sensor": "Continue anyway"
+        }
+      }
+    }
+  },
+
+  "entity": {
+    "event": {
+      "tariff_slot_phase_events": {
+        "name": "Tariff Slot & Phase Events",
+        "state": {
+          "last_event_type": "Last Event Type",
+          "last_event_timestamp": "Last Event Timestamp",
+          "event_counts": "Event Counts",
+          "event_history": "Event History"
+        }
+      }
+    }
+  },
+
+  "platform": {
+    "event": "Event"
+  },
+
+  "event_type": {
+    "edf_fpd_slot_changed": "Slot Changed",
+    "edf_fpd_phase_changed": "Phase Changed",
+    "edf_fpd_phase_started": "Phase Started",
+    "edf_fpd_phase_ended": "Phase Ended",
+    "edf_fpd_phase_block_changed": "Phase Block Changed",
+    "edf_fpd_next_phase_changed": "Next Phase Changed",
+    "edf_fpd_next_green_phase_changed": "Next Green Phase Changed",
+    "edf_fpd_next_amber_phase_changed": "Next Amber Phase Changed",
+    "edf_fpd_next_red_phase_changed": "Next Red Phase Changed",
+    "edf_fpd_debug": "Debug Event"
+  }
+}

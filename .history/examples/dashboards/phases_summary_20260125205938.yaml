@@ -1,0 +1,251 @@
+# Tariff Phase Dashboard (Example Layout)
+
+# This example shows how to present **yesterday’s**, **today’s**, and **tomorrow’s** tariff phases using a clean, collapsible layout built with:
+
+# - `vertical-stack`
+# - `expander-card`
+# - `mushroom-template-card`
+
+# Each expander contains **five phase rows**, representing the daily sequence:
+
+# 1. Green Phase  
+# 2. Amber Phase  
+# 3. Red Phase  
+# 4. Amber Phase  
+# 5. Green Phase  
+
+# Every phase row displays:
+
+# - The phase **colour** (via Mushroom’s `color:` property)  
+# - The phase **icon**  
+# - The **start → end** time  
+# - The **price (p/kWh)**  
+
+# This layout is ideal for dashboards that need a compact, readable breakdown of tariff periods without relying on charts or custom timeline components. It works beautifully on both desktop and mobile.
+
+# Below is the full YAML example you can paste directly into a Home Assistant dashboard.
+
+
+type: vertical-stack
+cards:
+
+  ###############################################################
+  # Yesterday's Phases
+  ###############################################################
+  - type: custom:expander-card
+    title: Yesterday's Phases
+    padding: 0
+    cards:
+
+      - type: custom:mushroom-template-card
+        multiline_secondary: true
+        icon: >
+          {{ state_attr('sensor.yesterday_phases_summary', 'phase_1')['icon'] }}
+        primary: >
+          Phase 1 — {{ state_attr('sensor.yesterday_phases_summary', 'phase_1')['phase'] | title }}
+        secondary: >
+          {{ state_attr('sensor.yesterday_phases_summary', 'phase_1')['start'] }}
+          → {{ state_attr('sensor.yesterday_phases_summary', 'phase_1')['end'] }}
+          • {{ state_attr('sensor.yesterday_phases_summary', 'phase_1')['price_pen_per_kwh'] }}
+        color: >
+          {{ state_attr('sensor.yesterday_phases_summary', 'phase_1')['phase'] }}
+
+      - type: custom:mushroom-template-card
+        multiline_secondary: true
+        icon: >
+          {{ state_attr('sensor.yesterday_phases_summary', 'phase_2')['icon'] }}
+        primary: >
+          Phase 2 — {{ state_attr('sensor.yesterday_phases_summary', 'phase_2')['phase'] | title }}
+        secondary: >
+          {{ state_attr('sensor.yesterday_phases_summary', 'phase_2')['start'] }}
+          → {{ state_attr('sensor.yesterday_phases_summary', 'phase_2')['end'] }}
+          • {{ state_attr('sensor.yesterday_phases_summary', 'phase_2')['price_pen_per_kwh'] }}
+        color: >
+          {{ state_attr('sensor.yesterday_phases_summary', 'phase_2')['phase'] }}
+
+      - type: custom:mushroom-template-card
+        multiline_secondary: true
+        icon: >
+          {{ state_attr('sensor.yesterday_phases_summary', 'phase_3')['icon'] }}
+        primary: >
+          Phase 3 — {{ state_attr('sensor.yesterday_phases_summary', 'phase_3')['phase'] | title }}
+        secondary: >
+          {{ state_attr('sensor.yesterday_phases_summary', 'phase_3')['start'] }}
+          → {{ state_attr('sensor.yesterday_phases_summary', 'phase_3')['end'] }}
+          • {{ state_attr('sensor.yesterday_phases_summary', 'phase_3')['price_pen_per_kwh'] }}
+        color: >
+          {{ state_attr('sensor.yesterday_phases_summary', 'phase_3')['phase'] }}
+
+      - type: custom:mushroom-template-card
+        multiline_secondary: true
+        icon: >
+          {{ state_attr('sensor.yesterday_phases_summary', 'phase_4')['icon'] }}
+        primary: >
+          Phase 4 — {{ state_attr('sensor.yesterday_phases_summary', 'phase_4')['phase'] | title }}
+        secondary: >
+          {{ state_attr('sensor.yesterday_phases_summary', 'phase_4')['start'] }}
+          → {{ state_attr('sensor.yesterday_phases_summary', 'phase_4')['end'] }}
+          • {{ state_attr('sensor.yesterday_phases_summary', 'phase_4')['price_pen_per_kwh'] }}
+        color: >
+          {{ state_attr('sensor.yesterday_phases_summary', 'phase_4')['phase'] }}
+
+      - type: custom:mushroom-template-card
+        multiline_secondary: true
+        icon: >
+          {{ state_attr('sensor.yesterday_phases_summary', 'phase_5')['icon'] }}
+        primary: >
+          Phase 5 — {{ state_attr('sensor.yesterday_phases_summary', 'phase_5')['phase'] | title }}
+        secondary: >
+          {{ state_attr('sensor.yesterday_phases_summary', 'phase_5')['start'] }}
+          → {{ state_attr('sensor.yesterday_phases_summary', 'phase_5')['end'] }}
+          • {{ state_attr('sensor.yesterday_phases_summary', 'phase_5')['price_pen_per_kwh'] }}
+        color: >
+          {{ state_attr('sensor.yesterday_phases_summary', 'phase_5')['phase'] }}
+
+
+  ###############################################################
+  # Today's Phases
+  ###############################################################
+  - type: custom:expander-card
+    title: Today's Phases
+    padding: 0
+    cards:
+
+      - type: custom:mushroom-template-card
+        multiline_secondary: true
+        icon: >
+          {{ state_attr('sensor.today_s_phases_summary', 'phase_1')['icon'] }}
+        primary: >
+          Phase 1 — {{ state_attr('sensor.today_s_phases_summary', 'phase_1')['phase'] | title }}
+        secondary: >
+          {{ state_attr('sensor.today_s_phases_summary', 'phase_1')['start'] }}
+          → {{ state_attr('sensor.today_s_phases_summary', 'phase_1')['end'] }}
+          • {{ state_attr('sensor.today_s_phases_summary', 'phase_1')['price_pen_per_kwh'] }}
+        color: >
+          {{ state_attr('sensor.today_s_phases_summary', 'phase_1')['phase'] }}
+
+      - type: custom:mushroom-template-card
+        multiline_secondary: true
+        icon: >
+          {{ state_attr('sensor.today_s_phases_summary', 'phase_2')['icon'] }}
+        primary: >
+          Phase 2 — {{ state_attr('sensor.today_s_phases_summary', 'phase_2')['phase'] | title }}
+        secondary: >
+          {{ state_attr('sensor.today_s_phases_summary', 'phase_2')['start'] }}
+          → {{ state_attr('sensor.today_s_phases_summary', 'phase_2')['end'] }}
+          • {{ state_attr('sensor.today_s_phases_summary', 'phase_2')['price_pen_per_kwh'] }}
+        color: >
+          {{ state_attr('sensor.today_s_phases_summary', 'phase_2')['phase'] }}
+
+      - type: custom:mushroom-template-card
+        multiline_secondary: true
+        icon: >
+          {{ state_attr('sensor.today_s_phases_summary', 'phase_3')['icon'] }}
+        primary: >
+          Phase 3 — {{ state_attr('sensor.today_s_phases_summary', 'phase_3')['phase'] | title }}
+        secondary: >
+          {{ state_attr('sensor.today_s_phases_summary', 'phase_3')['start'] }}
+          → {{ state_attr('sensor.today_s_phases_summary', 'phase_3')['end'] }}
+          • {{ state_attr('sensor.today_s_phases_summary', 'phase_3')['price_pen_per_kwh'] }}
+        color: >
+          {{ state_attr('sensor.today_s_phases_summary', 'phase_3')['phase'] }}
+
+      - type: custom:mushroom-template-card
+        multiline_secondary: true
+        icon: >
+          {{ state_attr('sensor.today_s_phases_summary', 'phase_4')['icon'] }}
+        primary: >
+          Phase 4 — {{ state_attr('sensor.today_s_phases_summary', 'phase_4')['phase'] | title }}
+        secondary: >
+          {{ state_attr('sensor.today_s_phases_summary', 'phase_4')['start'] }}
+          → {{ state_attr('sensor.today_s_phases_summary', 'phase_4')['end'] }}
+          • {{ state_attr('sensor.today_s_phases_summary', 'phase_4')['price_pen_per_kwh'] }}
+        color: >
+          {{ state_attr('sensor.today_s_phases_summary', 'phase_4')['phase'] }}
+
+      - type: custom:mushroom-template-card
+        multiline_secondary: true
+        icon: >
+          {{ state_attr('sensor.today_s_phases_summary', 'phase_5')['icon'] }}
+        primary: >
+          Phase 5 — {{ state_attr('sensor.today_s_phases_summary', 'phase_5')['phase'] | title }}
+        secondary: >
+          {{ state_attr('sensor.today_s_phases_summary', 'phase_5')['start'] }}
+          → {{ state_attr('sensor.today_s_phases_summary', 'phase_5')['end'] }}
+          • {{ state_attr('sensor.today_s_phases_summary', 'phase_5')['price_pen_per_kwh'] }}
+        color: >
+          {{ state_attr('sensor.today_s_phases_summary', 'phase_5')['phase'] }}
+
+
+  ###############################################################
+  # Tomorrow's Phases
+  ###############################################################
+  - type: custom:expander-card
+    title: Tomorrow's Phases
+    padding: 0
+    cards:
+
+      - type: custom:mushroom-template-card
+        multiline_secondary: true
+        icon: >
+          {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_1')['icon'] }}
+        primary: >
+          Phase 1 — {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_1')['phase'] | title }}
+        secondary: >
+          {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_1')['start'] }}
+          → {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_1')['end'] }}
+          • {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_1')['price_pen_per_kwh'] }}
+        color: >
+          {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_1')['phase'] }}
+
+      - type: custom:mushroom-template-card
+        multiline_secondary: true
+        icon: >
+          {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_2')['icon'] }}
+        primary: >
+          Phase 2 — {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_2')['phase'] | title }}
+        secondary: >
+          {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_2')['start'] }}
+          → {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_2')['end'] }}
+          • {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_2')['price_pen_per_kwh'] }}
+        color: >
+          {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_2')['phase'] }}
+
+      - type: custom:mushroom-template-card
+        multiline_secondary: true
+        icon: >
+          {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_3')['icon'] }}
+        primary: >
+          Phase 3 — {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_3')['phase'] | title }}
+        secondary: >
+          {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_3')['start'] }}
+          → {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_3')['end'] }}
+          • {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_3')['price_pen_per_kwh'] }}
+        color: >
+          {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_3')['phase'] }}
+
+      - type: custom:mushroom-template-card
+        multiline_secondary: true
+        icon: >
+          {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_4')['icon'] }}
+        primary: >
+          Phase 4 — {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_4')['phase'] | title }}
+        secondary: >
+          {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_4')['start'] }}
+          → {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_4')['end'] }}
+          • {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_4')['price_pen_per_kwh'] }}
+        color: >
+          {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_4')['phase'] }}
+
+      - type: custom:mushroom-template-card
+        multiline_secondary: true
+        icon: >
+          {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_5')['icon'] }}
+        primary: >
+          Phase 5 — {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_5')['phase'] | title }}
+        secondary: >
+          {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_5')['start'] }}
+          → {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_5')['end'] }}
+          • {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_5')['price_pen_per_kwh'] }}
+        color: >
+          {{ state_attr('sensor.tomorrow_s_phases_summary', 'phase_5')['phase'] }}

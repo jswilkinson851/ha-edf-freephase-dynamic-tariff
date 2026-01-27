@@ -560,7 +560,30 @@ async def validate_import_sensor(hass, entity_id: str) -> tuple[bool, list[str]]
         # Otherwise return all issues
         return False, reasons
 
+# ---------------------------------------------------------------------------
+# Build Entity IDs for all Entity Types
+# ---------------------------------------------------------------------------
+
+def build_entity_id(domain: str, object_id: str, tariff: str = "fpd") -> str:
+    """
+    Build a fully-qualified entity_id using the integration's
+    future-proof naming scheme.
+
+    Example:
+        build_entity_id("sensor", "current_price")
+        → "sensor.edf_fpd_current_price"
+    """
+    # Normalise object_id (replace spaces, hyphens, apostrophes)
+    safe_object_id = (
+        object_id.lower()
+        .replace(" ", "_")
+        .replace("-", "_")
+        .replace("’", "")
+        .replace("'", "")
+    )
+
+    return f"{domain}.edf_{tariff}_{safe_object_id}"
 
 # ---------------------------------------------------------------------------
-# End of shared helpers
+# End of helpers.py
 # ---------------------------------------------------------------------------
