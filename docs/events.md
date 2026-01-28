@@ -3,28 +3,29 @@
 As of **v0.7.0**, this integration includes a full **event platform** that emits structured Home Assistant events whenever EDF’s dynamic tariff changes in a meaningful way.
 
 These events allow you to build automations that react instantly to:
-- slot changes  
-- phase changes (green/amber/red)  
-- block transitions  
-- next‑phase predictions  
-- tariff window boundaries  
+- phase changes (green → amber → red)
+- upcoming phase changes
+- phase windows approaching their end
+
+The event system is intentionally simple, predictable, and focused on real‑world automation needs. 
 
 ---
 
 # 📡 Event Entity
 
-### `event.edf_fpd_tariff_slot_phase_events`
+`event.edf_fpd_phase_events`
 
 This entity emits all tariff‑related events and exposes diagnostic attributes:
 
 - `last_event_type`
 - `last_event_timestamp`
+- `last_event_payload`
 - `event_counts`
 - `event_history`
 
 Friendly name:
 
-- `EDF FPD Tariff Slot & Phase Events`
+- `EDF FPD Phase Events`
 
 ---
 
@@ -39,16 +40,10 @@ The following events may be emitted:
 
 | Event Type | Description |
 |------------|-------------|
-| `edf_fpd_slot_changed` | The current half‑hour slot changed. |
-| `edf_fpd_phase_changed` | The tariff phase (green/amber/red) changed. |
-| `edf_fpd_phase_started` | A new phase window began. |
-| `edf_fpd_phase_ended` | A phase window ended. |
-| `edf_fpd_phase_block_changed` | The merged block (group of same‑colour slots) changed. |
-| `edf_fpd_next_phase_changed` | The predicted next phase changed. |
-| `edf_fpd_next_green_phase_changed` | The next green phase changed. |
-| `edf_fpd_next_amber_phase_changed` | The next amber phase changed. |
-| `edf_fpd_next_red_phase_changed` | The next red phase changed. |
-| `edf_fpd_debug` | Debug event stream (only when debug logging is enabled). |
+| `edf_fpd_phase_changed` | 	Fired whenever the tariff phase changes (e.g., red → amber). |
+| `edf_fpd_phase_ending_soon` | Fired once per phase window when the current phase is within 30 minutes of ending. |
+| `edf_fpd_next_phase_changed` | Fired when the colour of the upcoming phase window changes. |
+
 
 ---
 
@@ -58,31 +53,25 @@ Each event includes a structured JSON payload.
 Example:
 
 ```json
-{
-  "event_type": "edf_fpd_phase_changed",
-  "timestamp": "2026-01-25T20:00:03.050683+00:00",
-  "phase": "amber",
-  "from": {
-    "phase": "green",
-    "start": "19:30"
-  },
-  "to": {
-    "phase": "amber",
-    "start": "20:00"
-  }
-}
+from: red
+to: amber
+phase:
+  colour: amber
+  start: "2026‑01‑27T19:00:00+00:00"
+  end: "2026‑01‑27T23:00:00+00:00"
+  price_p_per_kwh: 22.2075
+  slot_count: 5
 ```
 
-Payloads may include:
+Payload fields include:
+- `from` / `to` — previous and next phase colours
+- `phase` — semantic description of the new merged phase window
+- `colour` — green / amber / red
+- `start` / `end` — full window boundaries
+- `price_p_per_kwh` — price for the phase
+- `slot_count` — number of half‑hour slots in the window
 
-- phase
-- from / to objects
-- slot boundaries
-- phase summaries
-- price information
-- timestamps
-- colour (green/amber/red)
-- duration and window metadata
+This structure is stable, predictable, and easy to consume in automations, templates, and dashboards.
 
 ## 🧪 Example Automations
 
@@ -92,12 +81,13 @@ Payloads may include:
 alias: Notify on new tariff phase
 trigger:
   - platform: event
-    event_type: edf_fpd_phase_started
+    event_type: edf_fpd_phase_changed
 action:
   - service: notify.mobile_app_phone
     data:
       message: >
-        New tariff phase started: {{ trigger.event.data.phase }}
+        New tariff phase: {{ trigger.event.data.to | title }}
+        ({{ trigger.event.data.phase.start }} → {{ trigger.event.data.phase.end }})
 ```
 
 ### Trigger when the next green window becomes available
@@ -106,7 +96,11 @@ action:
 alias: Prepare for next green window
 trigger:
   - platform: event
-    event_type: edf_fpd_next_green_phase_changed
+    event_type: edf_fpd_next_phase_changed
+condition:
+  - condition: template
+    value_template: >
+      {{ trigger.event.data.to == 'green' }}
 action:
   - service: script.prepare_for_green_window
 ```
@@ -117,17 +111,17 @@ action:
 type: markdown
 title: EDF Event Timeline
 content: |
-  {% set diag = states['event.edf_fpd_tariff_slot_phase_events'].attributes %}
+  {% set diag = states['event.edf_fpd_phase_events'].attributes %}
   {% if diag %}
-  {% set history = diag["event_history"] %}
-  {% for item in history | reverse %}
-  **{{ item["timestamp"] }}**  
-  🧙‍♀️🪄⏱️ *{{ item["event_type"] }}*
+  {% for item in diag["event_history"] | reverse %}
+  **{{ item.timestamp }}**  
+  🪄 *{{ item.event_type }}*
 
   ```yaml
-  {{ item["payload"] }}
-  {% endfor %}
+  {{ item.payload }}
+    {% endfor %}
   {% endif %}
+
 ```
 
 ## 🧠 Debug Event Stream
@@ -144,12 +138,9 @@ This includes:
 Useful for advanced dashboards or development.
 
 ## 📌 Notes
-Event history is stored in memory only.
-
-Events are emitted immediately when the coordinator detects a transition.
-
-All event types follow the naming conventions documented in naming.md.
-
-The event entity name was updated in v0.7.1 to match the new entity‑ID scheme.
+- Event history is persisted across restarts (last 5 events).  
+- Events are emitted immediately when the coordinator detects a transition.  
+- All event types follow the naming conventions documented in `naming.md`.  
+- The event entity name was updated in **v0.7.1** to match the new entity‑ID scheme.
 
 ---

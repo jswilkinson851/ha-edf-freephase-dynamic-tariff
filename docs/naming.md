@@ -84,16 +84,13 @@ Where:
 
 ### Event Types
 
-- `edf_fpd_slot_changed`
+The integration emits three high‑level event types:
 - `edf_fpd_phase_changed`
-- `edf_fpd_phase_started`
-- `edf_fpd_phase_ended`
-- `edf_fpd_phase_block_changed`
+- `edf_fpd_phase_ending_soon`
 - `edf_fpd_next_phase_changed`
-- `edf_fpd_next_green_phase_changed`
-- `edf_fpd_next_amber_phase_changed`
-- `edf_fpd_next_red_phase_changed`
-- `edf_fpd_debug` (debug event stream)
+- `edf_fpd_debug` (debug stream, only when debug logging is enabled)
+
+These names follow the standard `edf_fpd_<description>` convention and represent the complete set of events produced by the tariff event engine.
 
 ---
 

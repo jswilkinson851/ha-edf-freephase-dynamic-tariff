@@ -6,6 +6,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## 🚀 [0.7.2] - 2026.01.28
+
+## Phase‑Centric Event Engine Overhaul
+
+### ✨ New
+- Event payloads now include the **full merged phase window** rather than a single 30‑minute slot.
+- Added a semantic `phase` object to all relevant events:
+  - `colour`
+  - `start` / `end` (full window boundaries)
+  - `price_p_per_kwh`
+  - `slot_count`
+- Event entity now exposes a clearer, more automation‑friendly structure.
+
+### 🔧 Changed
+- Replaced slot‑level event logic with a simplified, phase‑centric model.
+- Removed legacy event types:
+  - `edf_fpd_slot_changed`
+  - `edf_fpd_phase_started`
+  - `edf_fpd_phase_ended`
+  - `edf_fpd_phase_block_changed`
+  - `edf_fpd_next_green_phase_changed`
+  - `edf_fpd_next_amber_phase_changed`
+  - `edf_fpd_next_red_phase_changed`
+- Updated event entity ID to `event.edf_fpd_phase_events`.
+- Updated documentation and examples to reflect the new event model.
+
+### 🐛 Fixed
+- Eliminated spurious initialisation events caused by early coordinator updates.
+- Ensured phase transitions are detected reliably across merged slot blocks.
+- Corrected next‑phase detection logic for edge cases around midnight.
+
+### 🛠️ Hotfix: Entity Migration Stability
+
+- Fixed an issue where the event entity could fail to migrate cleanly during upgrades.
+- Ensured the legacy entity ID (`event.edf_fpd_tariff_slot_phase_events`) is correctly replaced with the new ID (`event.edf_fpd_phase_events`) without requiring manual intervention.
+- Added safeguards to prevent duplicate entities, stale registry entries, or missing diagnostics after updates.
+- Improved resilience of the initialisation path so the event entity always restores its previous state and diagnostics correctly after migration.
+
+### 🧪 Developer Notes
+- Diagnostics store now persists the last 5 events using the new payload format.
+- Debug stream (`edf_fpd_debug`) continues to emit raw event data when enabled.
+
+---
+
 ## 🚀 [v0.7.1] — 2026.01.27
 
 ## Entity Naming Overhaul & Seamless Migration

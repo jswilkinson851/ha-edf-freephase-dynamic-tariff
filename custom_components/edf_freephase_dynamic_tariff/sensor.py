@@ -53,13 +53,16 @@ from __future__ import annotations
 import logging
 from typing import Iterable, cast
 
+from homeassistant.config_entries import (  # pyright: ignore[reportMissingImports] # pylint: disable=import-error
+    ConfigEntry,
+)
+
 # pylint: disable=import-error
 from homeassistant.core import HomeAssistant  # pyright: ignore[reportMissingImports]
-from homeassistant.config_entries import ConfigEntry  # pyright: ignore[reportMissingImports]
-from homeassistant.helpers.entity_platform import AddEntitiesCallback  # pyright: ignore[reportMissingImports]
 from homeassistant.helpers.entity import Entity  # pyright: ignore[reportMissingImports]
-# pylint: enable=import-error
+from homeassistant.helpers.entity_platform import AddEntitiesCallback  # pyright: ignore[reportMissingImports]
 
+# pylint: enable=import-error
 from .const import DOMAIN
 from .sensors import ALL_SENSORS
 
@@ -86,21 +89,21 @@ async def async_setup_entry(
             entry.entry_id,
         )
 
-    # Coordinators have already been refreshed in __init__.py
-    # No need to refresh again here — avoids double API calls.
-
     entities: list[Entity] = []
 
     for sensor in ALL_SENSORS:
-        # Factory function for next-phase sensors
+
+        # ------------------------------------------------------------------
+        # Handle factory functions (e.g., create_next_phase_sensors)
+        # ------------------------------------------------------------------
         if callable(sensor) and sensor.__name__ == "create_next_phase_sensors":
-            factory_result = cast(Iterable[Entity], sensor(edf_coordinator))
-            entities.extend(factory_result)
+            factory_entities = cast(Iterable[Entity], sensor(edf_coordinator))
+            entities.extend(factory_entities)
             continue
 
-        # Universal instantiation logic:
-        # Try (edf_coordinator, cost_coordinator)
-        # Fall back to (edf_coordinator) if the class only accepts one argument.
+        # ------------------------------------------------------------------
+        # Instantiate normal sensor classes
+        # ------------------------------------------------------------------
         try:
             entity = sensor(edf_coordinator, cost_coordinator)
         except TypeError:
