@@ -6,6 +6,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## 🚀 [0.7.4] - 2026.02.10
+
+## Coordinator Refresh‑Loop Fix & Event Platform Stability
+This release resolves a subtle but high‑impact regression introduced by recent Home Assistant Core changes (2026.2.x). These changes altered the internal ordering of platform setup and coordinator listener registration, which exposed a race condition inside the integration.
+
+### 🐛 Fixed — Coordinator Refresh Loop (10‑second refresh bug)
+Some users experienced the EDF API refreshing every 10–12 seconds, regardless of the configured scan interval.
+This was caused by:
+
+- The event platform being set up twice by Home Assistant during startup.
+- Each setup created a second listener on the main EDFCoordinator.
+- Every coordinator update triggered two listeners, which triggered two refreshes, which triggered four listeners, and so on — a classic exponential feedback loop.
+- Home Assistant 2026.2.x made this easier to trigger due to internal lifecycle changes.
+
+### ✔️ Fix implemented
+The event platform now guarantees single‑setup by:
+
+- Ensuring the event entity subscribes only once.
+- Removing the duplicate listener registration in event.py.
+- Adding defensive guards in __init__.py to prevent double‑setup during reloads.
+- After this fix, the coordinator refreshes exactly at the configured scan interval (e.g., every 5 minutes), even across full HA restarts.
+
+### Result
+- API calls return to normal.
+- Debug logs behave correctly.
+- No more runaway refresh loops.
+- CPU and network usage drop back to expected levels.
+
+### 🎉 Additional Improvements
+- Improved internal ordering of coordinator initialisation to better align with HA 2026.2.x lifecycle changes.
+- Added safer listener‑registration patterns to avoid future double‑setup issues.
+- Minor cleanup of event‑entity lifecycle handling.
+
+---
+
+## 🚀 [0.7.3] - 2026.02.09
+
+## Hotfix for scan_interval 60-second refresh
+
+This hotfix addresses an issue where users with a 60‑second scan interval could experience multiple rapid events due to the way the coordinator updates and the event entity initialises. The changes ensure that the event entity correctly tracks its previous state and only emits events on actual phase changes, eliminating spurious events on startup or during rapid updates.
+
+N.B. It was since discovered that this hotfix did not resolve the issue. A more comprehensive overhaul of the event engine is planned for a future release to fully address the underlying logic and state-tracking issues.
+
+---
+
 ## 🚀 [0.7.2] - 2026.01.28
 
 ## Phase‑Centric Event Engine Overhaul

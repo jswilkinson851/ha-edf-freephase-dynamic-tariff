@@ -25,8 +25,8 @@ The flow performs several key responsibilities:
 
 3. Scan interval configuration
    The user selects how frequently the coordinator should refresh EDF’s API.
-   This value is stored in the config entry and used by the DataUpdateCoordinator
-   to schedule periodic updates.
+   This value (in minutes) is stored in the config entry and used by the
+   DataUpdateCoordinator to schedule periodic updates.
 
 4. Options flow
    The OptionsFlowHandler mirrors the main flow, allowing users to adjust the
@@ -46,11 +46,10 @@ generation, diagnostics, etc.) is handled by the coordinator and platform
 entities.
 """
 
-
 from __future__ import annotations
 
 # pylint: disable=import-error
-import aiohttp  # pyright: ignore[reportMissingImports] 
+import aiohttp  # pyright: ignore[reportMissingImports]
 import async_timeout  # pyright: ignore[reportMissingImports]
 import voluptuous as vol  # pyright: ignore[reportMissingImports]
 
@@ -132,7 +131,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[misc
     VERSION = 1
 
     async def async_step_user(self, user_input=None):
-        """Handle the initial step where the user selects region, scan interval and optional import sensor."""  # pylint: disable=line-too-long
+        """Handle the initial step where the user selects region, scan interval and optional import sensor."""
         errors: dict[str, str] = {}
 
         # Fetch region list for the form
@@ -146,7 +145,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[misc
                 ok, reasons = await validate_import_sensor(self.hass, import_sensor)
                 if not ok:
                     # Redirect to confirmation step with reasons so the user can choose to continue
-                    return await self.async_step_confirm_import_sensor({"user_input": user_input, "reasons": reasons})  # pylint: disable=line-too-long
+                    return await self.async_step_confirm_import_sensor(
+                        {"user_input": user_input, "reasons": reasons}
+                    )
 
             # If validation passed or no import sensor provided, create the entry
             selected_label = user_input["tariff_code"]
@@ -156,6 +157,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[misc
                 data={
                     "tariff_code": tariff_code,
                     "tariff_region_label": selected_label,
+                    # Stored as MINUTES
                     "scan_interval": user_input["scan_interval"],
                     "import_sensor": user_input.get("import_sensor"),
                     "product_url": PRODUCT_URL,
@@ -165,7 +167,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[misc
         data_schema = vol.Schema(
             {
                 vol.Required("tariff_code"): selector({"select": {"options": region_labels}}),
-                vol.Required("scan_interval", default=30): selector({"number": {"min": 1, "max": 120, "step": 1}}),  # pylint: disable=line-too-long
+                vol.Required(
+                    "scan_interval",
+                    default=30,
+                ): selector(
+                    {
+                        "number": {
+                            "min": 5,      # MINIMUM 5 MINUTES
+                            "max": 120,
+                            "step": 1,
+                        }
+                    }
+                ),
                 vol.Optional("import_sensor"): selector({"entity": {"domain": "sensor"}}),
             }
         )
@@ -191,6 +204,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[misc
                 data={
                     "tariff_code": tariff_code,
                     "tariff_region_label": selected_label,
+                    # Stored as MINUTES
                     "scan_interval": user_input["scan_interval"],
                     "import_sensor": import_sensor,
                     "product_url": PRODUCT_URL,
@@ -218,9 +232,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[misc
         return OptionsFlowHandler(config_entry)
 
 
-# ---------------------------------------------------------------------------
-# Options flow is implemented in OptionsFlowHandler below
-# ---------------------------------------------------------------------------
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Options flow for EDF FreePhase Dynamic Tariff."""
 
@@ -241,6 +252,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 current_region_label = label
                 break
 
+        # Stored as MINUTES
         current_scan = self._config_entry.data.get("scan_interval", 30)
         current_import_sensor = self._config_entry.data.get("import_sensor")
         stored_region_label = self._config_entry.data.get("tariff_region_label")
@@ -255,7 +267,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ok, reasons = await validate_import_sensor(self.hass, import_sensor)
                 if not ok:
                     # Redirect to confirmation step in options flow
-                    return await self.async_step_confirm_import_sensor({"user_input": user_input, "reasons": reasons})  # pylint: disable=line-too-long
+                    return await self.async_step_confirm_import_sensor(
+                        {"user_input": user_input, "reasons": reasons}
+                    )
 
             # Apply changes
             selected_label = user_input["tariff_code"]
@@ -264,27 +278,34 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 **self._config_entry.data,
                 "tariff_code": tariff_code,
                 "tariff_region_label": selected_label,
+                # Stored as MINUTES
                 "scan_interval": user_input["scan_interval"],
                 "import_sensor": user_input.get("import_sensor"),
                 "product_url": PRODUCT_URL,
             }
             self.hass.config_entries.async_update_entry(self._config_entry, data=new_data)
 
-            # This ensures: `entry.data` holds the core config & `entry.options` holds the debug flag
-            # if you do NOT put `debug_logging` into `new_data`
             return self.async_create_entry(
                 title="",
                 data={"debug_logging": user_input.get("debug_logging", False)},
             )
 
-        # Build the options form
         data_schema = vol.Schema(
             {
                 vol.Required("tariff_code", default=current_region_label): selector(
                     {"select": {"options": region_labels}}
                 ),
-                vol.Required("scan_interval", default=current_scan): selector(
-                    {"number": {"min": 1, "max": 120, "step": 1}}
+                vol.Required(
+                    "scan_interval",
+                    default=current_scan,
+                ): selector(
+                    {
+                        "number": {
+                            "min": 5,      # MINIMUM 5 MINUTES
+                            "max": 120,
+                            "step": 1,
+                        }
+                    }
                 ),
                 vol.Optional("import_sensor", default=current_import_sensor): selector(
                     {"entity": {"domain": "sensor"}}
@@ -313,13 +334,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 **self._config_entry.data,
                 "tariff_code": tariff_code,
                 "tariff_region_label": selected_label,
+                # Stored as MINUTES
                 "scan_interval": user_input["scan_interval"],
                 "import_sensor": import_sensor,
                 "product_url": PRODUCT_URL,
             }
             self.hass.config_entries.async_update_entry(self._config_entry, data=new_data)
 
-            # Ensures the debug flag is preserved even when the user confirms a failing sensor
             return self.async_create_entry(
                 title="",
                 data={"debug_logging": user_input.get("debug_logging", False)},

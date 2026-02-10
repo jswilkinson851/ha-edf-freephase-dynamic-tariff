@@ -14,18 +14,65 @@
 
 type: vertical-stack
 cards:
-  - type: custom:mushroom-title-card
-    title: 🧙‍♂️🧭 Debug & Events Panel 🔮🧙‍♂️
-    alignment: center
-
-  # ---------------------------------------------------------------------------
-  # EC Debug Logs
-  # ---------------------------------------------------------------------------
   - type: custom:expander-card
     title: ⚡ EC Debug Logs
     padding: 8
     cards:
       - type: markdown
+        content: >
+          {% set times = state_attr('sensor.edf_fpd_diagnostic_sensor',
+          'ec_debug_times') or []
+
+          %}
+
+
+          {% set logs = state_attr('sensor.edf_fpd_diagnostic_sensor',
+          'ec_debug_buffer') or []
+
+          %}
+
+
+
+          {% if times and logs %}
+
+
+          {% for i in range(times | length) %}
+
+
+          **{{ times[i] }}**  
+
+          <span style="color:#aaa;">
+            ⌚ {{ times[i] | as_timestamp | timestamp_custom("%H:%M:%S on %d %b %Y") }}
+          </span>
+
+
+          🧙‍♂️🧭✨ *EC Log Entry*
+
+
+
+          ```text
+
+
+          {{ logs[i] }}
+
+
+          ```
+
+
+
+          ---
+
+
+          {% endfor %}
+
+
+          {% else %}
+
+
+          <i>No EC debug logs available.</i>
+
+
+          {% endif %}
         card_mod:
           style:
             ha-markdown$: |
@@ -33,37 +80,67 @@ cards:
                 white-space: pre-wrap !important;
                 word-break: break-word !important;
               }
-        content: >
-          {% set times = state_attr('sensor.edf_fpd_diagnostic', 'ec_debug_times') or [] %}
-          {% set logs = state_attr('sensor.edf_fpd_diagnostic', 'ec_debug_buffer') or [] %}
-
-          {% if times and logs %}
-            {% for i in range(times | length) %}
-            **{{ times[i] }}**  
-            <span style="color:#aaa;">
-              ⌚ {{ times[i] | as_timestamp | timestamp_custom("%H:%M:%S on %d %b %Y") }}
-            </span>
-
-            🧙‍♂️🧭✨ *EC Log Entry*
-
-            ```text
-            {{ logs[i] }}
-            ```
-
-            ---
-            {% endfor %}
-          {% else %}
-            <i>No EC debug logs available.</i>
-          {% endif %}
-
-  # ---------------------------------------------------------------------------
-  # CC Debug Logs
-  # ---------------------------------------------------------------------------
   - type: custom:expander-card
     title: 🔌 CC Debug Logs
     padding: 8
     cards:
       - type: markdown
+        content: >
+
+          {% set times = state_attr('sensor.edf_fpd_diagnostic_sensor',
+          'cc_debug_times') or []
+
+          %}
+
+
+          {% set logs = state_attr('sensor.edf_fpd_diagnostic_sensor',
+          'cc_debug_buffer') or []
+
+          %}
+
+
+
+          {% if times and logs %}
+
+
+          {% for i in range(times | length) %}
+
+
+          **{{ times[i] }}**  
+
+
+          <span style="color:#aaa;">
+            ⌚ {{ times[i] | as_timestamp | timestamp_custom("%H:%M:%S on %d %b %Y") }}
+          </span>
+
+
+          🧙‍♀️💷🔮 *CC Log Entry*
+
+
+
+          ```text
+
+
+          {{ logs[i] }}
+
+
+          ```
+
+
+
+          ---
+
+
+          {% endfor %}
+
+
+          {% else %}
+
+
+          <i>No CC debug logs available.</i>
+
+
+          {% endif %}
         card_mod:
           style:
             ha-markdown$: |
@@ -71,46 +148,13 @@ cards:
                 white-space: pre-wrap !important;
                 word-break: break-word !important;
               }
-        content: >
-          {% set times = state_attr('sensor.edf_fpd_diagnostic', 'cc_debug_times') or [] %}
-          {% set logs = state_attr('sensor.edf_fpd_diagnostic', 'cc_debug_buffer') or [] %}
-
-          {% if times and logs %}
-            {% for i in range(times | length) %}
-            **{{ times[i] }}**  
-            <span style="color:#aaa;">
-              ⌚ {{ times[i] | as_timestamp | timestamp_custom("%H:%M:%S on %d %b %Y") }}
-            </span>
-
-            🧙‍♀️💷🔮 *CC Log Entry*
-
-            ```text
-            {{ logs[i] }}
-            ```
-
-            ---
-            {% endfor %}
-          {% else %}
-            <i>No CC debug logs available.</i>
-          {% endif %}
-
-  # ---------------------------------------------------------------------------
-  # EDF Event Timeline
-  # ---------------------------------------------------------------------------
   - type: custom:expander-card
     title: ⏱️ EDF Event Timeline
     padding: 8
     cards:
       - type: markdown
-        card_mod:
-          style:
-            ha-markdown$: |
-              pre, code {
-                white-space: pre-wrap !important;
-                word-break: break-word !important;
-              }
         content: |
-          {% set diag = states['event.edf_fpd_tariff_slot_phase_events'].attributes %}
+          {% set diag = states['event.edf_fpd_phase_events'].attributes %}
           {% if diag %}
 
           ## ⏱️ Last Event
@@ -127,7 +171,6 @@ cards:
             <span style="color:#aaa;">
               {{ item["timestamp"] | as_timestamp | timestamp_custom("%H:%M:%S on %d %b %Y") }}
             </span>
-
             🧙‍♀️🪄⏱️ *{{ item["event_type"] }}*
 
             ```yaml
@@ -137,9 +180,17 @@ cards:
             ---
             {% endfor %}
           {% else %}
-            No event history yet.
+          No event history yet.
           {% endif %}
 
           {% else %}
-            No event diagnostics available.
+          No event diagnostics available.
           {% endif %}
+        card_mod:
+          style:
+            ha-markdown$: |
+              pre, code {
+                white-space: pre-wrap !important;
+                word-break: break-word !important;
+              }
+
