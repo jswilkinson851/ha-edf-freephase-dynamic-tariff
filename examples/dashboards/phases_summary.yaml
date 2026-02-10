@@ -12,71 +12,87 @@ cards:
     title: Yesterday's Phases
     padding: 0
     cards:
-
       - type: custom:mushroom-template-card
         multiline_secondary: true
         icon: >
-          {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_1')['icon'] }}
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_1') %} {{ p['icon'] if p else 'mdi:help-circle' }}
         primary: >
-          Phase 1 — {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_1')['phase'] | title }}
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_1') %} Phase 1 — {{ p['phase'] | title if p else 'No data yet'
+          }}
         secondary: >
-          {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_1')['start'] }}
-          → {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_1')['end'] }}
-          • {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_1')['price_pen_per_kwh'] }}
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_1') %} {{ p['start'] if p else '—' }} → {{ p['end'] if p else
+          '—' }} • {{ p['price_pen_per_kwh'] if p else '—' }}
         color: >
-          {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_1')['phase'] }}
-
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_1') %} {{ p['phase'] if p else 'grey' }}
+        features_position: bottom
       - type: custom:mushroom-template-card
         multiline_secondary: true
         icon: >
-          {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_2')['icon'] }}
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_2') %} {{ p['icon'] if p else 'mdi:help-circle' }}
         primary: >
-          Phase 2 — {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_2')['phase'] | title }}
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_2') %} Phase 2 — {{ p['phase'] | title if p else 'No data yet'
+          }}
         secondary: >
-          {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_2')['start'] }}
-          → {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_2')['end'] }}
-          • {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_2')['price_pen_per_kwh'] }}
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_2') %} {{ p['start'] if p else '—' }} → {{ p['end'] if p else
+          '—' }} • {{ p['price_pen_per_kwh'] if p else '—' }}
         color: >
-          {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_2')['phase'] }}
-
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_2') %} {{ p['phase'] if p else 'grey' }}
       - type: custom:mushroom-template-card
         multiline_secondary: true
         icon: >
-          {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_3')['icon'] }}
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_3') %} {{ p['icon'] if p else 'mdi:help-circle' }}
         primary: >
-          Phase 3 — {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_3')['phase'] | title }}
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_3') %} Phase 3 — {{ p['phase'] | title if p else 'No data yet'
+          }}
         secondary: >
-          {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_3')['start'] }}
-          → {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_3')['end'] }}
-          • {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_3')['price_pen_per_kwh'] }}
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_3') %} {{ p['start'] if p else '—' }} → {{ p['end'] if p else
+          '—' }} • {{ p['price_pen_per_kwh'] if p else '—' }}
         color: >
-          {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_3')['phase'] }}
-
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_3') %} {{ p['phase'] if p else 'grey' }}
       - type: custom:mushroom-template-card
         multiline_secondary: true
         icon: >
-          {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_4')['icon'] }}
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_4') %} {{ p['icon'] if p else 'mdi:help-circle' }}
         primary: >
-          Phase 4 — {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_4')['phase'] | title }}
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_4') %} Phase 4 — {{ p['phase'] | title if p else 'No data yet'
+          }}
         secondary: >
-          {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_4')['start'] }}
-          → {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_4')['end'] }}
-          • {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_4')['price_pen_per_kwh'] }}
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_4') %} {{ p['start'] if p else '—' }} → {{ p['end'] if p else
+          '—' }} • {{ p['price_pen_per_kwh'] if p else '—' }}
         color: >
-          {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_4')['phase'] }}
-
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_4') %} {{ p['phase'] if p else 'grey' }}
       - type: custom:mushroom-template-card
         multiline_secondary: true
         icon: >
-          {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_5')['icon'] }}
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_5') %} {{ p['icon'] if p else 'mdi:help-circle' }}
         primary: >
-          Phase 5 — {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_5')['phase'] | title }}
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_5') %} Phase 5 — {{ p['phase'] | title if p else 'No data yet'
+          }}
         secondary: >
-          {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_5')['start'] }}
-          → {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_5')['end'] }}
-          • {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_5')['price_pen_per_kwh'] }}
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_5') %} {{ p['start'] if p else '—' }} → {{ p['end'] if p else
+          '—' }} • {{ p['price_pen_per_kwh'] if p else '—' }}
         color: >
-          {{ state_attr('sensor.edf_fpd_yesterday_phases_summary', 'phase_5')['phase'] }}
+          {% set p = state_attr('sensor.edf_fpd_yesterday_phases_summary',
+          'phase_5') %} {{ p['phase'] if p else 'grey' }}
 
   ###############################################################
   # Today's Phases
@@ -85,71 +101,86 @@ cards:
     title: Today's Phases
     padding: 0
     cards:
-
       - type: custom:mushroom-template-card
         multiline_secondary: true
         icon: >
-          {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_1')['icon'] }}
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_1') %} {{ p['icon'] if p else 'mdi:help-circle' }}
         primary: >
-          Phase 1 — {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_1')['phase'] | title }}
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_1') %} Phase 1 — {{ p['phase'] | title if p else 'No data yet'
+          }}
         secondary: >
-          {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_1')['start'] }}
-          → {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_1')['end'] }}
-          • {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_1')['price_pen_per_kwh'] }}
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_1') %} {{ p['start'] if p else '—' }} → {{ p['end'] if p else
+          '—' }} • {{ p['price_pen_per_kwh'] if p else '—' }}
         color: >
-          {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_1')['phase'] }}
-
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_1') %} {{ p['phase'] if p else 'grey' }}
       - type: custom:mushroom-template-card
         multiline_secondary: true
         icon: >
-          {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_2')['icon'] }}
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_2') %} {{ p['icon'] if p else 'mdi:help-circle' }}
         primary: >
-          Phase 2 — {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_2')['phase'] | title }}
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_2') %} Phase 2 — {{ p['phase'] | title if p else 'No data yet'
+          }}
         secondary: >
-          {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_2')['start'] }}
-          → {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_2')['end'] }}
-          • {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_2')['price_pen_per_kwh'] }}
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_2') %} {{ p['start'] if p else '—' }} → {{ p['end'] if p else
+          '—' }} • {{ p['price_pen_per_kwh'] if p else '—' }}
         color: >
-          {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_2')['phase'] }}
-
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_2') %} {{ p['phase'] if p else 'grey' }}
       - type: custom:mushroom-template-card
         multiline_secondary: true
         icon: >
-          {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_3')['icon'] }}
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_3') %} {{ p['icon'] if p else 'mdi:help-circle' }}
         primary: >
-          Phase 3 — {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_3')['phase'] | title }}
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_3') %} Phase 3 — {{ p['phase'] | title if p else 'No data yet'
+          }}
         secondary: >
-          {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_3')['start'] }}
-          → {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_3')['end'] }}
-          • {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_3')['price_pen_per_kwh'] }}
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_3') %} {{ p['start'] if p else '—' }} → {{ p['end'] if p else
+          '—' }} • {{ p['price_pen_per_kwh'] if p else '—' }}
         color: >
-          {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_3')['phase'] }}
-
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_3') %} {{ p['phase'] if p else 'grey' }}
       - type: custom:mushroom-template-card
         multiline_secondary: true
         icon: >
-          {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_4')['icon'] }}
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_4') %} {{ p['icon'] if p else 'mdi:help-circle' }}
         primary: >
-          Phase 4 — {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_4')['phase'] | title }}
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_4') %} Phase 4 — {{ p['phase'] | title if p else 'No data yet'
+          }}
         secondary: >
-          {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_4')['start'] }}
-          → {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_4')['end'] }}
-          • {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_4')['price_pen_per_kwh'] }}
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_4') %} {{ p['start'] if p else '—' }} → {{ p['end'] if p else
+          '—' }} • {{ p['price_pen_per_kwh'] if p else '—' }}
         color: >
-          {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_4')['phase'] }}
-
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_4') %} {{ p['phase'] if p else 'grey' }}
       - type: custom:mushroom-template-card
         multiline_secondary: true
         icon: >
-          {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_5')['icon'] }}
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_5') %} {{ p['icon'] if p else 'mdi:help-circle' }}
         primary: >
-          Phase 5 — {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_5')['phase'] | title }}
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_5') %} Phase 5 — {{ p['phase'] | title if p else 'No data yet'
+          }}
         secondary: >
-          {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_5')['start'] }}
-          → {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_5')['end'] }}
-          • {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_5')['price_pen_per_kwh'] }}
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_5') %} {{ p['start'] if p else '—' }} → {{ p['end'] if p else
+          '—' }} • {{ p['price_pen_per_kwh'] if p else '—' }}
         color: >
-          {{ state_attr('sensor.edf_fpd_today_phases_summary', 'phase_5')['phase'] }}
+          {% set p = state_attr('sensor.edf_fpd_today_phases_summary',
+          'phase_5') %} {{ p['phase'] if p else 'grey' }}
 
   ###############################################################
   # Tomorrow's Phases
@@ -158,68 +189,84 @@ cards:
     title: Tomorrow's Phases
     padding: 0
     cards:
-
       - type: custom:mushroom-template-card
         multiline_secondary: true
         icon: >
-          {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_1')['icon'] }}
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_1') %} {{ p['icon'] if p else 'mdi:help-circle' }}
         primary: >
-          Phase 1 — {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_1')['phase'] | title }}
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_1') %} Phase 1 — {{ p['phase'] | title if p else 'No data yet'
+          }}
         secondary: >
-          {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_1')['start'] }}
-          → {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_1')['end'] }}
-          • {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_1')['price_pen_per_kwh'] }}
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_1') %} {{ p['start'] if p else '—' }} → {{ p['end'] if p else
+          '—' }} • {{ p['price_pen_per_kwh'] if p else '—' }}
         color: >
-          {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_1')['phase'] }}
-
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_1') %} {{ p['phase'] if p else 'grey' }}
+        features_position: bottom
       - type: custom:mushroom-template-card
         multiline_secondary: true
         icon: >
-          {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_2')['icon'] }}
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_2') %} {{ p['icon'] if p else 'mdi:help-circle' }}
         primary: >
-          Phase 2 — {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_2')['phase'] | title }}
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_2') %} Phase 2 — {{ p['phase'] | title if p else 'No data yet'
+          }}
         secondary: >
-          {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_2')['start'] }}
-          → {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_2')['end'] }}
-          • {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_2')['price_pen_per_kwh'] }}
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_2') %} {{ p['start'] if p else '—' }} → {{ p['end'] if p else
+          '—' }} • {{ p['price_pen_per_kwh'] if p else '—' }}
         color: >
-          {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_2')['phase'] }}
-
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_2') %} {{ p['phase'] if p else 'grey' }}
       - type: custom:mushroom-template-card
         multiline_secondary: true
         icon: >
-          {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_3')['icon'] }}
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_3') %} {{ p['icon'] if p else 'mdi:help-circle' }}
         primary: >
-          Phase 3 — {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_3')['phase'] | title }}
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_3') %} Phase 3 — {{ p['phase'] | title if p else 'No data yet'
+          }}
         secondary: >
-          {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_3')['start'] }}
-          → {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_3')['end'] }}
-          • {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_3')['price_pen_per_kwh'] }}
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_3') %} {{ p['start'] if p else '—' }} → {{ p['end'] if p else
+          '—' }} • {{ p['price_pen_per_kwh'] if p else '—' }}
         color: >
-          {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_3')['phase'] }}
-
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_3') %} {{ p['phase'] if p else 'grey' }}
       - type: custom:mushroom-template-card
         multiline_secondary: true
         icon: >
-          {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_4')['icon'] }}
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_4') %} {{ p['icon'] if p else 'mdi:help-circle' }}
         primary: >
-          Phase 4 — {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_4')['phase'] | title }}
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_4') %} Phase 4 — {{ p['phase'] | title if p else 'No data yet'
+          }}
         secondary: >
-          {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_4')['start'] }}
-          → {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_4')['end'] }}
-          • {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_4')['price_pen_per_kwh'] }}
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_4') %} {{ p['start'] if p else '—' }} → {{ p['end'] if p else
+          '—' }} • {{ p['price_pen_per_kwh'] if p else '—' }}
         color: >
-          {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_4')['phase'] }}
-
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_4') %} {{ p['phase'] if p else 'grey' }}
       - type: custom:mushroom-template-card
         multiline_secondary: true
         icon: >
-          {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_5')['icon'] }}
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_5') %} {{ p['icon'] if p else 'mdi:help-circle' }}
         primary: >
-          Phase 5 — {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_5')['phase'] | title }}
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_5') %} Phase 5 — {{ p['phase'] | title if p else 'No data yet'
+          }}
         secondary: >
-          {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_5')['start'] }}
-          → {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_5')['end'] }}
-          • {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_5')['price_pen_per_kwh'] }}
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_5') %} {{ p['start'] if p else '—' }} → {{ p['end'] if p else
+          '—' }} • {{ p['price_pen_per_kwh'] if p else '—' }}
         color: >
-          {{ state_attr('sensor.edf_fpd_tomorrow_phases_summary', 'phase_5')['phase'] }}
+          {% set p = state_attr('sensor.edf_fpd_tomorrow_phases_summary',
+          'phase_5') %} {{ p['phase'] if p else 'grey' }}

@@ -69,17 +69,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     within this class; the platform module (`event.py`) is responsible only for
     instantiation and coordinator subscription.
     """
+
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator = data["coordinator"]
 
-    # Create the entity
+    # Create the entity; it will subscribe to the coordinator in async_added_to_hass
     entity = EDFFreePhaseDynamicSlotEventEntity(coordinator)
     async_add_entities([entity])
-
-    # Subscribe AFTER the entity is added AND using the correct coordinator reference
-    entity.async_on_remove(
-        coordinator.async_add_listener(entity._handle_coordinator_update)
-    )
 
 # --------------------------------------------------------------------------------------------
 # End of .event.py

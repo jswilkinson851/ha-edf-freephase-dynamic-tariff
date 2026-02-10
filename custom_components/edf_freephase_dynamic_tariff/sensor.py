@@ -61,6 +61,7 @@ from homeassistant.config_entries import (  # pyright: ignore[reportMissingImpor
 from homeassistant.core import HomeAssistant  # pyright: ignore[reportMissingImports]
 from homeassistant.helpers.entity import Entity  # pyright: ignore[reportMissingImports]
 from homeassistant.helpers.entity_platform import AddEntitiesCallback  # pyright: ignore[reportMissingImports]
+from homeassistant.components.sensor import SensorDeviceClass  # pyright: ignore[reportMissingImports]
 
 # pylint: enable=import-error
 from .const import DOMAIN

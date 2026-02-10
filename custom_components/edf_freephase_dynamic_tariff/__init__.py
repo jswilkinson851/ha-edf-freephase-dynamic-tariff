@@ -134,8 +134,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_url = urls["api_url"]
     standing_charges_url = urls["standing_charges_url"]
 
-    # Build scan interval
-    scan_interval = timedelta(minutes=entry.data["scan_interval"])
+    # Build scan interval in MINUTES (stored as int in entry.data)
+    scan_interval_minutes = entry.data.get("scan_interval", 30)
 
     # Create EDF coordinator and attach config entry
     coordinator = EDFCoordinator(
@@ -143,22 +143,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         product_url=product_url,
         api_url=api_url,
         standing_charges_url=standing_charges_url,
-        scan_interval=scan_interval,
+        scan_interval=scan_interval_minutes,  # MINUTES, not timedelta
     )
     coordinator.config_entry = entry
     startup_logger.info("EDF INT. EC | Coordinator created, preparing first refresh")
     coordinator.entry = entry
 
-    # Create CostCoordinator (do not refresh yet)
+    # Create CostCoordinator (same minutes value; it will convert internally)
     import_sensor = entry.data.get("import_sensor")
     cost_coordinator = CostCoordinator(
         hass=hass,
         edf_coordinator=coordinator,
         import_sensor_entity_id=import_sensor,
-        scan_interval=scan_interval,
+        scan_interval=scan_interval_minutes,  # MINUTES, not timedelta
     )
     cost_coordinator.config_entry = entry
-    cost_coordinator.entry = entry  # <-- OPTIONAL, but consistent
+    cost_coordinator.entry = entry
 
     # ---------------------------------------------------------------
     # NEW: Load manifest version (correct integration version)
@@ -247,7 +247,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     return True
 
-
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     data = hass.data[DOMAIN].get(entry.entry_id, {})
@@ -268,10 +267,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("EDFCoordinator: shutdown failed: %s", err)
 
-    # Unload the sensor, binary_sensor and switch platforms
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, ["sensor", "binary_sensor", "switch"])  # pylint: disable=line-too-long
+    # Unload all platforms, including the event platform
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry,
+        ["sensor", "binary_sensor", "switch", "event"],
+    )
 
     # Remove stored data
     hass.data[DOMAIN].pop(entry.entry_id, None)
 
     return unload_ok
+    
+# -----------------------------------------------------------------------------
+# End of root __init__.py file
+# -----------------------------------------------------------------------------

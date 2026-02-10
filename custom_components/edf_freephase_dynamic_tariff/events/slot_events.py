@@ -227,7 +227,7 @@ class EDFFreePhaseDynamicSlotEventEntity(CoordinatorEntity, EventEntity):
             "event_entity"
         ] = self
 
-        # Always subscribe to coordinator updates
+        # Subscribe to coordinator updates (push-only, no refresh requests)
         self.async_on_remove(
             self.coordinator.async_add_listener(self._handle_coordinator_update)
         )
@@ -280,7 +280,8 @@ class EDFFreePhaseDynamicSlotEventEntity(CoordinatorEntity, EventEntity):
     # ------------------------------------------------------------------
 
     def _handle_coordinator_update(self) -> None:
-        self.hass.async_create_task(self.async_update())
+        """Schedule processing of a coordinator data update without triggering a refresh."""
+        self.hass.async_create_task(self._async_handle_coordinator_update())
 
     # ------------------------------------------------------------------
     # Phase payload helper (merged phase window)
@@ -344,13 +345,12 @@ class EDFFreePhaseDynamicSlotEventEntity(CoordinatorEntity, EventEntity):
         return None
 
     # ------------------------------------------------------------------
-    # Main update logic
+    # Main update logic (push-only, no super().async_update())
     # ------------------------------------------------------------------
 
-    async def async_update(self) -> None:
+    async def _async_handle_coordinator_update(self) -> None:
         """Handle coordinator updates and emit simplified events."""
-        await super().async_update()
-
+        # NOTE: Do NOT call super().async_update() here – that would request a refresh.
         data = self.coordinator.data or {}
         current = data.get("current_slot")
         all_slots = data.get("all_slots_sorted", [])
@@ -427,7 +427,6 @@ class EDFFreePhaseDynamicSlotEventEntity(CoordinatorEntity, EventEntity):
                 },
             )
             self._prev_next_phase_colour = next_phase_colour
-
 
 # ----------------------------------------------------------------------
 # End of `/events/slot_events.py`

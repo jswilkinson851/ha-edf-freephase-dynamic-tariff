@@ -53,6 +53,7 @@ from homeassistant.components.sensor import SensorEntity  # pyright: ignore[repo
 from homeassistant.helpers.entity import EntityCategory  # pyright: ignore[reportMissingImports]
 from homeassistant.helpers.update_coordinator import CoordinatorEntity  # pyright: ignore[reportMissingImports]
 from homeassistant.util.dt import as_local, parse_datetime  # pyright: ignore[reportMissingImports]
+from homeassistant.components.sensor import SensorDeviceClass  # pyright: ignore[reportMissingImports]
 
 # pylint: enable=import-error
 from ..const import DOMAIN
@@ -86,7 +87,6 @@ def _format_timestamp(ts: str | None):
     dt = as_local(dt)
     return dt.strftime("%H:%M on %d/%m/%Y")
 
-
 # ---------------------------------------------------------------------------
 # Last Updated Sensor
 # ---------------------------------------------------------------------------
@@ -94,16 +94,8 @@ def _format_timestamp(ts: str | None):
 
 class EDFFreePhaseDynamicLastUpdatedSensor(CoordinatorEntity, SensorEntity):
     """
-    Sensor exposing when the coordinator last received valid data from the API.
-
-    The entity’s state is a formatted timestamp representing the most recent
-    successful update. Attributes include:
-    - The raw ISO timestamp.
-    - A human‑readable formatted version.
-    - The age of the data in seconds.
-
-    This sensor is useful for diagnosing stale data, scheduler issues, or API
-    outages.
+    Sensor exposing the *real* last refresh time from the coordinator.
+    Only updates when the coordinator performs a real API refresh.
     """
 
     def __init__(self, coordinator):
@@ -116,22 +108,27 @@ class EDFFreePhaseDynamicLastUpdatedSensor(CoordinatorEntity, SensorEntity):
             tariff="fpd",
         )
 
-        self._attr_name = "EDF FPD Last Updated"
+        self._attr_name = "EDF FPD Last Real Refresh"
         self._attr_icon = "mdi:update"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
-
-        # Ensure this entity is enabled and visible by default in Home Assistant's entity registry
         self._attr_entity_registry_enabled_default = True
+        self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     @property
     def native_value(self):
-        """Return the formatted last-updated timestamp."""
+        """
+        Return the raw ISO timestamp of the last real coordinator refresh.
+        This ensures the sensor only updates when the coordinator updates.
+        """
         data = self.coordinator.data or {}
-        return _format_timestamp(data.get("last_updated"))
+        ts = data.get("last_updated")
+        if not ts:
+            return None
+        return parse_datetime(ts)
 
     @property
     def extra_state_attributes(self):
-        """Expose raw timestamp and age in seconds."""
+        """Expose formatted timestamp and age in seconds."""
         data = self.coordinator.data or {}
         ts = data.get("last_updated")
         if not ts:
@@ -139,8 +136,8 @@ class EDFFreePhaseDynamicLastUpdatedSensor(CoordinatorEntity, SensorEntity):
 
         dt = parse_datetime(ts)
         if dt:
-            dt = as_local(dt)
-            age_seconds = (datetime.now(timezone.utc).astimezone() - dt).total_seconds()
+            dt_local = as_local(dt)
+            age_seconds = (datetime.now(timezone.utc).astimezone() - dt_local).total_seconds()
         else:
             age_seconds = None
 
@@ -153,9 +150,7 @@ class EDFFreePhaseDynamicLastUpdatedSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def device_info(self):
-        """Return device info for this sensor from `helpers.py`."""
         return edf_device_info(self.coordinator.config_entry.entry_id)
-
 
 # ---------------------------------------------------------------------------
 # API Latency Sensor

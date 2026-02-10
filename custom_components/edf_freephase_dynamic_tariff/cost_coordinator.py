@@ -129,8 +129,8 @@ from homeassistant.components.recorder import history as recorder_history  # pyr
 from homeassistant.core import HomeAssistant  # pyright: ignore[reportMissingImports]
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator  # pyright: ignore[reportMissingImports]
 from homeassistant.util import dt as dt_util  # pyright: ignore[reportMissingImports]
-# pylint: enable=import-error
 
+# pylint: enable=import-error
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -185,11 +185,17 @@ class CostCoordinator(DataUpdateCoordinator):
 
         self.debug = debug
 
+        # scan_interval may be minutes (int) or timedelta (old configs)
+        if isinstance(scan_interval, timedelta):
+            self._scan_interval = scan_interval
+        else:
+            self._scan_interval = timedelta(minutes=scan_interval)
+        
         super().__init__(
             hass,
             _LOGGER,
-            name="EDF FreePhase Dynamic Tariff Cost Coordinator",
-            update_interval=scan_interval,
+            name="EDF FreePhase Cost Coordinator",
+            update_interval=self._scan_interval,
         )
 
     @property
@@ -472,7 +478,7 @@ class CostCoordinator(DataUpdateCoordinator):
             if dt.tzinfo is None:
                 dt = dt.replace(tzinfo=timezone.utc)
             return dt.astimezone(timezone.utc)
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             return None
 
     @staticmethod
@@ -491,7 +497,7 @@ class CostCoordinator(DataUpdateCoordinator):
                     continue
                 ts = ts.astimezone(timezone.utc)
                 value = float(state.state)
-            except Exception:
+            except Exception:  # pylint: disable=broad-exception-caught
                 continue
 
             if prev_state is None:
@@ -568,21 +574,6 @@ class CostCoordinator(DataUpdateCoordinator):
             )
 
         return slot_costs
-
-    async def async_refresh(self):
-        """
-        Override Home Assistant's automatic refresh behaviour.
-
-        Home Assistant normally schedules a 60‑second fallback refresh loop
-        when update_interval is None. This integration uses a custom aligned
-        scheduler, so we disable HA's internal polling but still perform a
-        real refresh when the scheduler calls async_refresh().
-        """
-        # Perform the real update
-        new_data = await self._async_update_data()
-
-        # Store the new dataset
-        self.async_set_updated_data(new_data)
 
 # ---------------------------------------------------------
 # End of cost_coordinator.py file

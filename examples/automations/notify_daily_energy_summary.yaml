@@ -27,5 +27,5 @@ actions:
       message: |
         💷 Electricity cost so far: £{{ states('sensor.edf_fpd_cost_today') | float | round(2) }}
         ☀️ Solar generation today: {{ states('sensor.givtcp_{ge_serial_number}_pv_energy_today_kwh') | float | round(2) }} kWh
-        🔌 Grid import today: {{ states('sensor.edf_fpd_cost_per_phase') | float | round(2) }} kWh
+        🔌 Grid import today: {{ states('sensor.dcc_sourced_smart_electricity_meter_usage_today') | float | round(2) }} kWh
 mode: single
