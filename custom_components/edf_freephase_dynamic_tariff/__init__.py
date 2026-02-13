@@ -221,6 +221,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # --------------------------------------------------------------
     try:
         await coordinator.async_config_entry_first_refresh()
+        coordinator._schedule_next_refresh()
         _LOGGER.debug("EDFCoordinator: immediate first refresh completed")
     except Exception as err:  # pylint: disable=broad-except
         _LOGGER.exception("EDFCoordinator: immediate refresh failed: %s", err)
