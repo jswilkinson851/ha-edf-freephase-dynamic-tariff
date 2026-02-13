@@ -6,6 +6,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## 🚀 [0.7.5] - 2026.02.13
+
+## Reintroduced Aligned Scheduling for Clock‑Synced Refreshes
+
+### Added
+- Restored aligned‑boundary scheduling for the coordinator, ensuring refreshes occur on clean clock boundaries rather than drifting relative to startup time.
+  - Example:  
+    • 5‑minute interval → 21:15, 21:20, 21:25, 21:30…  
+    • 30‑minute interval → 21:30, 22:00, 22:30, 23:00…
+
+### Changed
+- Replaced Home Assistant’s internal `update_interval` scheduler with a custom aligned scheduler using `async_call_later()`.
+- Updated diagnostics to expose the *aligned* next refresh time (`next_refresh_datetime`, `next_refresh_delay_seconds`, `next_refresh_jitter_seconds`).
+
+### Fixed
+- Eliminated drift and jitter caused by HA’s internal scheduler.
+- Ensured aligned scheduling runs consistently across both success and error paths.
+- Removed legacy “next refresh” diagnostics that previously overwrote aligned values.
+
+### Result
+- Predictable, clock‑synchronised refreshes.
+- Cleaner logs and more intuitive behaviour.
+- Better alignment with tariff slot boundaries and user expectations.
+
+
+---
+
 ## 🚀 [0.7.4] - 2026.02.10
 
 ## Coordinator Refresh‑Loop Fix & Event Platform Stability
@@ -619,5 +646,6 @@ This update improves robustness, simplifies configuration, and ensures long‑te
 ---
 
 ## [Unreleased]
+
 
 - Future improvements will be tracked here.
