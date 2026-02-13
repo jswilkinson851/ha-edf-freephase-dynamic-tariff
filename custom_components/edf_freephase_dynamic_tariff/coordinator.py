@@ -15,6 +15,7 @@ from time import monotonic
 # pylint: disable=import-error
 from homeassistant.config_entries import ConfigEntry  # pyright: ignore[reportMissingImports]
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator  # pyright: ignore[reportMissingImports]
+from homeassistant.helpers.event import async_call_later  # pyright: ignore[reportMissingImports]
 # pylint: enable=import-error
 
 from .api.client import fetch_all_pages
@@ -45,6 +46,7 @@ HEARTBEAT_PRIORITY = [
     "partial",
     "healthy",
 ]
+
 
 class EDFCoordinator(DataUpdateCoordinator):
     """Coordinator for EDF FreePhase Dynamic Tariff."""
@@ -85,10 +87,12 @@ class EDFCoordinator(DataUpdateCoordinator):
 
         self.config_entry: ConfigEntry | None = None
 
-        self._next_boundary_utc = None
-        self._next_refresh_datetime = None
-        self._next_refresh_delay = None
-        self._next_refresh_jitter = None
+        # Simple, coordinator‑local scheduling diagnostics
+        self._next_boundary_utc: datetime | None = None
+        self._next_refresh_datetime: datetime | None = None
+        self._next_refresh_delay: int | None = None
+        self._next_refresh_jitter: int | None = None
+        self._unsub_next_refresh = None
 
         self._debug = self.hass.data[DOMAIN].get("debug_enabled", False)
         self.debug_counter = 0
@@ -112,12 +116,12 @@ class EDFCoordinator(DataUpdateCoordinator):
 
         self.debug = debug
 
-        # CRUCIAL: tell DataUpdateCoordinator to use our timedelta
+        # IMPORTANT: we handle scheduling manually for aligned refreshes
         super().__init__(
             hass,
             _LOGGER,
             name="EDF FreePhase Dynamic Tariff Integration",
-            update_interval=self._scan_interval,
+            update_interval=None,
         )
 
         # Initialise coordinator data with a valid timestamp so timestamp sensors
@@ -126,10 +130,69 @@ class EDFCoordinator(DataUpdateCoordinator):
             "last_updated": datetime.now(timezone.utc).isoformat()
         }
 
+    # ---------------------------------------------------------------------
+    # Aligned scheduling helpers
+    # ---------------------------------------------------------------------
+
     @property
     def debug_enabled(self) -> bool:
         """Return whether debug logging is enabled."""
         return self._debug
+
+    def _compute_next_boundary(self, now: datetime) -> datetime:
+        """Return the next aligned refresh boundary as a UTC datetime.
+
+        Alignment is based on whole multiples of the scan interval since
+        midnight UTC, so:
+          • 5‑minute interval → :00, :05, :10, ...
+          • 30‑minute interval → :00, :30, :00, ...
+        """
+        interval_seconds = int(self._scan_interval.total_seconds())
+        if interval_seconds <= 0:
+            # Fallback: just use a simple interval from now
+            return now + self._scan_interval
+
+        seconds_today = now.hour * 3600 + now.minute * 60 + now.second
+        next_boundary_seconds = ((seconds_today // interval_seconds) + 1) * interval_seconds
+        delta_seconds = next_boundary_seconds - seconds_today
+        if delta_seconds <= 0:
+            delta_seconds = interval_seconds
+
+        return now + timedelta(seconds=delta_seconds)
+
+    def _schedule_next_refresh(self) -> None:
+        """Schedule the next aligned refresh using async_call_later."""
+        # Cancel any existing timer
+        if self._unsub_next_refresh:
+            self._unsub_next_refresh()
+            self._unsub_next_refresh = None
+
+        now = datetime.now(timezone.utc)
+        next_boundary = self._compute_next_boundary(now)
+        delay = (next_boundary - now).total_seconds()
+        delay = max(delay, 1)
+
+        # Update diagnostics
+        self._next_boundary_utc = next_boundary
+        self._next_refresh_datetime = next_boundary
+        self._next_refresh_delay = int(delay)
+        self._next_refresh_jitter = 0
+
+        self.debug(
+            "Scheduling next aligned refresh in %s seconds at %s",
+            int(delay),
+            next_boundary.isoformat(),
+        )
+
+        async def _handle_scheduled_refresh(_now):
+            self.debug("Aligned timer fired; requesting coordinator refresh")
+            await self.async_request_refresh()
+
+        self._unsub_next_refresh = async_call_later(
+            self.hass,
+            delay,
+            _handle_scheduled_refresh,
+        )
 
     # ---------------------------------------------------------------------
     # Standing charges fetcher (self‑contained)
@@ -203,11 +266,9 @@ class EDFCoordinator(DataUpdateCoordinator):
                 "error": f"parse_error: {err}",
             }
 
-    @property
-    def debug_enabled(self) -> bool:
-        """Return whether debug logging is enabled."""
-        return self._debug
-
+    # ---------------------------------------------------------------------
+    # Main update logic
+    # ---------------------------------------------------------------------
     async def _async_update_data(self):
         """Fetch and build the full coordinator dataset."""
         self.debug("EDF INT. DEBUG: REAL API REFRESH OCCURRED")
@@ -415,11 +476,24 @@ class EDFCoordinator(DataUpdateCoordinator):
 
             self.debug("Primary coordinator state: %s", primary_state)
 
-            # Simple, coordinator‑local "next refresh" diagnostics
-            self._next_boundary_utc = None
-            self._next_refresh_datetime = now + self._scan_interval
-            self._next_refresh_delay = int(self._scan_interval.total_seconds())
+            # For aligned scheduling, compute and expose the *aligned* next refresh
+            next_boundary = self._compute_next_boundary(now)
+            delay = (next_boundary - now).total_seconds()
+            delay = max(delay, 1)
+
+            self._next_boundary_utc = next_boundary
+            self._next_refresh_datetime = next_boundary
+            self._next_refresh_delay = int(delay)
             self._next_refresh_jitter = 0
+
+            self.debug(
+                "Aligned next refresh: in %s seconds at %s",
+                int(delay),
+                next_boundary.isoformat(),
+            )
+
+            # Schedule the next aligned refresh
+            self._schedule_next_refresh()
 
             self.debug("Returning dataset")
 
@@ -444,12 +518,38 @@ class EDFCoordinator(DataUpdateCoordinator):
                 "standing_charge_valid_from": standing.get("valid_from"),
                 "standing_charge_valid_to": standing.get("valid_to"),
                 "standing_charge_raw": standing.get("raw"),
+                "next_refresh_datetime": (
+                    self._next_refresh_datetime.isoformat()
+                    if self._next_refresh_datetime
+                    else None
+                ),
+                "next_refresh_delay_seconds": self._next_refresh_delay,
+                "next_refresh_jitter_seconds": self._next_refresh_jitter,
                 **flags,
             }
 
         except Exception as err:  # pylint: disable=broad-exception-caught
             _LOGGER.error("EDF INT. EC: API request failed: %s", err)
             flags["api_error"] = True
+
+            # Even on error, keep aligned scheduling going
+            now = datetime.now(timezone.utc)
+            next_boundary = self._compute_next_boundary(now)
+            delay = (next_boundary - now).total_seconds()
+            delay = max(delay, 1)
+
+            self._next_boundary_utc = next_boundary
+            self._next_refresh_datetime = next_boundary
+            self._next_refresh_delay = int(delay)
+            self._next_refresh_jitter = 0
+
+            self.debug(
+                "Error path: aligned next refresh in %s seconds at %s",
+                int(delay),
+                next_boundary.isoformat(),
+            )
+
+            self._schedule_next_refresh()
 
             return {
                 "current_price": None,
@@ -467,9 +567,22 @@ class EDFCoordinator(DataUpdateCoordinator):
                 "coordinator_status": "api_error",
                 "tariff_metadata": tariff_metadata or {},
                 "scan_interval_seconds": int(self._scan_interval.total_seconds()),
+                "next_refresh_datetime": (
+                    self._next_refresh_datetime.isoformat()
+                    if self._next_refresh_datetime
+                    else None
+                ),
+                "next_refresh_delay_seconds": self._next_refresh_delay,
+                "next_refresh_jitter_seconds": self._next_refresh_jitter,
                 **flags,
             }
 
     async def async_shutdown(self) -> None:
-        """Shutdown hook (no custom scheduler to tear down)."""
-        return
+        """Shutdown hook: cancel aligned refresh timer."""
+        if self._unsub_next_refresh:
+            self._unsub_next_refresh()
+            self._unsub_next_refresh = None
+
+# ----------------------------------------------------------------------------
+# End of coordinator.py file
+# ----------------------------------------------------------------------------
